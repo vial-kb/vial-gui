@@ -1,6 +1,6 @@
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QWidget, QTabWidget, QVBoxLayout, QPushButton, QLabel, QComboBox, QToolButton, QHBoxLayout
+from PyQt5.QtWidgets import QWidget, QTabWidget, QVBoxLayout, QPushButton, QLabel, QComboBox, QToolButton, QHBoxLayout, QSizePolicy
 
 import sys
 import json
@@ -42,12 +42,48 @@ class KeyboardContainer(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        self.keys = []
+        self.layout_layers = QHBoxLayout()
+        layer_label = QLabel(tr("KeyboardContainer", "Layer"))
 
-    def rebuild(self, data):
+        layout_labels_container = QHBoxLayout()
+        layout_labels_container.addWidget(layer_label)
+        layout_labels_container.addLayout(self.layout_layers)
+        layout_labels_container.addStretch()
+
+        # contains the actual keyboard
+        self.container = QWidget()
+
+        layout = QVBoxLayout()
+        layout.addLayout(layout_labels_container)
+        layout.addWidget(self.container)
+        layout.setAlignment(self.container, Qt.AlignHCenter)
+        self.setLayout(layout)
+
+        self.keys = []
+        self.layer_labels = []
+
+    def rebuild_layers(self):
+        for label in self.layer_labels:
+            label.deleteLater()
+        self.layer_labels = []
+
+        # create new layer labels
+        for x in range(self.layers):
+            label = QLabel(str(x))
+            label.setStyleSheet("border: 1px solid black; padding: 5px")
+            label.setAlignment(Qt.AlignCenter)
+            self.layout_layers.addWidget(label)
+            self.layer_labels.append(label)
+
+    def rebuild(self, dev, data):
+        # delete current layout
         for key in self.keys:
             key.deleteLater()
         self.keys = []
+
+        # get number of layers
+        self.layers = hid_send(dev, b"\x11")[1]
+        self.rebuild_layers()
 
         serial = KleSerial()
         kb = serial.deserialize(data["layouts"]["keymap"])
@@ -55,8 +91,16 @@ class KeyboardContainer(QWidget):
         max_w = max_h = 0
 
         for key in kb.keys:
-            widget = QLabel(str(key.labels[0]))
-            widget.setParent(self)
+            widget = QLabel()
+
+            if key.labels[0] and "," in key.labels[0]:
+                row, col = key.labels[0].split(",")
+                row, col = int(row), int(col)
+                data = hid_send(dev, b"\x04" + struct.pack("<BBB", 0, row, col))
+                keycode = struct.unpack(">H", data[4:6])[0]
+                widget.setText("0x{:X}".format(keycode))
+
+            widget.setParent(self.container)
             widget.setStyleSheet('background-color:white; border: 1px solid black')
             widget.setAlignment(Qt.AlignCenter)
 
@@ -68,6 +112,7 @@ class KeyboardContainer(QWidget):
             widget.setFixedSize(w, h)
             widget.move(x, y)
             widget.show()
+
             # print("{} {}x{}+{}x{}".format(key.labels, key.x, key.y, key.width, key.height))
 
             max_w = max(max_w, x + w)
@@ -75,7 +120,7 @@ class KeyboardContainer(QWidget):
 
             self.keys.append(widget)
 
-        self.setFixedSize(max_w, max_h)
+        self.container.setFixedSize(max_w, max_h)
 
 
 class MainWindow(QWidget):
@@ -104,7 +149,6 @@ class MainWindow(QWidget):
         layout = QVBoxLayout()
         layout.addLayout(layout_combobox)
         layout.addWidget(self.keyboard_container)
-        layout.setAlignment(self.keyboard_container, Qt.AlignHCenter)
         layout.addWidget(self.tabbed_keycodes)
         self.setLayout(layout)
 
@@ -145,7 +189,7 @@ class MainWindow(QWidget):
             sz -= MSG_LEN
 
         payload = json.loads(lzma.decompress(payload))
-        self.keyboard_container.rebuild(payload)
+        self.keyboard_container.rebuild(self.device, payload)
 
 
 if __name__ == '__main__':
