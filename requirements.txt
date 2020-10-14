@@ -1,6 +1,7 @@
 altgraph==0.17
 fbs==0.9.0
 future==0.18.2
+hidapi==0.9.0.post3
 macholib==1.14
 pefile==2019.4.18
 PyInstaller==3.4
