@@ -1,12 +1,14 @@
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QWidget, QTabWidget, QVBoxLayout, QPushButton, QLabel
+from PyQt5.QtWidgets import QWidget, QTabWidget, QVBoxLayout, QPushButton, QLabel, QComboBox, QToolButton, QHBoxLayout
 
 import sys
 import json
+import struct
+import lzma
 
 from flowlayout import FlowLayout
-from util import tr
+from util import tr, find_vial_keyboards, open_device, hid_send, MSG_LEN
 from kle_serial import Serial as KleSerial
 
 class TabbedKeycodes(QTabWidget):
@@ -40,9 +42,14 @@ class KeyboardContainer(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
 
+        self.keys = []
+
+    def rebuild(self, data):
+        for key in self.keys:
+            key.deleteLater()
+        self.keys = []
+
         serial = KleSerial()
-        data = open("g60.json", "r").read()
-        data = json.loads(data)
         kb = serial.deserialize(data["layouts"]["keymap"])
 
         max_w = max_h = 0
@@ -60,11 +67,14 @@ class KeyboardContainer(QWidget):
 
             widget.setFixedSize(w, h)
             widget.move(x, y)
-            print("{} {}x{}+{}x{}".format(key.labels, key.x, key.y, key.width, key.height))
+            widget.show()
+            # print("{} {}x{}+{}x{}".format(key.labels, key.x, key.y, key.width, key.height))
 
             max_w = max(max_w, x + w)
             max_h = max(max_h, y + h)
-    
+
+            self.keys.append(widget)
+
         self.setFixedSize(max_w, max_h)
 
 
@@ -72,16 +82,70 @@ class MainWindow(QWidget):
 
     def __init__(self):
         super().__init__()
+        self.device = None
+        self.devices = []
 
         self.keyboard_container = KeyboardContainer()
 
         self.tabbed_keycodes = TabbedKeycodes()
 
+        self.combobox_devices = QComboBox()
+        self.combobox_devices.currentIndexChanged.connect(self.on_device_selected)
+
+        btn_refresh_devices = QToolButton()
+        btn_refresh_devices.setToolButtonStyle(Qt.ToolButtonTextOnly)
+        btn_refresh_devices.setText(tr("MainWindow", "Refresh"))
+        btn_refresh_devices.clicked.connect(self.on_click_refresh)
+
+        layout_combobox = QHBoxLayout()
+        layout_combobox.addWidget(self.combobox_devices)
+        layout_combobox.addWidget(btn_refresh_devices)
+
         layout = QVBoxLayout()
+        layout.addLayout(layout_combobox)
         layout.addWidget(self.keyboard_container)
         layout.setAlignment(self.keyboard_container, Qt.AlignHCenter)
         layout.addWidget(self.tabbed_keycodes)
         self.setLayout(layout)
+
+        # make sure initial state is valid
+        self.on_click_refresh()
+        self.on_device_selected()
+
+    def on_click_refresh(self):
+        self.devices = find_vial_keyboards()
+        self.combobox_devices.clear()
+
+        for dev in self.devices:
+            self.combobox_devices.addItem("{} {}".format(dev["manufacturer_string"], dev["product_string"]))
+
+    def on_device_selected(self):
+        self.device = None
+        idx = self.combobox_devices.currentIndex()
+        if idx >= 0:
+            self.device = open_device(self.devices[idx])
+            self.reload_layout()
+
+    def reload_layout(self):
+        """ Requests layout data from the current device """
+
+        # get the size
+        data = hid_send(self.device, b"\xFE\x01")
+        sz = struct.unpack("<I", data[0:4])[0]
+
+        # get the payload
+        payload = b""
+        block = 0
+        while sz > 0:
+            data = hid_send(self.device, b"\xFE\x02" + struct.pack("<I", block))
+            if sz < MSG_LEN:
+                data = data[:sz]
+            payload += data
+            block += 1
+            sz -= MSG_LEN
+
+        payload = json.loads(lzma.decompress(payload))
+        self.keyboard_container.rebuild(payload)
 
 
 if __name__ == '__main__':
