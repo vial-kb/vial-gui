@@ -1,0 +1,4 @@
+venv
+target
+__pycache__
+*.pyc
