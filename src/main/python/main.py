@@ -12,6 +12,7 @@ from flowlayout import FlowLayout
 from util import tr, find_vial_keyboards, open_device, hid_send, MSG_LEN
 from kle_serial import Serial as KleSerial
 from clickable_label import ClickableLabel
+from keycodes import keycode_to_label
 
 
 class TabbedKeycodes(QTabWidget):
@@ -148,7 +149,7 @@ class KeyboardContainer(QWidget):
 
         for (row, col), widgets in self.rowcol.items():
             keycode = self.layout[(self.current_layer, row, col)]
-            text = "0x{:X}".format(keycode)
+            text = keycode_to_label(keycode)
             for widget in widgets:
                 widget.setText(text)
 
