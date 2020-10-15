@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+
 from PyQt5.QtCore import QCoreApplication
 
 import sys

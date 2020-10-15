@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+
 # Based on https://github.com/ijprest/kle-serial
 import json
 from copy import copy
