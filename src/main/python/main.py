@@ -12,19 +12,20 @@ from flowlayout import FlowLayout
 from util import tr, find_vial_keyboards, open_device, hid_send, MSG_LEN
 from kle_serial import Serial as KleSerial
 from clickable_label import ClickableLabel
-from keycodes import keycode_to_label
+from keycodes import keycode_to_label, KEYCODES_BASIC
 
 
 class TabbedKeycodes(QTabWidget):
 
-    def __init__(self, parent=None):
+    def __init__(self, kb, parent=None):
         super().__init__(parent)
         self.tab_basic = QWidget()
         layout = FlowLayout()
 
-        for lbl in ["", "hello", "Esc", "A", "B", "C", "D", "E", "F"]:
-            btn = QPushButton(lbl)
+        for keycode in KEYCODES_BASIC:
+            btn = QPushButton(keycode.label)
             btn.setFixedSize(50, 50)
+            btn.clicked.connect(lambda st, k=keycode: kb.set_key(k.keycode))
             layout.addWidget(btn)
         self.tab_basic.setLayout(layout)
 
@@ -67,6 +68,9 @@ class KeyboardContainer(QWidget):
         self.layer_labels = []
         self.rowcol = defaultdict(list)
         self.layout = dict()
+        self.selected_key = None
+        self.selected_row = -1
+        self.selected_col = -1
 
     def rebuild_layers(self, dev):
         self.layers = hid_send(dev, b"\x11")[1]
@@ -110,7 +114,8 @@ class KeyboardContainer(QWidget):
         max_w = max_h = 0
 
         for key in kb.keys:
-            widget = QLabel()
+            widget = ClickableLabel()
+            widget.clicked.connect(lambda w=widget: self.select_key(w))
 
             if key.labels[0] and "," in key.labels[0]:
                 row, col = key.labels[0].split(",")
@@ -118,7 +123,6 @@ class KeyboardContainer(QWidget):
                 self.rowcol[(row, col)].append(widget)
 
             widget.setParent(self.container)
-            widget.setStyleSheet('background-color:white; border: 1px solid black')
             widget.setAlignment(Qt.AlignCenter)
 
             x = (KEY_WIDTH + KEY_SPACING) * key.x
@@ -151,10 +155,36 @@ class KeyboardContainer(QWidget):
             keycode = self.layout[(self.current_layer, row, col)]
             text = keycode_to_label(keycode)
             for widget in widgets:
+                widget.setStyleSheet('background-color:white; border: 1px solid black')
+                if widget == self.selected_key:
+                    widget.setStyleSheet('background-color:black; color: white; border: 1px solid black')
                 widget.setText(text)
 
     def switch_layer(self, idx):
         self.current_layer = idx
+        self.selected_key = None
+        self.selected_row = -1
+        self.selected_col = -1
+        self.refresh_layer_display()
+
+    def set_key(self, keycode):
+        """ Change currently selected key to provided keycode """
+
+        if self.selected_row >= 0 and self.selected_col >= 0:
+            hid_send(self.dev, struct.pack(">BBBBH", 5, self.current_layer, self.selected_row, self.selected_col, keycode))
+            self.layout[(self.current_layer, self.selected_row, self.selected_col)] = keycode
+
+            self.refresh_layer_display()
+
+    def select_key(self, widget):
+        """ Change which key is currently selected """
+
+        self.selected_key = widget
+        for (row, col), widgets in self.rowcol.items():
+            if widget in widgets:
+                self.selected_row = row
+                self.selected_col = col
+                break
         self.refresh_layer_display()
 
 
@@ -167,7 +197,7 @@ class MainWindow(QWidget):
 
         self.keyboard_container = KeyboardContainer()
 
-        self.tabbed_keycodes = TabbedKeycodes()
+        self.tabbed_keycodes = TabbedKeycodes(self.keyboard_container)
 
         self.combobox_devices = QComboBox()
         self.combobox_devices.currentIndexChanged.connect(self.on_device_selected)
@@ -199,9 +229,11 @@ class MainWindow(QWidget):
 
     def on_device_selected(self):
         self.device = None
+        self.keyboard_container.dev = None
         idx = self.combobox_devices.currentIndex()
         if idx >= 0:
             self.device = open_device(self.devices[idx])
+            self.keyboard_container.dev = self.device
             self.reload_layout()
 
     def reload_layout(self):

@@ -177,6 +177,8 @@ KEYCODES = [
     K(0x5C00, "RESET", "Reset"),
 ]
 
+KEYCODES_BASIC = KEYCODES
+
 K = None
 
 def keycode_to_label(code):
