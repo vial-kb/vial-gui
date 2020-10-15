@@ -6,10 +6,13 @@ import sys
 import json
 import struct
 import lzma
+from collections import defaultdict
 
 from flowlayout import FlowLayout
 from util import tr, find_vial_keyboards, open_device, hid_send, MSG_LEN
 from kle_serial import Serial as KleSerial
+from clickable_label import ClickableLabel
+
 
 class TabbedKeycodes(QTabWidget):
 
@@ -61,19 +64,32 @@ class KeyboardContainer(QWidget):
 
         self.keys = []
         self.layer_labels = []
+        self.rowcol = defaultdict(list)
+        self.layout = dict()
 
-    def rebuild_layers(self):
+    def rebuild_layers(self, dev):
+        self.layers = hid_send(dev, b"\x11")[1]
+
         for label in self.layer_labels:
             label.deleteLater()
         self.layer_labels = []
 
         # create new layer labels
         for x in range(self.layers):
-            label = QLabel(str(x))
-            label.setStyleSheet("border: 1px solid black; padding: 5px")
+            label = ClickableLabel(str(x))
             label.setAlignment(Qt.AlignCenter)
+            label.clicked.connect(lambda idx=x: self.switch_layer(idx))
             self.layout_layers.addWidget(label)
             self.layer_labels.append(label)
+
+    def rebuild_layout(self, dev):
+        """ Load current key mapping from the keyboard """
+
+        for layer in range(self.layers):
+            for row, col in self.rowcol.keys():
+                data = hid_send(dev, b"\x04" + struct.pack("<BBB", layer, row, col))
+                keycode = struct.unpack(">H", data[4:6])[0]
+                self.layout[(layer, row, col)] = keycode
 
     def rebuild(self, dev, data):
         # delete current layout
@@ -82,8 +98,10 @@ class KeyboardContainer(QWidget):
         self.keys = []
 
         # get number of layers
-        self.layers = hid_send(dev, b"\x11")[1]
-        self.rebuild_layers()
+        self.rebuild_layers(dev)
+
+        # prepare for fetching keymap
+        self.rowcol = defaultdict(list)
 
         serial = KleSerial()
         kb = serial.deserialize(data["layouts"]["keymap"])
@@ -96,9 +114,7 @@ class KeyboardContainer(QWidget):
             if key.labels[0] and "," in key.labels[0]:
                 row, col = key.labels[0].split(",")
                 row, col = int(row), int(col)
-                data = hid_send(dev, b"\x04" + struct.pack("<BBB", 0, row, col))
-                keycode = struct.unpack(">H", data[4:6])[0]
-                widget.setText("0x{:X}".format(keycode))
+                self.rowcol[(row, col)].append(widget)
 
             widget.setParent(self.container)
             widget.setStyleSheet('background-color:white; border: 1px solid black')
@@ -113,14 +129,32 @@ class KeyboardContainer(QWidget):
             widget.move(x, y)
             widget.show()
 
-            # print("{} {}x{}+{}x{}".format(key.labels, key.x, key.y, key.width, key.height))
-
             max_w = max(max_w, x + w)
             max_h = max(max_h, y + h)
 
             self.keys.append(widget)
 
         self.container.setFixedSize(max_w, max_h)
+        self.rebuild_layout(dev)
+        self.current_layer = 0
+        self.refresh_layer_display()
+
+    def refresh_layer_display(self):
+        """ Refresh text on key widgets to display data corresponding to current layer """
+
+        for label in self.layer_labels:
+            label.setStyleSheet("border: 1px solid black; padding: 5px")
+        self.layer_labels[self.current_layer].setStyleSheet("border: 1px solid black; padding: 5px; background-color: black; color: white")
+
+        for (row, col), widgets in self.rowcol.items():
+            keycode = self.layout[(self.current_layer, row, col)]
+            text = "0x{:X}".format(keycode)
+            for widget in widgets:
+                widget.setText(text)
+
+    def switch_layer(self, idx):
+        self.current_layer = idx
+        self.refresh_layer_display()
 
 
 class MainWindow(QWidget):
@@ -154,7 +188,6 @@ class MainWindow(QWidget):
 
         # make sure initial state is valid
         self.on_click_refresh()
-        self.on_device_selected()
 
     def on_click_refresh(self):
         self.devices = find_vial_keyboards()
