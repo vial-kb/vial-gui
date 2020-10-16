@@ -8,6 +8,15 @@ from kle_serial import Serial as KleSerial
 from util import MSG_LEN, hid_send
 
 
+CMD_VIA_GET_KEYCODE = 0x04
+CMD_VIA_SET_KEYCODE = 0x05
+CMD_VIA_GET_LAYER_COUNT = 0x11
+CMD_VIA_VIAL_PREFIX = 0xFE
+
+CMD_VIAL_GET_SIZE = 0x01
+CMD_VIAL_GET_DEFINITION = 0x02
+
+
 class Keyboard:
     """ Low-level communication with a vial-enabled keyboard """
 
@@ -32,20 +41,20 @@ class Keyboard:
     def reload_layers(self):
         """ Get how many layers the keyboard has """
 
-        self.layers = hid_send(self.dev, b"\x11")[1]
+        self.layers = hid_send(self.dev, struct.pack("B", CMD_VIA_GET_LAYER_COUNT))[1]
 
     def reload_layout(self):
         """ Requests layout data from the current device """
 
         # get the size
-        data = hid_send(self.dev, b"\xFE\x01")
+        data = hid_send(self.dev, struct.pack("BB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_GET_SIZE))
         sz = struct.unpack("<I", data[0:4])[0]
 
         # get the payload
         payload = b""
         block = 0
         while sz > 0:
-            data = hid_send(self.dev, b"\xFE\x02" + struct.pack("<I", block))
+            data = hid_send(self.dev, struct.pack("<BBI", CMD_VIA_VIAL_PREFIX, CMD_VIAL_GET_DEFINITION, block))
             if sz < MSG_LEN:
                 data = data[:sz]
             payload += data
@@ -72,10 +81,10 @@ class Keyboard:
 
         for layer in range(self.layers):
             for row, col in self.rowcol:
-                data = hid_send(self.dev, b"\x04" + struct.pack("<BBB", layer, row, col))
+                data = hid_send(self.dev, struct.pack("BBBB", CMD_VIA_GET_KEYCODE, layer, row, col))
                 keycode = struct.unpack(">H", data[4:6])[0]
                 self.layout[(layer, row, col)] = keycode
 
     def set_key(self, layer, row, col, code):
-        hid_send(self.dev, struct.pack(">BBBBH", 5, layer, row, col, code))
+        hid_send(self.dev, struct.pack(">BBBBH", CMD_VIA_SET_KEYCODE, layer, row, col, code))
         self.layout[(layer, row, col)] = code
