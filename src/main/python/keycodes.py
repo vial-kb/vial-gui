@@ -189,6 +189,13 @@ KEYCODES_BASIC = [
 KEYCODES_ISO = [
     K(0x32, "KC_NONUS_HASH", "~\n#", "Non-US # and ~"),
     K(0x64, "KC_NONUS_BSLASH", "|\n\\", "Non-US \\ and |"),
+    K(0x87, "KC_RO", "_\n\\", "JIS \\ and _"),
+    K(0x88, "KC_KANA", "カタカナ\nひらがな", "JIS Katakana/Hiragana"),
+    K(0x89, "KC_JYEN", "|\n¥"),
+    K(0x8A, "KC_HENK", "変換", "JIS Henkan"),
+    K(0x8B, "KC_MHEN", "無変換", "JIS Muhenkan"),
+    K(0x90, "KC_LANG1", "한영\nかな", "Korean Han/Yeong / JP Mac Kana"),
+    K(0x91, "KC_LANG2", "漢字\n英数", "Korean Hanja / JP Mac Eisu"),
 ]
 
 KEYCODES_MACRO = []
