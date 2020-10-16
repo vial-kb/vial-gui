@@ -14,29 +14,41 @@ from flowlayout import FlowLayout
 from util import tr, find_vial_keyboards, open_device, hid_send, MSG_LEN
 from kle_serial import Serial as KleSerial
 from clickable_label import ClickableLabel
-from keycodes import keycode_to_label, KEYCODES_BASIC
+from keycodes import keycode_label, keycode_tooltip, KEYCODES_BASIC, KEYCODES_ISO, KEYCODES_MACRO, KEYCODES_LAYERS, KEYCODES_SPECIAL
 
 
 class TabbedKeycodes(QTabWidget):
 
     def __init__(self, kb, parent=None):
         super().__init__(parent)
+
         self.tab_basic = QWidget()
+        self.tab_iso = QWidget()
+        self.tab_macro = QWidget()
+        self.tab_layers = QWidget()
+        self.tab_special = QWidget()
+
+        for (tab, label, keycodes) in [
+            (self.tab_basic, "Basic", KEYCODES_BASIC),
+            (self.tab_iso, "ISO/JIS", KEYCODES_ISO),
+            (self.tab_macro, "Macro", KEYCODES_MACRO),
+            (self.tab_layers, "Layers", KEYCODES_LAYERS),
+            (self.tab_special, "Special", KEYCODES_SPECIAL),
+        ]:
+            self.create_buttons(tab, keycodes)
+            self.addTab(tab, tr("TabbedKeycodes", label))
+
+    def create_buttons(self, tab, keycodes):
         layout = FlowLayout()
 
-        for keycode in KEYCODES_BASIC:
+        for keycode in keycodes:
             btn = QPushButton(keycode.label)
             btn.setFixedSize(50, 50)
-            btn.clicked.connect(lambda st, k=keycode: kb.set_key(k.keycode))
+            btn.setToolTip(keycode_tooltip(keycode.code))
+            btn.clicked.connect(lambda st, k=keycode: kb.set_key(k.code))
             layout.addWidget(btn)
-        self.tab_basic.setLayout(layout)
 
-        self.tab_media = QWidget()
-        self.tab_macro = QWidget()
-
-        self.addTab(self.tab_basic, tr("TabbedKeycodes", "Basic"))
-        self.addTab(self.tab_media, tr("TabbedKeycodes", "Media"))
-        self.addTab(self.tab_macro, tr("TabbedKeycodes", "Macro"))
+        tab.setLayout(layout)
 
 
 KEY_WIDTH = 40
@@ -154,13 +166,15 @@ class KeyboardContainer(QWidget):
         self.layer_labels[self.current_layer].setStyleSheet("border: 1px solid black; padding: 5px; background-color: black; color: white")
 
         for (row, col), widgets in self.rowcol.items():
-            keycode = self.layout[(self.current_layer, row, col)]
-            text = keycode_to_label(keycode)
+            code = self.layout[(self.current_layer, row, col)]
+            text = keycode_label(code)
+            tooltip = keycode_tooltip(code)
             for widget in widgets:
                 widget.setStyleSheet('background-color:white; border: 1px solid black')
                 if widget == self.selected_key:
                     widget.setStyleSheet('background-color:black; color: white; border: 1px solid black')
                 widget.setText(text)
+                widget.setToolTip(tooltip)
 
     def switch_layer(self, idx):
         self.current_layer = idx

@@ -4,15 +4,17 @@
 
 class Keycode():
 
-    def __init__(self, keycode, qmk_id, label):
-        self.keycode = keycode
+    def __init__(self, code, qmk_id, label, tooltip=None):
+        self.code = code
         self.qmk_id = qmk_id
         self.label = label
+        self.tooltip = tooltip
 
 
 K = Keycode
 
-KEYCODES = [
+KEYCODES_BASIC = [
+    K(0x00, "KC_NO", ""),
     K(0x01, "KC_TRNS", "▽"),
     K(0x04, "KC_A", "A"),
     K(0x05, "KC_B", "B"),
@@ -46,7 +48,7 @@ KEYCODES = [
     K(0x21, "KC_4", "$\n4"),
     K(0x22, "KC_5", "%\n5"),
     K(0x23, "KC_6", "^\n6"),
-    K(0x24, "KC_7", "&\n7"),
+    K(0x24, "KC_7", "&&\n7"),
     K(0x25, "KC_8", "*\n8"),
     K(0x26, "KC_9", "(\n9"),
     K(0x27, "KC_0", ")\n0"),
@@ -60,7 +62,6 @@ KEYCODES = [
     K(0x2F, "KC_LBRACKET", "{\n["),
     K(0x30, "KC_RBRACKET", "}\n]"),
     K(0x31, "KC_BSLASH", "|\n\\"),
-    K(0x32, "KC_NONUS_HASH", "~\n#"),
     K(0x33, "KC_SCOLON", ":\n;"),
     K(0x34, "KC_QUOTE", "\"\n'"),
     K(0x35, "KC_GRAVE", "~\n`"),
@@ -93,27 +94,26 @@ KEYCODES = [
     K(0x50, "KC_LEFT", "Left"),
     K(0x51, "KC_DOWN", "Down"),
     K(0x52, "KC_UP", "Up"),
-    # KC_NUMLOCK,
-    # KC_KP_SLASH,
-    # KC_KP_ASTERISK,
-    # KC_KP_MINUS,
-    # KC_KP_PLUS,
-    # KC_KP_ENTER,
-    # KC_KP_1,
-    # KC_KP_2,
-    # KC_KP_3,
-    # KC_KP_4,
-    # KC_KP_5,
-    # KC_KP_6,
-    # KC_KP_7,
-    # KC_KP_8,  // 0x60
-    # KC_KP_9,
-    # KC_KP_0,
-    # KC_KP_DOT,
-    # KC_NONUS_BSLASH,
-    # KC_APPLICATION,
+    K(0x53, "KC_NUMLOCK", "Num\nLock"),
+    K(0x54, "KC_KP_SLASH", "/"),
+    K(0x55, "KC_KP_ASTERISK", "*"),
+    K(0x56, "KC_KP_MINUS", "-"),
+    K(0x57, "KC_KP_PLUS", "+"),
+    K(0x58, "KC_KP_ENTER", "Num\nEnter"),
+    K(0x59, "KC_KP_1", "1"),
+    K(0x5A, "KC_KP_2", "2"),
+    K(0x5B, "KC_KP_3", "3"),
+    K(0x5C, "KC_KP_4", "4"),
+    K(0x5D, "KC_KP_5", "5"),
+    K(0x5E, "KC_KP_6", "6"),
+    K(0x5F, "KC_KP_7", "7"),
+    K(0x60, "KC_KP_8", "8"),
+    K(0x61, "KC_KP_9", "9"),
+    K(0x62, "KC_KP_0", "0"),
+    K(0x63, "KC_KP_DOT", "."),
+    K(0x65, "KC_APPLICATION", "Menu"),
     # KC_POWER,
-    # KC_KP_EQUAL,
+    K(0x67, "KC_KP_EQUAL", "="),
     # KC_F13,
     # KC_F14,
     # KC_F15,
@@ -176,15 +176,51 @@ KEYCODES = [
     # KC_CRSEL,
     # KC_EXSEL,
 
-    K(0x5C00, "RESET", "Reset"),
+    K(0xE0, "KC_LCTRL", "LCtrl"),
+    K(0xE1, "KC_LSHIFT", "LShift"),
+    K(0xE2, "KC_LALT", "LAlt"),
+    K(0xE3, "KC_LGUI", "LGui"),
+    K(0xE4, "KC_RCTRL", "RCtrl"),
+    K(0xE5, "KC_RSHIFT", "RShift"),
+    K(0xE6, "KC_RALT", "RAlt"),
+    K(0xE7, "KC_RGUI", "RGui"),
 ]
 
-KEYCODES_BASIC = KEYCODES
+KEYCODES_ISO = [
+    K(0x32, "KC_NONUS_HASH", "~\n#", "Non-US # and ~"),
+    K(0x64, "KC_NONUS_BSLASH", "|\n\\", "Non-US \\ and |"),
+]
+
+KEYCODES_MACRO = []
+
+KEYCODES_LAYERS = []
+
+KEYCODES_SPECIAL = [
+    K(0x5C00, "RESET", "Reset", "Reboot to bootloader"),
+    K(0x5C16, "GRAVE_ESC", "`Esc"),
+]
+
+KEYCODES = KEYCODES_BASIC + KEYCODES_ISO + KEYCODES_MACRO + KEYCODES_LAYERS + KEYCODES_SPECIAL
 
 K = None
 
-def keycode_to_label(code):
+def find_keycode(code):
     for keycode in KEYCODES:
-        if keycode.keycode == code:
-            return keycode.label
-    return "0x{:X}".format(code)
+        if keycode.code == code:
+            return keycode
+    return None
+
+def keycode_label(code):
+    keycode = find_keycode(code)
+    if keycode is None:
+        return "0x{:X}".format(code)
+    return keycode.label
+
+def keycode_tooltip(code):
+    keycode = find_keycode(code)
+    if keycode is None:
+        return None
+    tooltip = keycode.qmk_id
+    if keycode.tooltip:
+        tooltip = "{}: {}".format(tooltip, keycode.tooltip)
+    return tooltip
