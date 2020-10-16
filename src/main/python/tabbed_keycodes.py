@@ -3,7 +3,8 @@ from PyQt5.QtWidgets import QTabWidget, QWidget, QPushButton, QScrollArea
 
 from constants import KEYCODE_BTN_WIDTH, KEYCODE_BTN_HEIGHT
 from flowlayout import FlowLayout
-from keycodes import KEYCODES_BASIC, KEYCODES_ISO, KEYCODES_MACRO, KEYCODES_LAYERS, KEYCODES_SPECIAL, keycode_tooltip
+from keycodes import keycode_tooltip, KEYCODES_BASIC, KEYCODES_ISO, KEYCODES_MACRO, KEYCODES_LAYERS, KEYCODES_QUANTUM, \
+    KEYCODES_BACKLIGHT, KEYCODES_MEDIA
 from util import tr
 
 
@@ -16,16 +17,20 @@ class TabbedKeycodes(QTabWidget):
 
         self.tab_basic = QScrollArea()
         self.tab_iso = QScrollArea()
-        self.tab_macro = QScrollArea()
         self.tab_layers = QScrollArea()
-        self.tab_special = QScrollArea()
+        self.tab_quantum = QScrollArea()
+        self.tab_backlight = QScrollArea()
+        self.tab_media = QScrollArea()
+        self.tab_macro = QScrollArea()
 
         for (tab, label, keycodes) in [
             (self.tab_basic, "Basic", KEYCODES_BASIC),
             (self.tab_iso, "ISO/JIS", KEYCODES_ISO),
-            (self.tab_macro, "Macro", KEYCODES_MACRO),
             (self.tab_layers, "Layers", KEYCODES_LAYERS),
-            (self.tab_special, "Special", KEYCODES_SPECIAL),
+            (self.tab_quantum, "Quantum", KEYCODES_QUANTUM),
+            (self.tab_backlight, "Backlight", KEYCODES_BACKLIGHT),
+            (self.tab_media, "App, Media and Mouse", KEYCODES_MEDIA),
+            (self.tab_macro, "Macro", KEYCODES_MACRO),
         ]:
             layout = FlowLayout()
             if tab == self.tab_layers:

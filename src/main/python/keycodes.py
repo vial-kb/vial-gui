@@ -2,7 +2,7 @@
 
 # SPDX-License-Identifier: GPL-2.0-or-later
 
-class Keycode():
+class Keycode:
 
     def __init__(self, code, qmk_id, label, tooltip=None):
         self.code = code
@@ -198,16 +198,24 @@ KEYCODES_ISO = [
     K(0x91, "KC_LANG2", "漢字\n英数", "Korean Hanja / JP Mac Eisu"),
 ]
 
-KEYCODES_MACRO = []
-
 KEYCODES_LAYERS = []
 
-KEYCODES_SPECIAL = [
+KEYCODES_QUANTUM = [
     K(0x5C00, "RESET", "Reset", "Reboot to bootloader"),
     K(0x5C16, "GRAVE_ESC", "`Esc"),
 ]
 
-KEYCODES = KEYCODES_BASIC + KEYCODES_ISO + KEYCODES_MACRO + KEYCODES_LAYERS + KEYCODES_SPECIAL
+KEYCODES_BACKLIGHT = [
+
+]
+
+KEYCODES_MEDIA = [
+
+]
+
+KEYCODES_MACRO = []
+
+KEYCODES = []
 
 K = None
 
@@ -236,6 +244,14 @@ def keycode_tooltip(code):
     return tooltip
 
 
+def recreate_keycodes():
+    """ Regenerates global KEYCODES array """
+
+    KEYCODES.clear()
+    KEYCODES.extend(KEYCODES_BASIC + KEYCODES_ISO + KEYCODES_LAYERS + KEYCODES_QUANTUM + KEYCODES_BACKLIGHT +
+                    KEYCODES_MEDIA + KEYCODES_MACRO)
+
+
 def recreate_layer_keycodes(layers):
     """ Generates layer keycodes based on number of layers a keyboard provides """
 
@@ -258,5 +274,6 @@ def recreate_layer_keycodes(layers):
     KEYCODES_LAYERS.extend(generate_keycodes_for_mask("OSL", 0x5400))
     KEYCODES_LAYERS.extend(generate_keycodes_for_mask("TO", 0x5000 | (1 << 4)))
 
-    KEYCODES.clear()
-    KEYCODES.extend(KEYCODES_BASIC + KEYCODES_ISO + KEYCODES_MACRO + KEYCODES_LAYERS + KEYCODES_SPECIAL)
+    recreate_keycodes()
+
+recreate_keycodes()
