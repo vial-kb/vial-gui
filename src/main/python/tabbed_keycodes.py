@@ -1,5 +1,5 @@
-from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtWidgets import QTabWidget, QWidget, QPushButton
+from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtWidgets import QTabWidget, QWidget, QPushButton, QScrollArea
 
 from constants import KEYCODE_BTN_WIDTH, KEYCODE_BTN_HEIGHT
 from flowlayout import FlowLayout
@@ -14,11 +14,11 @@ class TabbedKeycodes(QTabWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        self.tab_basic = QWidget()
-        self.tab_iso = QWidget()
-        self.tab_macro = QWidget()
-        self.tab_layers = QWidget()
-        self.tab_special = QWidget()
+        self.tab_basic = QScrollArea()
+        self.tab_iso = QScrollArea()
+        self.tab_macro = QScrollArea()
+        self.tab_layers = QScrollArea()
+        self.tab_special = QScrollArea()
 
         for (tab, label, keycodes) in [
             (self.tab_basic, "Basic", KEYCODES_BASIC),
@@ -28,8 +28,18 @@ class TabbedKeycodes(QTabWidget):
             (self.tab_special, "Special", KEYCODES_SPECIAL),
         ]:
             layout = FlowLayout()
-            buttons = self.create_buttons(layout, keycodes)
-            tab.setLayout(layout)
+            if tab == self.tab_layers:
+                self.layout_layers = layout
+
+            self.create_buttons(layout, keycodes)
+
+            tab.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+            tab.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+            tab.setWidgetResizable(True)
+
+            w = QWidget()
+            w.setLayout(layout)
+            tab.setWidget(w)
             self.addTab(tab, tr("TabbedKeycodes", label))
 
         self.layer_keycode_buttons = []
@@ -50,4 +60,4 @@ class TabbedKeycodes(QTabWidget):
     def recreate_layer_keycode_buttons(self):
         for btn in self.layer_keycode_buttons:
             btn.deleteLater()
-        self.layer_keycode_buttons = self.create_buttons(self.tab_layers.layout(), KEYCODES_LAYERS)
+        self.layer_keycode_buttons = self.create_buttons(self.layout_layers, KEYCODES_LAYERS)
