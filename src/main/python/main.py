@@ -11,10 +11,10 @@ import lzma
 from collections import defaultdict
 
 from flowlayout import FlowLayout
-from util import tr, find_vial_keyboards, open_device, hid_send, MSG_LEN
-from kle_serial import Serial as KleSerial
+from util import tr, find_vial_keyboards, open_device
 from clickable_label import ClickableLabel
 from keycodes import keycode_label, keycode_tooltip, recreate_layer_keycodes, KEYCODES_BASIC, KEYCODES_ISO, KEYCODES_MACRO, KEYCODES_LAYERS, KEYCODES_SPECIAL
+from keyboard import Keyboard
 
 
 class TabbedKeycodes(QTabWidget):
@@ -95,15 +95,15 @@ class KeyboardContainer(QWidget):
         self.keys = []
         self.layer_labels = []
         self.rowcol = defaultdict(list)
-        self.layout = dict()
         self.selected_key = None
         self.selected_row = -1
         self.selected_col = -1
 
-    def rebuild_layers(self, dev):
-        self.layers = hid_send(dev, b"\x11")[1]
+    def rebuild_layers(self):
+        self.layers = self.keyboard.layers
         self.number_layers_changed.emit()
 
+        # delete old layer labels
         for label in self.layer_labels:
             label.deleteLater()
         self.layer_labels = []
@@ -116,40 +116,28 @@ class KeyboardContainer(QWidget):
             self.layout_layers.addWidget(label)
             self.layer_labels.append(label)
 
-    def rebuild_layout(self, dev):
-        """ Load current key mapping from the keyboard """
+    def rebuild(self, keyboard):
+        self.keyboard = keyboard
 
-        for layer in range(self.layers):
-            for row, col in self.rowcol.keys():
-                data = hid_send(dev, b"\x04" + struct.pack("<BBB", layer, row, col))
-                keycode = struct.unpack(">H", data[4:6])[0]
-                self.layout[(layer, row, col)] = keycode
-
-    def rebuild(self, dev, data):
         # delete current layout
         for key in self.keys:
             key.deleteLater()
         self.keys = []
 
         # get number of layers
-        self.rebuild_layers(dev)
+        self.rebuild_layers()
 
         # prepare for fetching keymap
         self.rowcol = defaultdict(list)
 
-        serial = KleSerial()
-        kb = serial.deserialize(data["layouts"]["keymap"])
-
         max_w = max_h = 0
 
-        for key in kb.keys:
+        for key in keyboard.keys:
             widget = ClickableLabel()
             widget.clicked.connect(lambda w=widget: self.select_key(w))
 
-            if key.labels[0] and "," in key.labels[0]:
-                row, col = key.labels[0].split(",")
-                row, col = int(row), int(col)
-                self.rowcol[(row, col)].append(widget)
+            if key.row is not None:
+                self.rowcol[(key.row, key.col)].append(widget)
 
             widget.setParent(self.container)
             widget.setAlignment(Qt.AlignCenter)
@@ -169,7 +157,6 @@ class KeyboardContainer(QWidget):
             self.keys.append(widget)
 
         self.container.setFixedSize(max_w, max_h)
-        self.rebuild_layout(dev)
         self.current_layer = 0
         self.refresh_layer_display()
 
@@ -181,7 +168,7 @@ class KeyboardContainer(QWidget):
         self.layer_labels[self.current_layer].setStyleSheet("border: 1px solid black; padding: 5px; background-color: black; color: white")
 
         for (row, col), widgets in self.rowcol.items():
-            code = self.layout[(self.current_layer, row, col)]
+            code = self.keyboard.layout[(self.current_layer, row, col)]
             text = keycode_label(code)
             tooltip = keycode_tooltip(code)
             for widget in widgets:
@@ -202,9 +189,7 @@ class KeyboardContainer(QWidget):
         """ Change currently selected key to provided keycode """
 
         if self.selected_row >= 0 and self.selected_col >= 0:
-            hid_send(self.dev, struct.pack(">BBBBH", 5, self.current_layer, self.selected_row, self.selected_col, keycode))
-            self.layout[(self.current_layer, self.selected_row, self.selected_col)] = keycode
-
+            self.keyboard.set_key(self.current_layer, self.selected_row, self.selected_col, keycode)
             self.refresh_layer_display()
 
     def select_key(self, widget):
@@ -262,33 +247,11 @@ class MainWindow(QWidget):
 
     def on_device_selected(self):
         self.device = None
-        self.keyboard_container.dev = None
         idx = self.combobox_devices.currentIndex()
         if idx >= 0:
-            self.device = open_device(self.devices[idx])
-            self.keyboard_container.dev = self.device
-            self.reload_layout()
-
-    def reload_layout(self):
-        """ Requests layout data from the current device """
-
-        # get the size
-        data = hid_send(self.device, b"\xFE\x01")
-        sz = struct.unpack("<I", data[0:4])[0]
-
-        # get the payload
-        payload = b""
-        block = 0
-        while sz > 0:
-            data = hid_send(self.device, b"\xFE\x02" + struct.pack("<I", block))
-            if sz < MSG_LEN:
-                data = data[:sz]
-            payload += data
-            block += 1
-            sz -= MSG_LEN
-
-        payload = json.loads(lzma.decompress(payload))
-        self.keyboard_container.rebuild(self.device, payload)
+            keyboard = Keyboard(open_device(self.devices[idx]))
+            keyboard.reload()
+            self.keyboard_container.rebuild(keyboard)
 
     def on_number_layers_changed(self):
         recreate_layer_keycodes(self.keyboard_container.layers)
