@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLabel, QVBoxLayout
 
 from clickable_label import ClickableLabel
 from keycodes import keycode_label, keycode_tooltip
-from constants import KEY_WIDTH, KEY_SPACING, KEY_HEIGHT
+from constants import KEY_WIDTH, KEY_SPACING, KEY_HEIGHT, LAYER_BTN_STYLE, ACTIVE_LAYER_BTN_STYLE
 from util import tr
 
 
@@ -39,9 +39,10 @@ class KeyboardContainer(QWidget):
         self.selected_key = None
         self.selected_row = -1
         self.selected_col = -1
+        self.keyboard = None
+        self.current_layer = 0
 
     def rebuild_layers(self):
-        self.layers = self.keyboard.layers
         self.number_layers_changed.emit()
 
         # delete old layer labels
@@ -50,7 +51,7 @@ class KeyboardContainer(QWidget):
         self.layer_labels = []
 
         # create new layer labels
-        for x in range(self.layers):
+        for x in range(self.keyboard.layers):
             label = ClickableLabel(str(x))
             label.setAlignment(Qt.AlignCenter)
             label.clicked.connect(lambda idx=x: self.switch_layer(idx))
@@ -105,8 +106,8 @@ class KeyboardContainer(QWidget):
         """ Refresh text on key widgets to display data corresponding to current layer """
 
         for label in self.layer_labels:
-            label.setStyleSheet("border: 1px solid black; padding: 5px")
-        self.layer_labels[self.current_layer].setStyleSheet("border: 1px solid black; padding: 5px; background-color: black; color: white")
+            label.setStyleSheet(LAYER_BTN_STYLE)
+        self.layer_labels[self.current_layer].setStyleSheet(ACTIVE_LAYER_BTN_STYLE)
 
         for (row, col), widgets in self.rowcol.items():
             code = self.keyboard.layout[(self.current_layer, row, col)]

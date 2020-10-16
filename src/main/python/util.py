@@ -16,6 +16,7 @@ VIAL_SERIAL_NUMBER_MAGIC = "vial:f64c2b3c"
 
 MSG_LEN = 32
 
+
 def hid_send(dev, msg):
     if len(msg) > MSG_LEN:
         raise RuntimeError("message must be less than 32 bytes")
@@ -26,9 +27,11 @@ def hid_send(dev, msg):
 
     return bytes(dev.read(MSG_LEN))
 
+
 def is_rawhid(dev):
     # TODO: this is only broken on linux, other platforms should be able to check usage_page
     return dev["interface_number"] == 1
+
 
 def find_vial_keyboards():
     filtered = []
@@ -36,6 +39,7 @@ def find_vial_keyboards():
         if VIAL_SERIAL_NUMBER_MAGIC in dev["serial_number"] and is_rawhid(dev):
             filtered.append(dev)
     return filtered
+
 
 def open_device(desc):
     # TODO: error handling here

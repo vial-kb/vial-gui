@@ -193,12 +193,3 @@ class Serial:
 
 
 # TODO: add tests
-
-
-# serial = Serial()
-# data = open("plain60.json", "r").read()
-# data = json.loads(data)
-# kb = serial.deserialize(data["layouts"]["keymap"])
-
-# for key in kb.keys:
-#     print("{} {}x{}+{}x{}".format(key.labels, key.x, key.y, key.width, key.height))

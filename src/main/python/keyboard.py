@@ -14,6 +14,11 @@ class Keyboard:
     def __init__(self, dev):
         self.dev = dev
 
+        self.rowcol = set()
+        self.layout = dict()
+        self.layers = 0
+        self.keys = []
+
     def reload(self):
         """ Load information about the keyboard: number of layers, physical key layout """
 

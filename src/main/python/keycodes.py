@@ -211,17 +211,20 @@ KEYCODES = KEYCODES_BASIC + KEYCODES_ISO + KEYCODES_MACRO + KEYCODES_LAYERS + KE
 
 K = None
 
+
 def find_keycode(code):
     for keycode in KEYCODES:
         if keycode.code == code:
             return keycode
     return None
 
+
 def keycode_label(code):
     keycode = find_keycode(code)
     if keycode is None:
         return "0x{:X}".format(code)
     return keycode.label
+
 
 def keycode_tooltip(code):
     keycode = find_keycode(code)
@@ -231,6 +234,7 @@ def keycode_tooltip(code):
     if keycode.tooltip:
         tooltip = "{}: {}".format(tooltip, keycode.tooltip)
     return tooltip
+
 
 def recreate_layer_keycodes(layers):
     """ Generates layer keycodes based on number of layers a keyboard provides """

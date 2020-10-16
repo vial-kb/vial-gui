@@ -58,7 +58,7 @@ class MainWindow(QWidget):
             self.keyboard_container.rebuild(keyboard)
 
     def on_number_layers_changed(self):
-        recreate_layer_keycodes(self.keyboard_container.layers)
+        recreate_layer_keycodes(self.keyboard_container.keyboard.layers)
         self.tabbed_keycodes.recreate_layer_keycode_buttons()
 
     def on_keycode_changed(self, code):
