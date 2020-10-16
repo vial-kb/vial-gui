@@ -77,7 +77,7 @@ class KeyboardContainer(QWidget):
 
         for key in keyboard.keys:
             widget = ClickableLabel()
-            widget.clicked.connect(lambda w=widget: self.select_key(w))
+            widget.clicked.connect(lambda w=widget: self.on_key_clicked(w))
 
             if key.row is not None:
                 self.rowcol[(key.row, key.col)].append(widget)
@@ -135,10 +135,14 @@ class KeyboardContainer(QWidget):
             self.keyboard.set_key(self.current_layer, self.selected_row, self.selected_col, keycode)
             self.refresh_layer_display()
 
-    def select_key(self, widget):
+    def on_key_clicked(self, widget):
         """ Change which key is currently selected """
 
-        self.selected_key = widget
+        if self.selected_key == widget:
+            self.selected_key = None
+        else:
+            self.selected_key = widget
+
         for (row, col), widgets in self.rowcol.items():
             if widget in widgets:
                 self.selected_row = row
