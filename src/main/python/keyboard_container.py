@@ -5,7 +5,8 @@ from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLabel, QVBoxLayout
 
 from clickable_label import ClickableLabel
 from keycodes import keycode_label, keycode_tooltip
-from constants import KEY_WIDTH, KEY_SPACING, KEY_HEIGHT, LAYER_BTN_STYLE, ACTIVE_LAYER_BTN_STYLE
+from constants import KEY_WIDTH, KEY_SPACING, KEY_HEIGHT, LAYER_BTN_STYLE, ACTIVE_LAYER_BTN_STYLE, KEY_NORMAL_STYLE, \
+    KEY_ACTIVE_STYLE
 from util import tr
 
 
@@ -114,9 +115,9 @@ class KeyboardContainer(QWidget):
             text = keycode_label(code)
             tooltip = keycode_tooltip(code)
             for widget in widgets:
-                widget.setStyleSheet('background-color:white; border: 1px solid black')
+                widget.setStyleSheet(KEY_NORMAL_STYLE)
                 if widget == self.selected_key:
-                    widget.setStyleSheet('background-color:black; color: white; border: 1px solid black')
+                    widget.setStyleSheet(KEY_ACTIVE_STYLE)
                 widget.setText(text)
                 widget.setToolTip(tooltip)
 

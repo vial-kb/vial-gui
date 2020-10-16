@@ -1,6 +1,7 @@
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QTabWidget, QWidget, QPushButton
 
+from constants import KEYCODE_BTN_WIDTH, KEYCODE_BTN_HEIGHT
 from flowlayout import FlowLayout
 from keycodes import KEYCODES_BASIC, KEYCODES_ISO, KEYCODES_MACRO, KEYCODES_LAYERS, KEYCODES_SPECIAL, keycode_tooltip
 from util import tr
@@ -38,7 +39,7 @@ class TabbedKeycodes(QTabWidget):
 
         for keycode in keycodes:
             btn = QPushButton(keycode.label)
-            btn.setFixedSize(50, 50)
+            btn.setFixedSize(KEYCODE_BTN_WIDTH, KEYCODE_BTN_HEIGHT)
             btn.setToolTip(keycode_tooltip(keycode.code))
             btn.clicked.connect(lambda st, k=keycode: self.keycode_changed.emit(k.code))
             layout.addWidget(btn)
