@@ -224,3 +224,28 @@ def keycode_tooltip(code):
     if keycode.tooltip:
         tooltip = "{}: {}".format(tooltip, keycode.tooltip)
     return tooltip
+
+def recreate_layer_keycodes(layers):
+    """ Generates layer keycodes based on number of layers a keyboard provides """
+
+    def generate_keycodes_for_mask(label, mask):
+        keycodes = []
+        for layer in range(layers):
+            lbl = "{}({})".format(label, layer)
+            keycodes.append(Keycode(mask | layer, lbl, lbl))
+        return keycodes
+
+    KEYCODES_LAYERS.clear()
+
+    if layers >= 4:
+        KEYCODES_LAYERS.append(Keycode(0x5F10, "FN_MO13", "Fn1\n(Fn3)"))
+        KEYCODES_LAYERS.append(Keycode(0x5F11, "FN_MO23", "Fn2\n(Fn3)"))
+
+    KEYCODES_LAYERS.extend(generate_keycodes_for_mask("MO", 0x5100))
+    KEYCODES_LAYERS.extend(generate_keycodes_for_mask("TG", 0x5300))
+    KEYCODES_LAYERS.extend(generate_keycodes_for_mask("TT", 0x5800))
+    KEYCODES_LAYERS.extend(generate_keycodes_for_mask("OSL", 0x5400))
+    KEYCODES_LAYERS.extend(generate_keycodes_for_mask("TO", 0x5000 | (1 << 4)))
+
+    KEYCODES.clear()
+    KEYCODES.extend(KEYCODES_BASIC + KEYCODES_ISO + KEYCODES_MACRO + KEYCODES_LAYERS + KEYCODES_SPECIAL)

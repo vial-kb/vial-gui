@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import QWidget, QTabWidget, QVBoxLayout, QPushButton, QLabel, QComboBox, QToolButton, QHBoxLayout, QSizePolicy
 
 import sys
@@ -14,7 +14,7 @@ from flowlayout import FlowLayout
 from util import tr, find_vial_keyboards, open_device, hid_send, MSG_LEN
 from kle_serial import Serial as KleSerial
 from clickable_label import ClickableLabel
-from keycodes import keycode_label, keycode_tooltip, KEYCODES_BASIC, KEYCODES_ISO, KEYCODES_MACRO, KEYCODES_LAYERS, KEYCODES_SPECIAL
+from keycodes import keycode_label, keycode_tooltip, recreate_layer_keycodes, KEYCODES_BASIC, KEYCODES_ISO, KEYCODES_MACRO, KEYCODES_LAYERS, KEYCODES_SPECIAL
 
 
 class TabbedKeycodes(QTabWidget):
@@ -35,11 +35,15 @@ class TabbedKeycodes(QTabWidget):
             (self.tab_layers, "Layers", KEYCODES_LAYERS),
             (self.tab_special, "Special", KEYCODES_SPECIAL),
         ]:
-            self.create_buttons(tab, keycodes)
+            layout = FlowLayout()
+            buttons = self.create_buttons(layout, keycodes)
+            tab.setLayout(layout)
             self.addTab(tab, tr("TabbedKeycodes", label))
 
-    def create_buttons(self, tab, keycodes):
-        layout = FlowLayout()
+        self.layer_keycode_buttons = []
+
+    def create_buttons(self, layout, keycodes):
+        buttons = []
 
         for keycode in keycodes:
             btn = QPushButton(keycode.label)
@@ -47,8 +51,14 @@ class TabbedKeycodes(QTabWidget):
             btn.setToolTip(keycode_tooltip(keycode.code))
             btn.clicked.connect(lambda st, k=keycode: kb.set_key(k.code))
             layout.addWidget(btn)
+            buttons.append(btn)
 
-        tab.setLayout(layout)
+        return buttons
+
+    def recreate_layer_keycode_buttons(self):
+        for btn in self.layer_keycode_buttons:
+            btn.deleteLater()
+        self.layer_keycode_buttons = self.create_buttons(self.tab_layers.layout(), KEYCODES_LAYERS)
 
 
 KEY_WIDTH = 40
@@ -57,6 +67,8 @@ KEY_SPACING = 4
 
 
 class KeyboardContainer(QWidget):
+
+    number_layers_changed = pyqtSignal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -88,6 +100,7 @@ class KeyboardContainer(QWidget):
 
     def rebuild_layers(self, dev):
         self.layers = hid_send(dev, b"\x11")[1]
+        self.number_layers_changed.emit()
 
         for label in self.layer_labels:
             label.deleteLater()
@@ -212,6 +225,7 @@ class MainWindow(QWidget):
         self.devices = []
 
         self.keyboard_container = KeyboardContainer()
+        self.keyboard_container.number_layers_changed.connect(self.on_number_layers_changed)
 
         self.tabbed_keycodes = TabbedKeycodes(self.keyboard_container)
 
@@ -272,6 +286,10 @@ class MainWindow(QWidget):
 
         payload = json.loads(lzma.decompress(payload))
         self.keyboard_container.rebuild(self.device, payload)
+
+    def on_number_layers_changed(self):
+        recreate_layer_keycodes(self.keyboard_container.layers)
+        self.tabbed_keycodes.recreate_layer_keycode_buttons()
 
 
 if __name__ == '__main__':
