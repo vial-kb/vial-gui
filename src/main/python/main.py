@@ -19,7 +19,9 @@ from keycodes import keycode_label, keycode_tooltip, recreate_layer_keycodes, KE
 
 class TabbedKeycodes(QTabWidget):
 
-    def __init__(self, kb, parent=None):
+    keycode_changed = pyqtSignal(int)
+
+    def __init__(self, parent=None):
         super().__init__(parent)
 
         self.tab_basic = QWidget()
@@ -49,7 +51,7 @@ class TabbedKeycodes(QTabWidget):
             btn = QPushButton(keycode.label)
             btn.setFixedSize(50, 50)
             btn.setToolTip(keycode_tooltip(keycode.code))
-            btn.clicked.connect(lambda st, k=keycode: kb.set_key(k.code))
+            btn.clicked.connect(lambda st, k=keycode: self.keycode_changed.emit(k.code))
             layout.addWidget(btn)
             buttons.append(btn)
 
@@ -227,7 +229,8 @@ class MainWindow(QWidget):
         self.keyboard_container = KeyboardContainer()
         self.keyboard_container.number_layers_changed.connect(self.on_number_layers_changed)
 
-        self.tabbed_keycodes = TabbedKeycodes(self.keyboard_container)
+        self.tabbed_keycodes = TabbedKeycodes()
+        self.tabbed_keycodes.keycode_changed.connect(self.on_keycode_changed)
 
         self.combobox_devices = QComboBox()
         self.combobox_devices.currentIndexChanged.connect(self.on_device_selected)
@@ -290,6 +293,9 @@ class MainWindow(QWidget):
     def on_number_layers_changed(self):
         recreate_layer_keycodes(self.keyboard_container.layers)
         self.tabbed_keycodes.recreate_layer_keycode_buttons()
+
+    def on_keycode_changed(self, code):
+        self.keyboard_container.set_key(code)
 
 
 if __name__ == '__main__':
