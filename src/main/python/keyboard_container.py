@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+
 from collections import defaultdict
 
 from PyQt5.QtCore import pyqtSignal, Qt

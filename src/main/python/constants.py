@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+
 KEY_WIDTH = 40
 KEY_HEIGHT = KEY_WIDTH
 KEY_SPACING = 4
