@@ -151,3 +151,10 @@ class KeyboardContainer(QWidget):
                 self.selected_col = col
                 break
         self.refresh_layer_display()
+
+    def save_layout(self):
+        return self.keyboard.save_layout()
+
+    def restore_layout(self, data):
+        self.keyboard.restore_layout(data)
+        self.refresh_layer_display()
