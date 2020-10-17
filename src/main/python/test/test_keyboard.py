@@ -89,6 +89,8 @@ class TestKeyboard(unittest.TestCase):
         return kb, dev
 
     def test_keyboard_layout(self):
+        """ Tests that loading a layout from a keyboard works """
+
         kb, dev = self.prepare_keyboard(LAYOUT_2x2, [[[1, 2], [3, 4]], [[5, 6], [7, 8]]])
         self.assertEqual(kb.layers, 2)
         self.assertEqual(kb.layout[(0, 0, 0)], 1)
@@ -99,4 +101,14 @@ class TestKeyboard(unittest.TestCase):
         self.assertEqual(kb.layout[(1, 0, 1)], 6)
         self.assertEqual(kb.layout[(1, 1, 0)], 7)
         self.assertEqual(kb.layout[(1, 1, 1)], 8)
+        dev.finish()
+
+    def test_set_key(self):
+        """ Tests that setting a key works """
+
+        kb, dev = self.prepare_keyboard(LAYOUT_2x2, [[[1, 2], [3, 4]], [[5, 6], [7, 8]]])
+        dev.expect("050101000009", "")
+        kb.set_key(1, 1, 0, 9)
+        self.assertEqual(kb.layout[(1, 1, 0)], 9)
+
         dev.finish()
