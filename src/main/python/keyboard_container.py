@@ -6,9 +6,9 @@ from PyQt5.QtCore import pyqtSignal, Qt
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLabel, QVBoxLayout
 
 from clickable_label import ClickableLabel
+from keyboard_widget import KeyboardWidget
 from keycodes import keycode_label, keycode_tooltip
-from constants import KEY_WIDTH, KEY_SPACING, KEY_HEIGHT, LAYER_BTN_STYLE, ACTIVE_LAYER_BTN_STYLE, KEY_NORMAL_STYLE, \
-    KEY_ACTIVE_STYLE
+from constants import LAYER_BTN_STYLE, ACTIVE_LAYER_BTN_STYLE
 from util import tr
 
 
@@ -28,7 +28,8 @@ class KeyboardContainer(QWidget):
         layout_labels_container.addStretch()
 
         # contains the actual keyboard
-        self.container = QWidget()
+        self.container = KeyboardWidget()
+        self.container.clicked.connect(self.on_key_clicked)
 
         layout = QVBoxLayout()
         layout.addLayout(layout_labels_container)
@@ -39,7 +40,6 @@ class KeyboardContainer(QWidget):
         self.keys = []
         self.layer_labels = []
         self.rowcol = defaultdict(list)
-        self.selected_key = None
         self.selected_row = -1
         self.selected_col = -1
         self.keyboard = None
@@ -75,33 +75,11 @@ class KeyboardContainer(QWidget):
         # prepare for fetching keymap
         self.rowcol = defaultdict(list)
 
-        max_w = max_h = 0
+        self.container.set_keys(keyboard.keys)
+        for key in self.container.keys:
+            if key.desc.row is not None:
+                self.rowcol[(key.desc.row, key.desc.col)].append(key)
 
-        for key in keyboard.keys:
-            widget = ClickableLabel()
-            widget.clicked.connect(lambda w=widget: self.on_key_clicked(w))
-
-            if key.row is not None:
-                self.rowcol[(key.row, key.col)].append(widget)
-
-            widget.setParent(self.container)
-            widget.setAlignment(Qt.AlignCenter)
-
-            x = (KEY_WIDTH + KEY_SPACING) * key.x
-            y = (KEY_HEIGHT + KEY_SPACING) * key.y
-            w = (KEY_WIDTH + KEY_SPACING) * key.width - KEY_SPACING
-            h = (KEY_HEIGHT + KEY_SPACING) * key.height - KEY_SPACING
-
-            widget.setFixedSize(w, h)
-            widget.move(x, y)
-            widget.show()
-
-            max_w = max(max_w, x + w)
-            max_h = max(max_h, y + h)
-
-            self.keys.append(widget)
-
-        self.container.setFixedSize(max_w, max_h)
         self.current_layer = 0
         self.refresh_layer_display()
 
@@ -117,15 +95,13 @@ class KeyboardContainer(QWidget):
             text = keycode_label(code)
             tooltip = keycode_tooltip(code)
             for widget in widgets:
-                widget.setStyleSheet(KEY_NORMAL_STYLE)
-                if widget == self.selected_key:
-                    widget.setStyleSheet(KEY_ACTIVE_STYLE)
                 widget.setText(text)
                 widget.setToolTip(tooltip)
+        self.container.update()
 
     def switch_layer(self, idx):
+        self.container.deselect()
         self.current_layer = idx
-        self.selected_key = None
         self.selected_row = -1
         self.selected_col = -1
         self.refresh_layer_display()
@@ -139,11 +115,6 @@ class KeyboardContainer(QWidget):
 
     def on_key_clicked(self, widget):
         """ Change which key is currently selected """
-
-        if self.selected_key == widget:
-            self.selected_key = None
-        else:
-            self.selected_key = widget
 
         for (row, col), widgets in self.rowcol.items():
             if widget in widgets:

@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 # Based on https://github.com/ijprest/kle-serial
+# & see https://github.com/ijprest/kle-serial/pull/1
 import json
 from copy import copy
 
@@ -62,6 +63,12 @@ class Keyboard:
         self.keys = []
 
 
+class Cluster:
+
+    def __init__(self):
+        self.x = self.y = 0
+
+
 class Serial:
 
     labelMap = [
@@ -88,6 +95,7 @@ class Serial:
     
     def deserialize(self, rows):
         current = Key()
+        cluster = Cluster()
         kbd = Keyboard()
         align = 4
 
@@ -127,9 +135,13 @@ class Serial:
                         if "r" in item:
                             current.rotation_angle = item["r"]
                         if "rx" in item:
-                            current.rotation_x = item["rx"]
+                            current.rotation_x = cluster.x = item["rx"]
+                            current.x = cluster.x
+                            current.y = cluster.y
                         if "ry" in item:
-                            current.rotation_y = item["ry"]
+                            current.rotation_y = cluster.y = item["ry"]
+                            current.x = cluster.x
+                            current.y = cluster.y
                         if "a" in item:
                             align = item["a"]
                         if "f" in item:
