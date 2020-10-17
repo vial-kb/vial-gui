@@ -89,5 +89,7 @@ class Keyboard:
                 self.layout[(layer, row, col)] = keycode
 
     def set_key(self, layer, row, col, code):
-        self.usb_send(self.dev, struct.pack(">BBBBH", CMD_VIA_SET_KEYCODE, layer, row, col, code))
-        self.layout[(layer, row, col)] = code
+        key = (layer, row, col)
+        if self.layout[key] != code:
+            self.usb_send(self.dev, struct.pack(">BBBBH", CMD_VIA_SET_KEYCODE, layer, row, col, code))
+            self.layout[key] = code

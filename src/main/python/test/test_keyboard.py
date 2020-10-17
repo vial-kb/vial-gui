@@ -112,3 +112,14 @@ class TestKeyboard(unittest.TestCase):
         self.assertEqual(kb.layout[(1, 1, 0)], 9)
 
         dev.finish()
+
+    def test_set_key_twice(self):
+        """ Tests that setting a key twice is optimized (doesn't send 2 cmds) """
+
+        kb, dev = self.prepare_keyboard(LAYOUT_2x2, [[[1, 2], [3, 4]], [[5, 6], [7, 8]]])
+        dev.expect("050101000009", "")
+        kb.set_key(1, 1, 0, 9)
+        kb.set_key(1, 1, 0, 9)
+        self.assertEqual(kb.layout[(1, 1, 0)], 9)
+
+        dev.finish()
