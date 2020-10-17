@@ -102,7 +102,7 @@ class Keyboard:
         """ Serializes current layout to a binary """
 
         # TODO: increase version before release
-        data = {"version": "0"}
+        data = {"version": 0}
         layout = []
         for l in range(self.layers):
             layer = []
