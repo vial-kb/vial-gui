@@ -28,7 +28,7 @@ class Keyboard:
         # n.b. using OrderedDict here to make order of layout requests consistent for tests
         self.rowcol = OrderedDict()
         self.layout = dict()
-        self.layers = 0
+        self.rows = self.cols = self.layers = 0
         self.keys = []
 
     def reload(self):
@@ -65,6 +65,10 @@ class Keyboard:
             sz -= MSG_LEN
 
         payload = json.loads(lzma.decompress(payload))
+
+        self.rows = payload["matrix"]["rows"]
+        self.cols = payload["matrix"]["cols"]
+
         serial = KleSerial()
         kb = serial.deserialize(payload["layouts"]["keymap"])
 
@@ -93,3 +97,32 @@ class Keyboard:
         if self.layout[key] != code:
             self.usb_send(self.dev, struct.pack(">BBBBH", CMD_VIA_SET_KEYCODE, layer, row, col, code))
             self.layout[key] = code
+
+    def save_layout(self):
+        """ Serializes current layout to a binary """
+
+        # TODO: increase version before release
+        data = {"version": "0"}
+        layout = []
+        for l in range(self.layers):
+            layer = []
+            layout.append(layer)
+            for r in range(self.rows):
+                row = []
+                layer.append(row)
+                for c in range(self.cols):
+                    val = self.layout.get((l, r, c), -1)
+                    row.append(val)
+        data["layout"] = layout
+        # TODO: this should also save/restore macros, when implemented
+        return json.dumps(data).encode("utf-8")
+
+    def restore_layout(self, data):
+        """ Restores saved layout """
+
+        data = json.loads(data.decode("utf-8"))
+        for l, layer in enumerate(data["layout"]):
+            for r, row in enumerate(layer):
+                for c, col in enumerate(row):
+                    if (l, r, c) in self.layout:
+                        self.set_key(l, r, c, col)

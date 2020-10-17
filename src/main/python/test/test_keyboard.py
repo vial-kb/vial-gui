@@ -123,3 +123,19 @@ class TestKeyboard(unittest.TestCase):
         self.assertEqual(kb.layout[(1, 1, 0)], 9)
 
         dev.finish()
+
+    def test_layout_save_restore(self):
+        """ Tests that layout saving and restore works """
+
+        kb, dev = self.prepare_keyboard(LAYOUT_2x2, [[[1, 2], [3, 4]], [[5, 6], [7, 8]]])
+        dev.expect("05010100000A", "")
+        kb.set_key(1, 1, 0, 10)
+        self.assertEqual(kb.layout[(1, 1, 0)], 10)
+        data = kb.save_layout()
+        dev.finish()
+
+        kb, dev = self.prepare_keyboard(LAYOUT_2x2, [[[1, 2], [3, 4]], [[5, 6], [7, 8]]])
+        dev.expect("05010100000A", "")
+        kb.restore_layout(data)
+        self.assertEqual(kb.layout[(1, 1, 0)], 10)
+        dev.finish()
