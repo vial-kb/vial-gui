@@ -14,6 +14,7 @@ CMD_VIA_SET_KEYCODE = 0x05
 CMD_VIA_GET_LAYER_COUNT = 0x11
 CMD_VIA_VIAL_PREFIX = 0xFE
 
+CMD_VIAL_GET_KEYBOARD_ID = 0x00
 CMD_VIAL_GET_SIZE = 0x01
 CMD_VIAL_GET_DEFINITION = 0x02
 
@@ -30,6 +31,8 @@ class Keyboard:
         self.layout = dict()
         self.rows = self.cols = self.layers = 0
         self.keys = []
+
+        self.vial_protocol = self.keyboard_id = -1
 
     def reload(self, sideload_json=None):
         """ Load information about the keyboard: number of layers, physical key layout """
@@ -52,6 +55,10 @@ class Keyboard:
         if sideload_json is not None:
             payload = sideload_json
         else:
+            # get keyboard identification
+            data = self.usb_send(self.dev, struct.pack("BB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_GET_KEYBOARD_ID))
+            self.vial_protocol, self.keyboard_id = struct.unpack("<IQ", data[0:12])
+
             # get the size
             data = self.usb_send(self.dev, struct.pack("BB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_GET_SIZE))
             sz = struct.unpack("<I", data[0:4])[0]
