@@ -183,6 +183,20 @@ MOD_RGUI = 0x18
 MOD_HYPR = 0xF
 MOD_MEH = 0x7
 
+QK_LCTL = 0x0100
+QK_LSFT = 0x0200
+QK_LALT = 0x0400
+QK_LGUI = 0x0800
+QK_RCTL = 0x1100
+QK_RSFT = 0x1200
+QK_RALT = 0x1400
+QK_RGUI = 0x1800
+
+
+def MT(mod):
+    return QK_MOD_TAP | (mod << 8)
+
+
 KEYCODES_QUANTUM = [
     K(0x5C00, "RESET", "Reset", "Reboot to bootloader"),
     K(QK_ONE_SHOT_MOD | MOD_LSFT, "OSM(MOD_LSFT)", "OSM\nLSft", "Enable Left Shift for one keypress"),
@@ -215,7 +229,41 @@ KEYCODES_QUANTUM = [
     K(QK_ONE_SHOT_MOD | MOD_HYPR, "OSM(MOD_HYPR)", "OSM\nHyper",
       "Enable Control, Shift, Alt, and GUI for one keypress"),
 
-    K(QK_MOD_TAP | (MOD_RSFT << 8), "RSFT_T(kc)", "RSft_T\n(kc)", "Right Shift when held, kc when tapped", masked=True),
+    K(QK_LSFT, "LSFT(kc)", "LSft\n(kc)", masked=True),
+    K(QK_LCTL, "LCTL(kc)", "LCtl\n(kc)", masked=True),
+    K(QK_LALT, "LALT(kc)", "LAlt\n(kc)", masked=True),
+    K(QK_LGUI, "LGUI(kc)", "LGui\n(kc)", masked=True),
+    K(QK_RSFT, "RSFT(kc)", "RSft\n(kc)", masked=True),
+    K(QK_RCTL, "RCTL(kc)", "RCtl\n(kc)", masked=True),
+    K(QK_RALT, "RALT(kc)", "RAlt\n(kc)", masked=True),
+    K(QK_RGUI, "RGUI(kc)", "RGui\n(kc)", masked=True),
+
+    K(MT(MOD_LSFT), "LSFT_T(kc)", "LSft_T\n(kc)", "Left Shift when held, kc when tapped", masked=True),
+    K(MT(MOD_LCTL), "LCTL_T(kc)", "LCtl_T\n(kc)", "Left Control when held, kc when tapped", masked=True),
+    K(MT(MOD_LALT), "LALT_T(kc)", "LAlt_T\n(kc)", "Left Alt when held, kc when tapped", masked=True),
+    K(MT(MOD_LGUI), "LGUI_T(kc)", "LGui_T\n(kc)", "Left GUI when held, kc when tapped", masked=True),
+    K(MT(MOD_RSFT), "RSFT_T(kc)", "RSft_T\n(kc)", "Right Shift when held, kc when tapped", masked=True),
+    K(MT(MOD_RCTL), "RCTL_T(kc)", "RCtl_T\n(kc)", "Right Control when held, kc when tapped", masked=True),
+    K(MT(MOD_RALT), "RALT_T(kc)", "RAlt_T\n(kc)", "Right Alt when held, kc when tapped", masked=True),
+    K(MT(MOD_RGUI), "RGUI_T(kc)", "RGui_T\n(kc)", "Right GUI when held, kc when tapped", masked=True),
+    K(MT(MOD_LCTL|MOD_LSFT), "C_S_T(kc)", "C_S_T\n(kc)", "Left Control + Left Shift when held, kc when tapped",
+      masked=True),
+    K(MT(MOD_LCTL|MOD_LSFT|MOD_LALT|MOD_LGUI), "ALL_T(kc)",
+      "ALL_T\n(kc)", "LCTL + LSFT + LALT + LGUI when held, kc when tapped", masked=True),
+    K(MT(MOD_LCTL|MOD_LSFT|MOD_LALT), "MEH_T(kc)", "Meh_T\n(kc)", "LCTL + LSFT + LALT when held, kc when tapped",
+      masked=True),
+    K(MT(MOD_LCTL|MOD_LALT|MOD_LGUI), "LCAG_T(kc)", "LCAG_T\n(kc)", "LCTL + LALT + LGUI when held, kc when tapped",
+      masked=True),
+    K(MT(MOD_RCTL|MOD_RALT|MOD_RGUI), "RCAG_T(kc)", "RCAG_T\n(kc)", "RCTL + RALT + RGUI when held, kc when tapped",
+      masked=True),
+    K(MT(MOD_LGUI|MOD_LSFT), "SGUI_T(kc)", "SGUI_T\n(kc)", "LGUI + LSFT when held, kc when tapped", masked=True),
+    K(MT(MOD_LCTL|MOD_LALT), "LCA_T(kc)", "LCA_T\n(kc)", "LCTL + LALT when held, kc when tapped", masked=True),
+
+    K(QK_LCTL|QK_LSFT|QK_LALT|QK_LGUI, "HYPR(kc)", "Hyper\n(kc)", "LCTL + LSFT + LALT + LGUI", masked=True),
+    K(QK_LCTL|QK_LSFT|QK_LALT, "MEH(kc)", "Meh\n(kc)", "LCTL + LSFT + LALT", masked=True),
+    K(QK_LCTL|QK_LALT|QK_LGUI, "LCAG(kc)", "LCAG\n(kc)", "LCTL + LALT + LGUI", masked=True),
+    K(QK_LGUI|QK_LSFT, "SGUI(kc)", "SGUI\n(kc)", "LGUI + LSFT", masked=True),
+    K(QK_LCTL|QK_LALT, "LCA(kc)", "LCA\n(kc)", "LCTL + LALT", masked=True),
 
     K(0x5C16, "KC_GESC", "Esc\n~", "Esc normally, but ~ when Shift or GUI is pressed"),
     K(0x5CD7, "KC_LSPO", "LS\n(", "Left Shift when held, ( when tapped"),
