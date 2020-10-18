@@ -168,6 +168,7 @@ KEYCODES_ISO = [
 
 KEYCODES_LAYERS = []
 
+QK_LAYER_TAP = 0x4000
 QK_ONE_SHOT_MOD = 0x5500
 QK_MOD_TAP = 0x6000
 
@@ -195,6 +196,10 @@ QK_RGUI = 0x1800
 
 def MT(mod):
     return QK_MOD_TAP | (mod << 8)
+
+
+def LT(layer):
+    return QK_LAYER_TAP | (((layer) & 0xF) << 8)
 
 
 KEYCODES_QUANTUM = [
@@ -350,6 +355,10 @@ def recreate_layer_keycodes(layers):
     KEYCODES_LAYERS.extend(generate_keycodes_for_mask("TT", 0x5800))
     KEYCODES_LAYERS.extend(generate_keycodes_for_mask("OSL", 0x5400))
     KEYCODES_LAYERS.extend(generate_keycodes_for_mask("TO", 0x5000 | (1 << 4)))
+
+    for x in range(layers):
+        KEYCODES_LAYERS.append(Keycode(LT(x), "LT({}, kc)".format(x), "LT {}\n(kc)".format(x),
+                                       "kc on tap, switch to layer {} while held".format(x), masked=True))
 
     recreate_keycodes()
 
