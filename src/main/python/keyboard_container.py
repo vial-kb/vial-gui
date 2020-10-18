@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLabel, QVBoxLayout
 
 from clickable_label import ClickableLabel
 from keyboard_widget import KeyboardWidget
-from keycodes import keycode_label, keycode_tooltip
+from keycodes import keycode_label, keycode_tooltip, keycode_is_mask
 from constants import LAYER_BTN_STYLE, ACTIVE_LAYER_BTN_STYLE
 from util import tr
 
@@ -42,6 +42,7 @@ class KeyboardContainer(QWidget):
         self.rowcol = defaultdict(list)
         self.selected_row = -1
         self.selected_col = -1
+        self.selected_mask = False
         self.keyboard = None
         self.current_layer = 0
 
@@ -94,8 +95,14 @@ class KeyboardContainer(QWidget):
             code = self.keyboard.layout[(self.current_layer, row, col)]
             text = keycode_label(code)
             tooltip = keycode_tooltip(code)
+            mask = keycode_is_mask(code)
+            mask_text = keycode_label(code & 0xFF)
+            if mask:
+                text = text.split("\n")[0]
             for widget in widgets:
+                widget.masked = mask
                 widget.setText(text)
+                widget.setMaskText(mask_text)
                 widget.setToolTip(tooltip)
         self.container.update()
 
@@ -109,12 +116,22 @@ class KeyboardContainer(QWidget):
     def set_key(self, keycode):
         """ Change currently selected key to provided keycode """
 
-        if self.selected_row >= 0 and self.selected_col >= 0:
-            self.keyboard.set_key(self.current_layer, self.selected_row, self.selected_col, keycode)
+        l, r, c = self.current_layer, self.selected_row, self.selected_col
+
+        if r >= 0 and c >= 0:
+            # if masked, ensure that this is a byte-sized keycode
+            if self.selected_mask:
+                if keycode > 0xFF:
+                    return
+                keycode = (self.keyboard.layout[(l, r, c)] & 0xFF00) | keycode
+
+            self.keyboard.set_key(l, r, c, keycode)
             self.refresh_layer_display()
 
-    def on_key_clicked(self, widget):
+    def on_key_clicked(self, widget, is_mask):
         """ Change which key is currently selected """
+
+        self.selected_mask = is_mask
 
         for (row, col), widgets in self.rowcol.items():
             if widget in widgets:

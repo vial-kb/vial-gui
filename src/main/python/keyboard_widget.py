@@ -1,8 +1,8 @@
 from PyQt5.QtGui import QPainter, QColor, QPainterPath, QTransform, QBrush, QPolygonF
 from PyQt5.QtWidgets import QWidget, QToolTip
-from PyQt5.QtCore import Qt, QSize, QRect, QPointF, pyqtSignal, QEvent
+from PyQt5.QtCore import Qt, QSize, QRect, QPointF, pyqtSignal, QEvent, QRectF
 
-from constants import KEY_WIDTH, KEY_SPACING, KEY_HEIGHT, KEYBOARD_WIDGET_PADDING
+from constants import KEY_WIDTH, KEY_SPACING, KEY_HEIGHT, KEYBOARD_WIDGET_PADDING, KEYBOARD_WIDGET_MASK_PADDING
 
 
 class KeyWidget:
@@ -10,6 +10,7 @@ class KeyWidget:
     def __init__(self, desc):
         self.desc = desc
         self.text = ""
+        self.mask_text = ""
         self.tooltip = ""
 
         self.rotation_x = (KEY_WIDTH + KEY_SPACING) * desc.rotation_x
@@ -30,15 +31,24 @@ class KeyWidget:
         self.w2 = (KEY_WIDTH + KEY_SPACING) * desc.width2 - KEY_SPACING
         self.h2 = (KEY_HEIGHT + KEY_SPACING) * desc.height2 - KEY_SPACING
 
-        self.bbox = self.calculate_bbox()
+        self.bbox = self.calculate_bbox(QRectF(self.x, self.y, self.w, self.h))
         self.polygon = QPolygonF(self.bbox + [self.bbox[0]])
         self.draw_path = self.calculate_draw_path()
 
-    def calculate_bbox(self):
-        x1 = self.x
-        y1 = self.y
-        x2 = self.x + self.w
-        y2 = self.y + self.h
+        # calculate areas where the inner keycode will be located
+        # nonmask = outer (e.g. Rsft_T)
+        # mask = inner (e.g. KC_A)
+        self.nonmask_rect = QRectF(self.x, self.y, self.w, self.h / 2)
+        self.mask_rect = QRectF(self.x + KEYBOARD_WIDGET_MASK_PADDING, self.y + self.h / 2,
+                                self.w - 2 * KEYBOARD_WIDGET_MASK_PADDING, self.h / 2 - KEYBOARD_WIDGET_MASK_PADDING)
+        self.mask_bbox = self.calculate_bbox(self.mask_rect)
+        self.mask_polygon = QPolygonF(self.mask_bbox + [self.mask_bbox[0]])
+
+    def calculate_bbox(self, rect):
+        x1 = rect.topLeft().x()
+        y1 = rect.topLeft().y()
+        x2 = rect.bottomRight().x()
+        y2 = rect.bottomRight().y()
         points = [(x1, y1), (x1, y2), (x2, y2), (x2, y1)]
         bbox = []
         for p in points:
@@ -66,13 +76,16 @@ class KeyWidget:
     def setText(self, text):
         self.text = text
 
+    def setMaskText(self, text):
+        self.mask_text = text
+
     def setToolTip(self, tooltip):
         self.tooltip = tooltip
 
 
 class KeyboardWidget(QWidget):
 
-    clicked = pyqtSignal(KeyWidget)
+    clicked = pyqtSignal(KeyWidget, bool)
 
     def __init__(self):
         super().__init__()
@@ -81,6 +94,7 @@ class KeyboardWidget(QWidget):
         self.keys = []
         self.width = self.height = 0
         self.active_key = None
+        self.active_mask = False
 
     def set_keys(self, keys):
         self.keys = []
@@ -126,21 +140,36 @@ class KeyboardWidget(QWidget):
         active_brush.setColor(QColor("black"))
         active_brush.setStyle(Qt.SolidPattern)
 
+        mask_font = qp.font()
+        mask_font.setPointSize(mask_font.pointSize() * 0.8)
+
         for idx, key in enumerate(self.keys):
             qp.save()
             qp.translate(key.rotation_x, key.rotation_y)
             qp.rotate(key.rotation_angle)
             qp.translate(-key.rotation_x, -key.rotation_y)
 
-            if self.active_key == key:
+            if self.active_key == key and not self.active_mask:
                 qp.setPen(active_pen)
                 qp.setBrush(active_brush)
 
             # draw the keycap
             qp.drawPath(key.draw_path)
 
-            # draw the legend
-            qp.drawText(key.rect, Qt.AlignCenter, key.text)
+            # if this is a mask key, draw the inner key
+            if key.masked:
+                qp.setFont(mask_font)
+                qp.drawText(key.nonmask_rect, Qt.AlignCenter, key.text)
+
+                if self.active_key == key and self.active_mask:
+                    qp.setPen(active_pen)
+                    qp.setBrush(active_brush)
+
+                qp.drawRect(key.mask_rect)
+                qp.drawText(key.mask_rect, Qt.AlignCenter, key.mask_text)
+            else:
+                # draw the legend
+                qp.drawText(key.rect, Qt.AlignCenter, key.text)
 
             qp.restore()
 
@@ -150,20 +179,21 @@ class KeyboardWidget(QWidget):
         return QSize(self.width, self.height)
 
     def hit_test(self, pos):
+        """ Returns key, hit_masked_part """
+
         for key in self.keys:
+            if key.masked and key.mask_polygon.containsPoint(pos, Qt.OddEvenFill):
+                return key, True
             if key.polygon.containsPoint(pos, Qt.OddEvenFill):
-                return key
-        return None
+                return key, False
+
+        return None, False
 
     def mousePressEvent(self, ev):
-        prev_active_key = self.active_key
-
-        self.active_key = self.hit_test(ev.pos())
+        self.active_key, self.active_mask = self.hit_test(ev.pos())
         if self.active_key is not None:
-            self.clicked.emit(self.active_key)
-
-        if prev_active_key != self.active_key:
-            self.update()
+            self.clicked.emit(self.active_key, self.active_mask)
+        self.update()
 
     def deselect(self):
         if self.active_key is not None:
@@ -172,7 +202,7 @@ class KeyboardWidget(QWidget):
 
     def event(self, ev):
         if ev.type() == QEvent.ToolTip:
-            key = self.hit_test(ev.pos())
+            key = self.hit_test(ev.pos())[0]
             if key is not None:
                 QToolTip.showText(ev.globalPos(), key.tooltip)
             else:

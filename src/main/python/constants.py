@@ -13,3 +13,4 @@ LAYER_BTN_STYLE = "border: 1px solid black; padding: 5px"
 ACTIVE_LAYER_BTN_STYLE = "border: 1px solid black; padding: 5px; background-color: black; color: white"
 
 KEYBOARD_WIDGET_PADDING = 5
+KEYBOARD_WIDGET_MASK_PADDING = 3

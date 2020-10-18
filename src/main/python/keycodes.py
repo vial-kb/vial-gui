@@ -4,11 +4,18 @@
 
 class Keycode:
 
-    def __init__(self, code, qmk_id, label, tooltip=None):
+    masked_keycodes = set()
+
+    def __init__(self, code, qmk_id, label, tooltip=None, masked=False):
         self.code = code
         self.qmk_id = qmk_id
         self.label = label
         self.tooltip = tooltip
+        # whether this keycode requires another sub-keycode
+        self.masked = masked
+
+        if masked:
+            self.masked_keycodes.add(code)
 
 
 K = Keycode
@@ -162,6 +169,8 @@ KEYCODES_ISO = [
 KEYCODES_LAYERS = []
 
 QK_ONE_SHOT_MOD = 0x5500
+QK_MOD_TAP = 0x6000
+
 MOD_LCTL = 0x01
 MOD_LSFT = 0x02
 MOD_LALT = 0x04
@@ -206,6 +215,8 @@ KEYCODES_QUANTUM = [
     K(QK_ONE_SHOT_MOD | MOD_HYPR, "OSM(MOD_HYPR)", "OSM\nHyper",
       "Enable Control, Shift, Alt, and GUI for one keypress"),
 
+    K(QK_MOD_TAP | (MOD_RSFT << 8), "RSFT_T(kc)", "RSft_T\n(kc)", "Right Shift when held, kc when tapped", masked=True),
+
     K(0x5C16, "KC_GESC", "Esc\n~", "Esc normally, but ~ when Shift or GUI is pressed"),
     K(0x5CD7, "KC_LSPO", "LS\n(", "Left Shift when held, ( when tapped"),
     K(0x5CD8, "KC_RSPC", "RS\n)", "Right Shift when held, ) when tapped"),
@@ -232,6 +243,9 @@ K = None
 
 
 def find_keycode(code):
+    if keycode_is_mask(code):
+        code = code & 0xFF00
+
     for keycode in KEYCODES:
         if keycode.code == code:
             return keycode
@@ -253,6 +267,10 @@ def keycode_tooltip(code):
     if keycode.tooltip:
         tooltip = "{}: {}".format(tooltip, keycode.tooltip)
     return tooltip
+
+
+def keycode_is_mask(code):
+    return (code & 0xFF00) in Keycode.masked_keycodes
 
 
 def recreate_keycodes():
