@@ -184,6 +184,28 @@ KEYCODES_BASIC = [
     K(0xE5, "KC_RSHIFT", "RShift"),
     K(0xE6, "KC_RALT", "RAlt"),
     K(0xE7, "KC_RGUI", "RGui"),
+
+    K(0x235, "KC_TILD", "~"),
+    K(0x21E, "KC_EXLM", "!"),
+    K(0x21F, "KC_AT", "@"),
+    K(0x220, "KC_HASH", "#"),
+    K(0x221, "KC_DLR", "$"),
+    K(0x222, "KC_PERC", "%"),
+    K(0x223, "KC_CIRC", "^"),
+    K(0x224, "KC_AMPR", "&&"),
+    K(0x225, "KC_ASTR", "*"),
+    K(0x226, "KC_LPRN", "("),
+    K(0x227, "KC_RPRN", ")"),
+    K(0x22D, "KC_UNDS", "_"),
+    K(0x22E, "KC_PLUS", "+"),
+    K(0x22F, "KC_LCBR", "{"),
+    K(0x230, "KC_RCBR", "}"),
+    K(0x236, "KC_LT", "<"),
+    K(0x237, "KC_GT", ">"),
+    K(0x233, "KC_COLN", ":"),
+    K(0x231, "KC_PIPE", "|"),
+    K(0x238, "KC_QUES", "?"),
+    K(0x234, "KC_DQUO", '"'),
 ]
 
 KEYCODES_ISO = [
