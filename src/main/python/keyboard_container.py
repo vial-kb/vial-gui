@@ -105,6 +105,7 @@ class KeyboardContainer(QWidget):
                 widget.setMaskText(mask_text)
                 widget.setToolTip(tooltip)
         self.container.update()
+        self.container.updateGeometry()
 
     def switch_layer(self, idx):
         self.container.deselect()
