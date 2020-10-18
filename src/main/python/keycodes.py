@@ -245,7 +245,14 @@ KEYCODES_QUANTUM = [
     K(QK_ONE_SHOT_MOD | MOD_HYPR, "OSM(MOD_HYPR)", "OSM\nHyper",
       "Enable Control, Shift, Alt, and GUI for one keypress"),
 
-    K(0x5C16, "GRAVE_ESC", "`Esc"),
+    K(0x5C16, "KC_GESC", "Esc\n~", "Esc normally, but ~ when Shift or GUI is pressed"),
+    K(0x5CD7, "KC_LSPO", "LS\n(", "Left Shift when held, ( when tapped"),
+    K(0x5CD8, "KC_RSPC", "RS\n)", "Right Shift when held, ) when tapped"),
+    K(0x5CF3, "KC_LCPO", "LC\n(", "Left Control when held, ( when tapped"),
+    K(0x5CF4, "KC_RCPC", "RC\n)", "Right Control when held, ) when tapped"),
+    K(0x5CF5, "KC_LAPO", "LA\n(", "Left Alt when held, ( when tapped"),
+    K(0x5CF6, "KC_RAPC", "RA\n)", "Right Alt when held, ) when tapped"),
+    K(0x5CD9, "KC_SFTENT", "RS\nEnter", "Right Shift when held, Enter when tapped"),
 ]
 
 KEYCODES_BACKLIGHT = [
