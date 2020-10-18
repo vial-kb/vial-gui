@@ -33,10 +33,12 @@ def is_rawhid(dev):
     return dev["interface_number"] == 1
 
 
-def find_vial_keyboards():
+def find_vial_keyboards(sideload_vid, sideload_pid):
     filtered = []
     for dev in hid.enumerate():
         if VIAL_SERIAL_NUMBER_MAGIC in dev["serial_number"] and is_rawhid(dev):
+            filtered.append(dev)
+        elif dev["vendor_id"] == sideload_vid and dev["product_id"] == sideload_pid and is_rawhid(dev):
             filtered.append(dev)
     return filtered
 

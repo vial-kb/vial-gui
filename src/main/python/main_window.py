@@ -4,6 +4,8 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QWidget, QComboBox, QToolButton, QHBoxLayout, QVBoxLayout, QMainWindow, QAction, qApp, \
     QFileDialog, QDialog
 
+import json
+
 from keyboard import Keyboard
 from keyboard_container import KeyboardContainer
 from keycodes import recreate_layer_keycodes
@@ -15,8 +17,10 @@ class MainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
-        self.device = None
+        self.keyboard = None
         self.devices = []
+        self.sideload_json = None
+        self.sideload_vid = self.sideload_pid = -1
 
         self.keyboard_container = KeyboardContainer()
         self.keyboard_container.number_layers_changed.connect(self.on_number_layers_changed)
@@ -58,6 +62,9 @@ class MainWindow(QMainWindow):
         layout_save_act.setShortcut("Ctrl+S")
         layout_save_act.triggered.connect(self.on_layout_save)
 
+        sideload_json_act = QAction(tr("MenuFile", "Sideload VIA JSON"), self)
+        sideload_json_act.triggered.connect(self.on_sideload_json)
+
         exit_act = QAction(tr("MenuFile", "Exit"), self)
         exit_act.setShortcut("Ctrl+Q")
         exit_act.triggered.connect(qApp.exit)
@@ -66,6 +73,8 @@ class MainWindow(QMainWindow):
         file_menu = self.menuBar().addMenu(tr("Menu", "File"))
         file_menu.addAction(layout_load_act)
         file_menu.addAction(layout_save_act)
+        file_menu.addSeparator()
+        file_menu.addAction(sideload_json_act)
         file_menu.addSeparator()
         file_menu.addAction(exit_act)
 
@@ -89,19 +98,27 @@ class MainWindow(QMainWindow):
                 outf.write(self.keyboard_container.save_layout())
 
     def on_click_refresh(self):
-        self.devices = find_vial_keyboards()
+        self.devices = find_vial_keyboards(self.sideload_vid, self.sideload_pid)
         self.combobox_devices.clear()
 
         for dev in self.devices:
-            self.combobox_devices.addItem("{} {}".format(dev["manufacturer_string"], dev["product_string"]))
+            title = "{} {}".format(dev["manufacturer_string"], dev["product_string"])
+            if dev["vendor_id"] == self.sideload_vid and dev["product_id"] == self.sideload_pid:
+                title += " [sideload]"
+            self.combobox_devices.addItem(title)
 
     def on_device_selected(self):
-        self.device = None
+        if self.keyboard is not None:
+            self.keyboard.dev.close()
         idx = self.combobox_devices.currentIndex()
         if idx >= 0:
-            keyboard = Keyboard(open_device(self.devices[idx]))
-            keyboard.reload()
-            self.keyboard_container.rebuild(keyboard)
+            dev = self.devices[idx]
+            self.keyboard = Keyboard(open_device(dev))
+            if dev["vendor_id"] == self.sideload_vid and dev["product_id"] == self.sideload_pid:
+                self.keyboard.reload(self.sideload_json)
+            else:
+                self.keyboard.reload()
+            self.keyboard_container.rebuild(self.keyboard)
 
     def on_number_layers_changed(self):
         recreate_layer_keycodes(self.keyboard_container.keyboard.layers)
@@ -109,3 +126,16 @@ class MainWindow(QMainWindow):
 
     def on_keycode_changed(self, code):
         self.keyboard_container.set_key(code)
+
+    def on_sideload_json(self):
+        dialog = QFileDialog()
+        dialog.setDefaultSuffix("json")
+        dialog.setAcceptMode(QFileDialog.AcceptOpen)
+        dialog.setNameFilters(["VIA layout JSON (*.json)"])
+        if dialog.exec_() == QDialog.Accepted:
+            with open(dialog.selectedFiles()[0], "rb") as inf:
+                data = inf.read()
+            self.sideload_json = json.loads(data)
+            self.sideload_vid = int(self.sideload_json["vendorId"], 16)
+            self.sideload_pid = int(self.sideload_json["productId"], 16)
+            self.on_click_refresh()

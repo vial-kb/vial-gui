@@ -31,13 +31,13 @@ class Keyboard:
         self.rows = self.cols = self.layers = 0
         self.keys = []
 
-    def reload(self):
+    def reload(self, sideload_json=None):
         """ Load information about the keyboard: number of layers, physical key layout """
 
         self.rowcol = OrderedDict()
         self.layout = dict()
 
-        self.reload_layout()
+        self.reload_layout(sideload_json)
         self.reload_layers()
         self.reload_keymap()
 
@@ -46,25 +46,28 @@ class Keyboard:
 
         self.layers = self.usb_send(self.dev, struct.pack("B", CMD_VIA_GET_LAYER_COUNT))[1]
 
-    def reload_layout(self):
+    def reload_layout(self, sideload_json=None):
         """ Requests layout data from the current device """
 
-        # get the size
-        data = self.usb_send(self.dev, struct.pack("BB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_GET_SIZE))
-        sz = struct.unpack("<I", data[0:4])[0]
+        if sideload_json is not None:
+            payload = sideload_json
+        else:
+            # get the size
+            data = self.usb_send(self.dev, struct.pack("BB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_GET_SIZE))
+            sz = struct.unpack("<I", data[0:4])[0]
 
-        # get the payload
-        payload = b""
-        block = 0
-        while sz > 0:
-            data = self.usb_send(self.dev, struct.pack("<BBI", CMD_VIA_VIAL_PREFIX, CMD_VIAL_GET_DEFINITION, block))
-            if sz < MSG_LEN:
-                data = data[:sz]
-            payload += data
-            block += 1
-            sz -= MSG_LEN
+            # get the payload
+            payload = b""
+            block = 0
+            while sz > 0:
+                data = self.usb_send(self.dev, struct.pack("<BBI", CMD_VIA_VIAL_PREFIX, CMD_VIAL_GET_DEFINITION, block))
+                if sz < MSG_LEN:
+                    data = data[:sz]
+                payload += data
+                block += 1
+                sz -= MSG_LEN
 
-        payload = json.loads(lzma.decompress(payload))
+            payload = json.loads(lzma.decompress(payload))
 
         self.rows = payload["matrix"]["rows"]
         self.cols = payload["matrix"]["cols"]
