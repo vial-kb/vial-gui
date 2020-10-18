@@ -200,8 +200,51 @@ KEYCODES_ISO = [
 
 KEYCODES_LAYERS = []
 
+QK_ONE_SHOT_MOD = 0x5500
+MOD_LCTL = 0x01
+MOD_LSFT = 0x02
+MOD_LALT = 0x04
+MOD_LGUI = 0x08
+MOD_RCTL = 0x11
+MOD_RSFT = 0x12
+MOD_RALT = 0x14
+MOD_RGUI = 0x18
+
+MOD_HYPR = 0xF
+MOD_MEH = 0x7
+
 KEYCODES_QUANTUM = [
     K(0x5C00, "RESET", "Reset", "Reboot to bootloader"),
+    K(QK_ONE_SHOT_MOD | MOD_LSFT, "OSM(MOD_LSFT)", "OSM\nLSft", "Enable Left Shift for one keypress"),
+    K(QK_ONE_SHOT_MOD | MOD_LCTL, "OSM(MOD_LCTL)", "OSM\nLCtl", "Enable Left Control for one keypress"),
+    K(QK_ONE_SHOT_MOD | MOD_LALT, "OSM(MOD_LALT)", "OSM\nLAlt", "Enable Left Alt for one keypress"),
+    K(QK_ONE_SHOT_MOD | MOD_LGUI, "OSM(MOD_LGUI)", "OSM\nLGUI", "Enable Left GUI for one keypress"),
+    K(QK_ONE_SHOT_MOD | MOD_RSFT, "OSM(MOD_RSFT)", "OSM\nRSft", "Enable Right Shift for one keypress"),
+    K(QK_ONE_SHOT_MOD | MOD_RCTL, "OSM(MOD_RCTL)", "OSM\nRCtl", "Enable Right Control for one keypress"),
+    K(QK_ONE_SHOT_MOD | MOD_RALT, "OSM(MOD_RALT)", "OSM\nRAlt", "Enable Right Alt for one keypress"),
+    K(QK_ONE_SHOT_MOD | MOD_RGUI, "OSM(MOD_RGUI)", "OSM\nRGUI", "Enable Right GUI for one keypress"),
+    K(QK_ONE_SHOT_MOD | MOD_LCTL | MOD_LSFT, "OSM(MOD_LCTL|MOD_LSFT)", "OSM\nCS",
+      "Enable Control and Shift for one keypress"),
+    K(QK_ONE_SHOT_MOD | MOD_LCTL | MOD_LALT, "OSM(MOD_LCTL|MOD_LALT)", "OSM\nCA",
+      "Enable Control and Alt for one keypress"),
+    K(QK_ONE_SHOT_MOD | MOD_LCTL | MOD_LGUI, "OSM(MOD_LCTL|MOD_LGUI)", "OSM\nCG",
+      "Enable Control and GUI for one keypress"),
+    K(QK_ONE_SHOT_MOD | MOD_LSFT | MOD_LALT, "OSM(MOD_LSFT|MOD_LALT)", "OSM\nSA",
+      "Enable Shift and Alt for one keypress"),
+    K(QK_ONE_SHOT_MOD | MOD_LSFT | MOD_LGUI, "OSM(MOD_LSFT|MOD_LGUI)", "OSM\nSG",
+      "Enable Shift and GUI for one keypress"),
+    K(QK_ONE_SHOT_MOD | MOD_LALT | MOD_LGUI, "OSM(MOD_LALT|MOD_LGUI)", "OSM\nAG",
+      "Enable Alt and GUI for one keypress"),
+    K(QK_ONE_SHOT_MOD | MOD_LCTL | MOD_LSFT | MOD_LGUI, "OSM(MOD_LCTL|MOD_LSFT|MOD_LGUI)", "OSM\nCSG",
+      "Enable Control, Shift, and GUI for one keypress"),
+    K(QK_ONE_SHOT_MOD | MOD_LCTL | MOD_LALT | MOD_LGUI, "OSM(MOD_LCTL|MOD_LALT|MOD_LGUI)", "OSM\nCAG",
+      "Enable Control, Alt, and GUI for one keypress"),
+    K(QK_ONE_SHOT_MOD | MOD_LSFT | MOD_LALT | MOD_LGUI, "OSM(MOD_LSFT|MOD_LALT|MOD_LGUI)", "OSM\nSAG",
+      "Enable Shift, Alt, and GUI for one keypress"),
+    K(QK_ONE_SHOT_MOD | MOD_MEH, "OSM(MOD_MEH)", "OSM\nMeh", "Enable Control, Shift, and Alt for one keypress"),
+    K(QK_ONE_SHOT_MOD | MOD_HYPR, "OSM(MOD_HYPR)", "OSM\nHyper",
+      "Enable Control, Shift, Alt, and GUI for one keypress"),
+
     K(0x5C16, "GRAVE_ESC", "`Esc"),
 ]
 
