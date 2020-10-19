@@ -281,7 +281,34 @@ KEYCODES_QUANTUM = [
 ]
 
 KEYCODES_BACKLIGHT = [
+    K(23743, "BL_TOGG", "BL\nToggle", "Turn the backlight on or off"),
+    K(23744, "BL_STEP", "BL\nCycle", "Cycle through backlight levels"),
+    K(23745, "BL_BRTG", "BL\nBreath", "Toggle backlight breathing"),
+    K(23739, "BL_ON", "BL On", "Set the backlight to max brightness"),
+    K(23740, "BL_OFF", "BL Off", "Turn the backlight off"),
+    K(23742, "BL_INC", "BL +", "Increase the backlight level"),
+    K(23741, "BL_DEC", "BL - ", "Decrease the backlight level"),
 
+    K(23746, "RGB_TOG", "RGB\nToggle", "Toggle RGB lighting on or off"),
+    K(23747, "RGB_MOD", "RGB\nMode +", "Next RGB mode"),
+    K(23748, "RGB_RMOD", "RGB\nMode -", "Previous RGB mode"),
+    K(23749, "RGB_HUI", "Hue +", "Increase hue"),
+    K(23750, "RGB_HUD", "Hue -", "Decrease hue"),
+    K(23751, "RGB_SAI", "Sat +", "Increase saturation"),
+    K(23752, "RGB_SAD", "Sat -", "Decrease saturation"),
+    K(23753, "RGB_VAI", "Bright +", "Increase value"),
+    K(23754, "RGB_VAD", "Bright -", "Decrease value"),
+    K(23755, "RGB_SPI", "Effect +", "Increase RGB effect speed"),
+    K(23756, "RGB_SPD", "Effect -", "Decrease RGB effect speed"),
+    K(23757, "RGB_M_P", "RGB\nMode P", "RGB Mode: Plain"),
+    K(23758, "RGB_M_B", "RGB\nMode B", "RGB Mode: Breathe"),
+    K(23759, "RGB_M_R", "RGB\nMode R", "RGB Mode: Rainbow"),
+    K(23760, "RGB_M_SW", "RGB\nMode SW", "RGB Mode: Swirl"),
+    K(23761, "RGB_M_SN", "RGB\nMode SN", "RGB Mode: Snake"),
+    K(23762, "RGB_M_K", "RGB\nMode K", "RGB Mode: Knight Rider"),
+    K(23763, "RGB_M_X", "RGB\nMode X", "RGB Mode: Christmas"),
+    K(23764, "RGB_M_G", "RGB\nMode G", "RGB Mode: Gradient"),
+    K(23765, "RGB_M_T", "RGB\nMode T", "RGB Mode: Test"),
 ]
 
 KEYCODES_MEDIA = [
