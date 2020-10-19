@@ -54,15 +54,15 @@ class MainWindow(QMainWindow):
         self.on_click_refresh()
 
     def init_menu(self):
-        layout_load_act = QAction(tr("MenuFile", "Load saved layout"), self)
+        layout_load_act = QAction(tr("MenuFile", "Load saved layout..."), self)
         layout_load_act.setShortcut("Ctrl+O")
         layout_load_act.triggered.connect(self.on_layout_load)
 
-        layout_save_act = QAction(tr("MenuFile", "Save current layout"), self)
+        layout_save_act = QAction(tr("MenuFile", "Save current layout..."), self)
         layout_save_act.setShortcut("Ctrl+S")
         layout_save_act.triggered.connect(self.on_layout_save)
 
-        sideload_json_act = QAction(tr("MenuFile", "Sideload VIA JSON"), self)
+        sideload_json_act = QAction(tr("MenuFile", "Sideload VIA JSON..."), self)
         sideload_json_act.triggered.connect(self.on_sideload_json)
 
         exit_act = QAction(tr("MenuFile", "Exit"), self)
