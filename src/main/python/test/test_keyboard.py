@@ -31,6 +31,9 @@ class SimulatedDevice:
             out = bytes.fromhex(out)
         self.expect_data.append((inp, out))
 
+    def expect_keyboard_id(self, kbid):
+        self.expect("FE00", struct.pack("<IQ", 0, kbid))
+
     def expect_layout(self, layout):
         compressed = lzma.compress(layout.encode("utf-8"))
         self.expect("FE01", struct.pack("<I", len(compressed)))
@@ -61,8 +64,8 @@ class SimulatedDevice:
         if data != inp:
             raise Exception("Got unexpected data at index {}: expected={} got={}".format(
                 dev.expect_idx,
-                data.hex(),
-                inp.hex()
+                inp.hex(),
+                data.hex()
             ))
         dev.expect_idx += 1
         return out
@@ -79,6 +82,7 @@ class TestKeyboard(unittest.TestCase):
     @staticmethod
     def prepare_keyboard(layout, keymap):
         dev = SimulatedDevice()
+        dev.expect_keyboard_id(0)
         dev.expect_layout(layout)
         dev.expect_layers(len(keymap))
         dev.expect_keymap(keymap)
