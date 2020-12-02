@@ -2,10 +2,11 @@
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QWidget, QComboBox, QToolButton, QHBoxLayout, QVBoxLayout, QMainWindow, QAction, qApp, \
-    QFileDialog, QDialog
+    QFileDialog, QDialog, QTabWidget
 
 import json
 
+from firmware_flasher import FirmwareFlasher
 from keyboard import Keyboard
 from keyboard_container import KeyboardContainer
 from keycodes import recreate_layer_keycodes
@@ -40,10 +41,21 @@ class MainWindow(QMainWindow):
         layout_combobox.addWidget(self.combobox_devices)
         layout_combobox.addWidget(btn_refresh_devices)
 
+        kb_and_codes = QVBoxLayout()
+        kb_and_codes.addWidget(self.keyboard_container)
+        kb_and_codes.addWidget(self.tabbed_keycodes)
+
+        flasher = FirmwareFlasher()
+
+        tabs = QTabWidget()
+        for container, lbl in [(kb_and_codes, "Layout"), (flasher, "Firmware updater")]:
+            w = QWidget()
+            w.setLayout(container)
+            tabs.addTab(w, tr("MainWindow", lbl))
+
         layout = QVBoxLayout()
         layout.addLayout(layout_combobox)
-        layout.addWidget(self.keyboard_container)
-        layout.addWidget(self.tabbed_keycodes)
+        layout.addWidget(tabs)
         w = QWidget()
         w.setLayout(layout)
         self.setCentralWidget(w)
