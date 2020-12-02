@@ -7,16 +7,15 @@ from PyQt5.QtWidgets import QWidget, QComboBox, QToolButton, QHBoxLayout, QVBoxL
 import json
 
 from firmware_flasher import FirmwareFlasher
-from keyboard import Keyboard
 from layout_editor import LayoutEditor
-from util import tr, find_vial_keyboards, open_device
+from util import tr, find_vial_devices
 
 
 class MainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
-        self.keyboard = None
+        self.current_device = None
         self.devices = []
         self.sideload_json = None
         self.sideload_vid = self.sideload_pid = -1
@@ -34,17 +33,14 @@ class MainWindow(QMainWindow):
         layout_combobox.addWidget(btn_refresh_devices)
 
         self.layout_editor = LayoutEditor()
-        flasher = FirmwareFlasher()
+        self.firmware_flasher = FirmwareFlasher()
 
-        tabs = QTabWidget()
-        for container, lbl in [(self.layout_editor, "Layout"), (flasher, "Firmware updater")]:
-            w = QWidget()
-            w.setLayout(container)
-            tabs.addTab(w, tr("MainWindow", lbl))
+        self.tabs = QTabWidget()
+        self.refresh_tabs()
 
         layout = QVBoxLayout()
         layout.addLayout(layout_combobox)
-        layout.addWidget(tabs)
+        layout.addWidget(self.tabs)
         w = QWidget()
         w.setLayout(layout)
         self.setCentralWidget(w)
@@ -99,27 +95,37 @@ class MainWindow(QMainWindow):
                 outf.write(self.layout_editor.save_layout())
 
     def on_click_refresh(self):
-        self.devices = find_vial_keyboards(self.sideload_vid, self.sideload_pid)
+        self.devices = find_vial_devices(self.sideload_vid, self.sideload_pid)
         self.combobox_devices.clear()
 
         for dev in self.devices:
-            title = "{} {}".format(dev["manufacturer_string"], dev["product_string"])
-            if dev["vendor_id"] == self.sideload_vid and dev["product_id"] == self.sideload_pid:
-                title += " [sideload]"
-            self.combobox_devices.addItem(title)
+            self.combobox_devices.addItem(dev.title())
 
     def on_device_selected(self):
-        if self.keyboard is not None:
-            self.keyboard.dev.close()
+        if self.current_device is not None:
+            self.current_device.close()
+        self.current_device = None
         idx = self.combobox_devices.currentIndex()
         if idx >= 0:
-            dev = self.devices[idx]
-            self.keyboard = Keyboard(open_device(dev))
-            if dev["vendor_id"] == self.sideload_vid and dev["product_id"] == self.sideload_pid:
-                self.keyboard.reload(self.sideload_json)
-            else:
-                self.keyboard.reload()
-            self.layout_editor.rebuild(self.keyboard)
+            self.current_device = self.devices[idx]
+
+        if self.current_device is not None:
+            self.current_device.open(self.sideload_json if self.current_device.sideload else None)
+
+        self.layout_editor.rebuild(self.current_device)
+        self.firmware_flasher.rebuild(self.current_device)
+
+        self.refresh_tabs()
+
+    def refresh_tabs(self):
+        self.tabs.clear()
+        for container, lbl in [(self.layout_editor, "Layout"), (self.firmware_flasher, "Firmware updater")]:
+            if not container.valid():
+                continue
+
+            w = QWidget()
+            w.setLayout(container)
+            self.tabs.addTab(w, tr("MainWindow", lbl))
 
     def on_sideload_json(self):
         dialog = QFileDialog()

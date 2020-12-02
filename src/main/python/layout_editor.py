@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import QVBoxLayout
 from keyboard_container import KeyboardContainer
 from keycodes import recreate_layer_keycodes
 from tabbed_keycodes import TabbedKeycodes
+from vial_device import VialKeyboard
 
 
 class LayoutEditor(QVBoxLayout):
@@ -21,6 +22,8 @@ class LayoutEditor(QVBoxLayout):
         self.addWidget(self.keyboard_container)
         self.addWidget(self.tabbed_keycodes)
 
+        self.device = None
+
     def on_number_layers_changed(self):
         recreate_layer_keycodes(self.keyboard_container.keyboard.layers)
         self.tabbed_keycodes.recreate_layer_keycode_buttons()
@@ -28,8 +31,13 @@ class LayoutEditor(QVBoxLayout):
     def on_keycode_changed(self, code):
         self.keyboard_container.set_key(code)
 
-    def rebuild(self, keyboard):
-        self.keyboard_container.rebuild(keyboard)
+    def rebuild(self, device):
+        self.device = device
+        if isinstance(self.device, VialKeyboard):
+            self.keyboard_container.rebuild(device.keyboard)
+
+    def valid(self):
+        return isinstance(self.device, VialKeyboard)
 
     def save_layout(self):
         return self.keyboard_container.save_layout()

@@ -2,17 +2,16 @@
 
 from PyQt5.QtCore import QCoreApplication
 
-import sys
-
-if sys.platform.startswith("linux"):
-    import hidraw as hid
-else:
-    import hid
+from hidproxy import hid
 
 
 tr = QCoreApplication.translate
 
+# For Vial keyboard
 VIAL_SERIAL_NUMBER_MAGIC = "vial:f64c2b3c"
+
+# For bootloader
+VIBL_SERIAL_NUMBER_MAGIC = "vibl:d4f8159c"
 
 MSG_LEN = 32
 
@@ -33,18 +32,15 @@ def is_rawhid(dev):
     return dev["interface_number"] == 1
 
 
-def find_vial_keyboards(sideload_vid, sideload_pid):
+def find_vial_devices(sideload_vid, sideload_pid):
+    from vial_device import VialBootloader, VialKeyboard
+
     filtered = []
     for dev in hid.enumerate():
         if VIAL_SERIAL_NUMBER_MAGIC in dev["serial_number"] and is_rawhid(dev):
-            filtered.append(dev)
+            filtered.append(VialKeyboard(dev))
+        elif VIBL_SERIAL_NUMBER_MAGIC in dev["serial_number"]:
+            filtered.append(VialBootloader(dev))
         elif dev["vendor_id"] == sideload_vid and dev["product_id"] == sideload_pid and is_rawhid(dev):
-            filtered.append(dev)
+            filtered.append(VialKeyboard(dev, sideload=True))
     return filtered
-
-
-def open_device(desc):
-    # TODO: error handling here
-    dev = hid.device()
-    dev.open_path(desc["path"])
-    return dev

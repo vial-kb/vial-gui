@@ -3,6 +3,7 @@
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QLineEdit, QToolButton, QPlainTextEdit, QProgressBar
 
 from util import tr
+from vial_device import VialBootloader
 
 
 class FirmwareFlasher(QVBoxLayout):
@@ -23,3 +24,11 @@ class FirmwareFlasher(QVBoxLayout):
         btn_flash.setText(tr("Flasher", "Flash"))
         progress_flash.addWidget(btn_flash)
         self.addLayout(progress_flash)
+
+        self.device = None
+
+    def rebuild(self, device):
+        self.device = device
+
+    def valid(self):
+        return isinstance(self.device, VialBootloader)
