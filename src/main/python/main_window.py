@@ -8,9 +8,7 @@ import json
 
 from firmware_flasher import FirmwareFlasher
 from keyboard import Keyboard
-from keyboard_container import KeyboardContainer
-from keycodes import recreate_layer_keycodes
-from tabbed_keycodes import TabbedKeycodes
+from layout_editor import LayoutEditor
 from util import tr, find_vial_keyboards, open_device
 
 
@@ -22,12 +20,6 @@ class MainWindow(QMainWindow):
         self.devices = []
         self.sideload_json = None
         self.sideload_vid = self.sideload_pid = -1
-
-        self.keyboard_container = KeyboardContainer()
-        self.keyboard_container.number_layers_changed.connect(self.on_number_layers_changed)
-
-        self.tabbed_keycodes = TabbedKeycodes()
-        self.tabbed_keycodes.keycode_changed.connect(self.on_keycode_changed)
 
         self.combobox_devices = QComboBox()
         self.combobox_devices.currentIndexChanged.connect(self.on_device_selected)
@@ -41,14 +33,11 @@ class MainWindow(QMainWindow):
         layout_combobox.addWidget(self.combobox_devices)
         layout_combobox.addWidget(btn_refresh_devices)
 
-        kb_and_codes = QVBoxLayout()
-        kb_and_codes.addWidget(self.keyboard_container)
-        kb_and_codes.addWidget(self.tabbed_keycodes)
-
+        self.layout_editor = LayoutEditor()
         flasher = FirmwareFlasher()
 
         tabs = QTabWidget()
-        for container, lbl in [(kb_and_codes, "Layout"), (flasher, "Firmware updater")]:
+        for container, lbl in [(self.layout_editor, "Layout"), (flasher, "Firmware updater")]:
             w = QWidget()
             w.setLayout(container)
             tabs.addTab(w, tr("MainWindow", lbl))
@@ -98,7 +87,7 @@ class MainWindow(QMainWindow):
         if dialog.exec_() == QDialog.Accepted:
             with open(dialog.selectedFiles()[0], "rb") as inf:
                 data = inf.read()
-            self.keyboard_container.restore_layout(data)
+            self.layout_editor.restore_layout(data)
 
     def on_layout_save(self):
         dialog = QFileDialog()
@@ -107,7 +96,7 @@ class MainWindow(QMainWindow):
         dialog.setNameFilters(["Vial layout (*.vil)"])
         if dialog.exec_() == QDialog.Accepted:
             with open(dialog.selectedFiles()[0], "wb") as outf:
-                outf.write(self.keyboard_container.save_layout())
+                outf.write(self.layout_editor.save_layout())
 
     def on_click_refresh(self):
         self.devices = find_vial_keyboards(self.sideload_vid, self.sideload_pid)
@@ -130,14 +119,7 @@ class MainWindow(QMainWindow):
                 self.keyboard.reload(self.sideload_json)
             else:
                 self.keyboard.reload()
-            self.keyboard_container.rebuild(self.keyboard)
-
-    def on_number_layers_changed(self):
-        recreate_layer_keycodes(self.keyboard_container.keyboard.layers)
-        self.tabbed_keycodes.recreate_layer_keycode_buttons()
-
-    def on_keycode_changed(self, code):
-        self.keyboard_container.set_key(code)
+            self.layout_editor.rebuild(self.keyboard)
 
     def on_sideload_json(self):
         dialog = QFileDialog()
