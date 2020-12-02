@@ -23,17 +23,17 @@ class MainWindow(QMainWindow):
         self.combobox_devices = QComboBox()
         self.combobox_devices.currentIndexChanged.connect(self.on_device_selected)
 
-        btn_refresh_devices = QToolButton()
-        btn_refresh_devices.setToolButtonStyle(Qt.ToolButtonTextOnly)
-        btn_refresh_devices.setText(tr("MainWindow", "Refresh"))
-        btn_refresh_devices.clicked.connect(self.on_click_refresh)
+        self.btn_refresh_devices = QToolButton()
+        self.btn_refresh_devices.setToolButtonStyle(Qt.ToolButtonTextOnly)
+        self.btn_refresh_devices.setText(tr("MainWindow", "Refresh"))
+        self.btn_refresh_devices.clicked.connect(self.on_click_refresh)
 
         layout_combobox = QHBoxLayout()
         layout_combobox.addWidget(self.combobox_devices)
-        layout_combobox.addWidget(btn_refresh_devices)
+        layout_combobox.addWidget(self.btn_refresh_devices)
 
         self.layout_editor = LayoutEditor()
-        self.firmware_flasher = FirmwareFlasher()
+        self.firmware_flasher = FirmwareFlasher(self)
 
         self.tabs = QTabWidget()
         self.refresh_tabs()
@@ -139,3 +139,13 @@ class MainWindow(QMainWindow):
             self.sideload_vid = int(self.sideload_json["vendorId"], 16)
             self.sideload_pid = int(self.sideload_json["productId"], 16)
             self.on_click_refresh()
+
+    def lock_ui(self):
+        self.tabs.setEnabled(False)
+        self.combobox_devices.setEnabled(False)
+        self.btn_refresh_devices.setEnabled(False)
+
+    def unlock_ui(self):
+        self.tabs.setEnabled(True)
+        self.combobox_devices.setEnabled(True)
+        self.btn_refresh_devices.setEnabled(True)
