@@ -15,6 +15,13 @@ class VialDevice:
         self.dev = hid.device()
         self.dev.open_path(self.desc["path"])
 
+    def send(self, data):
+        # add 00 at start for hidapi report id
+        return self.dev.write(b"\x00" + data)
+
+    def recv(self, length):
+        return bytes(self.dev.read(length))
+
     def close(self):
         self.dev.close()
 

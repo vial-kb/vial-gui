@@ -44,3 +44,8 @@ def find_vial_devices(sideload_vid, sideload_pid):
         elif dev["vendor_id"] == sideload_vid and dev["product_id"] == sideload_pid and is_rawhid(dev):
             filtered.append(VialKeyboard(dev, sideload=True))
     return filtered
+
+
+def chunks(data, sz):
+    for i in range(0, len(data), sz):
+        yield data[i:i+sz]
