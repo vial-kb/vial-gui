@@ -17,6 +17,8 @@ CMD_VIA_VIAL_PREFIX = 0xFE
 CMD_VIAL_GET_KEYBOARD_ID = 0x00
 CMD_VIAL_GET_SIZE = 0x01
 CMD_VIAL_GET_DEFINITION = 0x02
+CMD_VIAL_GET_ENCODER = 0x03
+CMD_VIAL_SET_ENCODER = 0x04
 
 
 class Keyboard:
@@ -28,9 +30,12 @@ class Keyboard:
 
         # n.b. using OrderedDict here to make order of layout requests consistent for tests
         self.rowcol = OrderedDict()
+        self.encoderpos = OrderedDict()
         self.layout = dict()
+        self.encoder_layout = dict()
         self.rows = self.cols = self.layers = 0
         self.keys = []
+        self.encoders = []
 
         self.vial_protocol = self.keyboard_id = -1
 
@@ -38,7 +43,9 @@ class Keyboard:
         """ Load information about the keyboard: number of layers, physical key layout """
 
         self.rowcol = OrderedDict()
+        self.encoderpos = OrderedDict()
         self.layout = dict()
+        self.encoder_layout = dict()
 
         self.reload_layout(sideload_json)
         self.reload_layers()
@@ -82,16 +89,26 @@ class Keyboard:
         serial = KleSerial()
         kb = serial.deserialize(payload["layouts"]["keymap"])
 
-        self.keys = kb.keys
+        self.keys = []
+        self.encoders = []
 
-        for key in self.keys:
+        for key in kb.keys:
             key.row = key.col = None
-            if key.labels[0] and "," in key.labels[0]:
+            key.encoder_idx = key.encoder_dir = None
+            if key.labels[4] == "e":
+                idx, direction = key.labels[0].split(",")
+                idx, direction = int(idx), int(direction)
+                key.encoder_idx = idx
+                key.encoder_dir = direction
+                self.encoderpos[idx] = True
+                self.encoders.append(key)
+            elif key.labels[0] and "," in key.labels[0]:
                 row, col = key.labels[0].split(",")
                 row, col = int(row), int(col)
                 key.row = row
                 key.col = col
                 self.rowcol[(row, col)] = True
+                self.keys.append(key)
 
     def reload_keymap(self):
         """ Load current key mapping from the keyboard """
@@ -101,12 +118,23 @@ class Keyboard:
                 data = self.usb_send(self.dev, struct.pack("BBBB", CMD_VIA_GET_KEYCODE, layer, row, col))
                 keycode = struct.unpack(">H", data[4:6])[0]
                 self.layout[(layer, row, col)] = keycode
+            for idx in self.encoderpos:
+                data = self.usb_send(self.dev, struct.pack("BBBB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_GET_ENCODER, layer, idx))
+                self.encoder_layout[(layer, idx, 0)] = struct.unpack(">H", data[0:2])[0]
+                self.encoder_layout[(layer, idx, 1)] = struct.unpack(">H", data[2:4])[0]
 
     def set_key(self, layer, row, col, code):
         key = (layer, row, col)
         if self.layout[key] != code:
             self.usb_send(self.dev, struct.pack(">BBBBH", CMD_VIA_SET_KEYCODE, layer, row, col, code))
             self.layout[key] = code
+
+    def set_encoder(self, layer, index, direction, code):
+        key = (layer, index, direction)
+        if self.encoder_layout[key] != code:
+            self.usb_send(self.dev, struct.pack(">BBBBBH", CMD_VIA_VIAL_PREFIX, CMD_VIAL_SET_ENCODER,
+                                                layer, index, direction, code))
+            self.encoder_layout[key] = code
 
     def save_layout(self):
         """ Serializes current layout to a binary """

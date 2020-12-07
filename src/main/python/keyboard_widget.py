@@ -34,6 +34,7 @@ class KeyWidget:
         self.bbox = self.calculate_bbox(QRectF(self.x, self.y, self.w, self.h))
         self.polygon = QPolygonF(self.bbox + [self.bbox[0]])
         self.draw_path = self.calculate_draw_path()
+        self.draw_path2 = self.calculate_draw_path2()
 
         # calculate areas where the inner keycode will be located
         # nonmask = outer (e.g. Rsft_T)
@@ -73,6 +74,9 @@ class KeyWidget:
 
         return path
 
+    def calculate_draw_path2(self):
+        return QPainterPath()
+
     def setText(self, text):
         self.text = text
 
@@ -81,6 +85,28 @@ class KeyWidget:
 
     def setToolTip(self, tooltip):
         self.tooltip = tooltip
+
+
+class EncoderWidget(KeyWidget):
+
+    def calculate_draw_path(self):
+        path = QPainterPath()
+        path.addEllipse(int(self.x), int(self.y), int(self.w), int(self.h))
+        return path
+
+    def calculate_draw_path2(self):
+        path = QPainterPath()
+        if self.desc.encoder_dir == 0:
+            path.moveTo(int(self.x), int(self.y + self.h / 2))
+            path.lineTo(int(self.x - self.w / 5), int(self.y + self.h / 3))
+            path.moveTo(int(self.x), int(self.y + self.h / 2))
+            path.lineTo(int(self.x + self.w / 5), int(self.y + self.h / 3))
+        else:
+            path.moveTo(int(self.x), int(self.y + self.h / 2))
+            path.lineTo(int(self.x - self.w / 5), int(self.y + self.h - self.h / 3))
+            path.moveTo(int(self.x), int(self.y + self.h / 2))
+            path.lineTo(int(self.x + self.w / 5), int(self.y + self.h - self.h / 3))
+        return path
 
 
 class KeyboardWidget(QWidget):
@@ -96,10 +122,12 @@ class KeyboardWidget(QWidget):
         self.active_key = None
         self.active_mask = False
 
-    def set_keys(self, keys):
+    def set_keys(self, keys, encoders):
         self.keys = []
         for key in keys:
             self.keys.append(KeyWidget(key))
+        for key in encoders:
+            self.keys.append(EncoderWidget(key))
         self.calculate_size()
         self.update()
 
@@ -155,6 +183,7 @@ class KeyboardWidget(QWidget):
 
             # draw the keycap
             qp.drawPath(key.draw_path)
+            qp.strokePath(key.draw_path2, regular_pen)
 
             # if this is a mask key, draw the inner key
             if key.masked:
