@@ -1,7 +1,5 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
-from collections import defaultdict
-
 from PyQt5.QtCore import pyqtSignal, Qt
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLabel, QVBoxLayout
 
@@ -39,7 +37,6 @@ class KeyboardContainer(QWidget):
 
         self.keys = []
         self.layer_labels = []
-        self.widgets = []
         self.keyboard = None
         self.current_layer = 0
 
@@ -70,13 +67,7 @@ class KeyboardContainer(QWidget):
         # get number of layers
         self.rebuild_layers()
 
-        # prepare for fetching keymap
-        self.widgets = []
-
         self.container.set_keys(keyboard.keys, keyboard.encoders)
-        for key in self.container.keys:
-            if key.desc.row is not None or key.desc.encoder_idx is not None:
-                self.widgets.append(key)
 
         self.current_layer = 0
         self.refresh_layer_display()
@@ -88,7 +79,7 @@ class KeyboardContainer(QWidget):
             label.setStyleSheet(LAYER_BTN_STYLE)
         self.layer_labels[self.current_layer].setStyleSheet(ACTIVE_LAYER_BTN_STYLE)
 
-        for widget in self.widgets:
+        for widget in self.container.keys:
             if widget.desc.row is not None:
                 code = self.keyboard.layout[(self.current_layer, widget.desc.row, widget.desc.col)]
             else:
