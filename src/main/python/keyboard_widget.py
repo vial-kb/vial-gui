@@ -111,7 +111,7 @@ class EncoderWidget(KeyWidget):
 
 class KeyboardWidget(QWidget):
 
-    clicked = pyqtSignal(KeyWidget, bool)
+    clicked = pyqtSignal()
 
     def __init__(self):
         super().__init__()
@@ -221,7 +221,7 @@ class KeyboardWidget(QWidget):
     def mousePressEvent(self, ev):
         self.active_key, self.active_mask = self.hit_test(ev.pos())
         if self.active_key is not None:
-            self.clicked.emit(self.active_key, self.active_mask)
+            self.clicked.emit()
         self.update()
 
     def deselect(self):

@@ -40,8 +40,6 @@ class KeyboardContainer(QWidget):
         self.keys = []
         self.layer_labels = []
         self.widgets = []
-        self.selected_widget = None
-        self.selected_mask = False
         self.keyboard = None
         self.current_layer = 0
 
@@ -112,23 +110,22 @@ class KeyboardContainer(QWidget):
     def switch_layer(self, idx):
         self.container.deselect()
         self.current_layer = idx
-        self.selected_widget = None
         self.refresh_layer_display()
 
     def set_key(self, keycode):
         """ Change currently selected key to provided keycode """
 
-        if isinstance(self.selected_widget, EncoderWidget):
+        if isinstance(self.container.active_key, EncoderWidget):
             self.set_key_encoder(keycode)
         else:
             self.set_key_matrix(keycode)
 
     def set_key_encoder(self, keycode):
-        l, i, d = self.current_layer, self.selected_widget.desc.encoder_idx,\
-                            self.selected_widget.desc.encoder_dir
+        l, i, d = self.current_layer, self.container.active_key.desc.encoder_idx,\
+                            self.container.active_key.desc.encoder_dir
 
         # if masked, ensure that this is a byte-sized keycode
-        if self.selected_mask:
+        if self.container.active_mask:
             if keycode > 0xFF:
                 return
             keycode = (self.keyboard.encoder_layout[(l, i, d)] & 0xFF00) | keycode
@@ -137,11 +134,11 @@ class KeyboardContainer(QWidget):
         self.refresh_layer_display()
 
     def set_key_matrix(self, keycode):
-        l, r, c = self.current_layer, self.selected_widget.desc.row, self.selected_widget.desc.col
+        l, r, c = self.current_layer, self.container.active_key.desc.row, self.container.active_key.desc.col
 
         if r >= 0 and c >= 0:
             # if masked, ensure that this is a byte-sized keycode
-            if self.selected_mask:
+            if self.container.active_mask:
                 if keycode > 0xFF:
                     return
                 keycode = (self.keyboard.layout[(l, r, c)] & 0xFF00) | keycode
@@ -149,12 +146,8 @@ class KeyboardContainer(QWidget):
             self.keyboard.set_key(l, r, c, keycode)
             self.refresh_layer_display()
 
-    def on_key_clicked(self, widget, is_mask):
-        """ Change which key is currently selected """
-
-        self.selected_mask = is_mask
-        self.selected_widget = widget
-
+    def on_key_clicked(self):
+        """ Called when a key on the keyboard widget is clicked """
         self.refresh_layer_display()
 
     def save_layout(self):
