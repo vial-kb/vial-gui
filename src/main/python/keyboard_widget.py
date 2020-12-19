@@ -224,6 +224,18 @@ class KeyboardWidget(QWidget):
             self.clicked.emit()
         self.update()
 
+    def select_next(self):
+        """ Selects next key based on their order in the keymap """
+        # TODO: this almost certainly needs changes after multilayout support lands
+
+        keys_looped = self.keys + [self.keys[0]]
+        for x, key in enumerate(keys_looped):
+            if key == self.active_key:
+                self.active_key = keys_looped[x + 1]
+                self.active_mask = False
+                self.clicked.emit()
+                return
+
     def deselect(self):
         if self.active_key is not None:
             self.active_key = None

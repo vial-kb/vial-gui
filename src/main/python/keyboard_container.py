@@ -111,6 +111,8 @@ class KeyboardContainer(QWidget):
         else:
             self.set_key_matrix(keycode)
 
+        self.container.select_next()
+
     def set_key_encoder(self, keycode):
         l, i, d = self.current_layer, self.container.active_key.desc.encoder_idx,\
                             self.container.active_key.desc.encoder_dir
