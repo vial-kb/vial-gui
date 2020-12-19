@@ -118,6 +118,8 @@ class Keyboard:
                 data = self.usb_send(self.dev, struct.pack("BBBB", CMD_VIA_GET_KEYCODE, layer, row, col))
                 keycode = struct.unpack(">H", data[4:6])[0]
                 self.layout[(layer, row, col)] = keycode
+
+        for layer in range(self.layers):
             for idx in self.encoderpos:
                 data = self.usb_send(self.dev, struct.pack("BBBB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_GET_ENCODER, layer, idx))
                 self.encoder_layout[(layer, idx, 0)] = struct.unpack(">H", data[0:2])[0]

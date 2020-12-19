@@ -10,6 +10,10 @@ LAYOUT_2x2 = """
 {"name":"test","vendorId":"0x0000","productId":"0x1111","lighting":"none","matrix":{"rows":2,"cols":2},"layouts":{"keymap":[["0,0","0,1"],["1,0","1,1"]]}}
 """
 
+LAYOUT_ENCODER = r"""
+{"name":"test","vendorId":"0x0000","productId":"0x1111","lighting":"none","matrix":{"rows":1,"cols":1},"layouts":{"keymap":[["0,0\n\n\n\n\n\n\n\n\ne","0,1\n\n\n\n\n\n\n\n\ne"],["0,0"]]}}
+"""
+
 
 class SimulatedDevice:
 
@@ -47,6 +51,11 @@ class SimulatedDevice:
                 for c, col in enumerate(row):
                     self.expect(struct.pack("BBBB", 4, l, r, c), struct.pack(">BBBBH", 4, l, r, c, col))
 
+    def expect_encoders(self, encoders):
+        for l, layer in enumerate(encoders):
+            for e, enc in enumerate(layer):
+                self.expect(struct.pack("BBBB", 0xFE, 3, l, e), struct.pack(">HH", enc[0], enc[1]))
+
     @staticmethod
     def sim_send(dev, data):
         if dev.expect_idx >= len(dev.expect_data):
@@ -57,9 +66,10 @@ class SimulatedDevice:
             ))
         inp, out = dev.expect_data[dev.expect_idx]
         if data != inp:
-            raise Exception("Got unexpected data at index {}: expected={} got={}".format(
+            raise Exception("Got unexpected data at index {}: expected={} with result={} got={}".format(
                 dev.expect_idx,
                 inp.hex(),
+                out.hex(),
                 data.hex()
             ))
         dev.expect_idx += 1
@@ -75,12 +85,14 @@ class SimulatedDevice:
 class TestKeyboard(unittest.TestCase):
 
     @staticmethod
-    def prepare_keyboard(layout, keymap):
+    def prepare_keyboard(layout, keymap, encoders=None):
         dev = SimulatedDevice()
         dev.expect_keyboard_id(0)
         dev.expect_layout(layout)
         dev.expect_layers(len(keymap))
         dev.expect_keymap(keymap)
+        if encoders is not None:
+            dev.expect_encoders(encoders)
 
         kb = Keyboard(dev, dev.sim_send)
         kb.reload()
@@ -138,3 +150,27 @@ class TestKeyboard(unittest.TestCase):
         kb.restore_layout(data)
         self.assertEqual(kb.layout[(1, 1, 0)], 10)
         dev.finish()
+
+    def test_encoder_simple(self):
+        """ Tests that we try to retrieve encoder layout """
+
+        kb, dev = self.prepare_keyboard(LAYOUT_ENCODER, [[[1]], [[2]], [[3]], [[4]]], [[(10, 11)], [(12, 13)], [(14, 15)], [(16, 17)]])
+        self.assertEqual(kb.encoder_layout[(0, 0, 0)], 10)
+        self.assertEqual(kb.encoder_layout[(0, 0, 1)], 11)
+        self.assertEqual(kb.encoder_layout[(1, 0, 0)], 12)
+        self.assertEqual(kb.encoder_layout[(1, 0, 1)], 13)
+        self.assertEqual(kb.encoder_layout[(2, 0, 0)], 14)
+        self.assertEqual(kb.encoder_layout[(2, 0, 1)], 15)
+        self.assertEqual(kb.encoder_layout[(3, 0, 0)], 16)
+        self.assertEqual(kb.encoder_layout[(3, 0, 1)], 17)
+        dev.finish()
+
+    def test_encoder_change(self):
+        """ Test that changing encoder works """
+
+        kb, dev = self.prepare_keyboard(LAYOUT_ENCODER, [[[1]], [[2]], [[3]], [[4]]], [[(10, 11)], [(12, 13)], [(14, 15)], [(16, 17)]])
+        self.assertEqual(kb.encoder_layout[(1, 0, 0)], 12)
+        self.assertEqual(kb.encoder_layout[(1, 0, 1)], 13)
+        dev.expect("FE040100010020", "")
+        kb.set_encoder(1, 0, 1, 0x20)
+        self.assertEqual(kb.encoder_layout[(1, 0, 1)], 0x20)
