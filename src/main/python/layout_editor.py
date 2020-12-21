@@ -1,7 +1,65 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
+from PyQt5.QtWidgets import QLabel, QCheckBox, QComboBox, QGridLayout
 
 from basic_editor import BasicEditor
 from vial_device import VialKeyboard
+
+
+class BooleanChoice:
+
+    def __init__(self, container, label):
+        self.choice = 0
+
+        self.widget_label = QLabel(label)
+        self.widget_checkbox = QCheckBox()
+
+        row = container.rowCount()
+        container.addWidget(self.widget_label, row, 0)
+        container.addWidget(self.widget_checkbox, row, 1)
+
+    def delete(self):
+        self.widget_label.deleteLater()
+        self.widget_checkbox.deleteLater()
+
+    def pack(self):
+        return str(self.choice)
+
+    def unpack(self, value):
+        self.change(int(value))
+
+    def change(self, value):
+        self.widget_checkbox.setChecked(bool(value))
+
+
+class SelectChoice:
+
+    def __init__(self, container, label, options):
+        self.choice = 0
+        self.options = options
+
+        self.widget_label = QLabel(label)
+        self.widget_options = QComboBox()
+        self.widget_options.addItems(options)
+
+        row = container.rowCount()
+        container.addWidget(self.widget_label, row, 0)
+        container.addWidget(self.widget_options, row, 1)
+
+    def delete(self):
+        self.widget_label.deleteLater()
+        self.widget_options.deleteLater()
+
+    def pack(self):
+        val = bin(self.choice)[2:]
+        val = "0" * ((len(self.options) - 1).bit_length() - len(val)) + val
+        return val
+
+    def unpack(self, value):
+        self.change(int(value, 2))
+
+    def change(self, value):
+        self.choice = value
+        self.widget_options.setCurrentIndex(self.choice)
 
 
 class LayoutEditor(BasicEditor):
@@ -10,8 +68,46 @@ class LayoutEditor(BasicEditor):
         super().__init__(parent)
         self.device = None
 
+        self.choices = []
+
+        self.widgets = []
+
+        self.container = QGridLayout()
+        self.addLayout(self.container)
+
     def rebuild(self, device):
         super().rebuild(device)
 
+        if not self.valid:
+            return
+
+        for choice in self.choices:
+            choice.delete()
+        self.choices = []
+
+        for item in device.keyboard.layouts["labels"]:
+            if isinstance(item, str):
+                self.choices.append(BooleanChoice(self.container, item))
+            else:
+                self.choices.append(SelectChoice(self.container, item[0], item[1:]))
+
+        self.unpack(self.device.keyboard.layout_options)
+
     def valid(self):
-        return isinstance(self.device, VialKeyboard)
+        return isinstance(self.device, VialKeyboard) and self.device.keyboard.layouts
+
+    def pack(self):
+        val = ""
+        for choice in self.choices[::-1]:
+            val += choice.pack()
+        return int(val, 2)
+
+    def unpack(self, value):
+        # we operate on bit strings
+        value = "0" * 100 + bin(value)[2:]
+
+        # VIA stores option choices backwards, we need to parse the input in reverse
+        for choice in self.choices[::-1]:
+            sz = len(choice.pack())
+            choice.unpack(value[-sz:])
+            value = value[:-sz]

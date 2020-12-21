@@ -9,10 +9,14 @@ from kle_serial import Serial as KleSerial
 from util import MSG_LEN, hid_send
 
 
+CMD_VIA_GET_KEYBOARD_VALUE = 0x02
+CMD_VIA_SET_KEYBOARD_VALUE = 0x03
 CMD_VIA_GET_KEYCODE = 0x04
 CMD_VIA_SET_KEYCODE = 0x05
 CMD_VIA_GET_LAYER_COUNT = 0x11
 CMD_VIA_VIAL_PREFIX = 0xFE
+
+VIA_LAYOUT_OPTIONS = 0x02
 
 CMD_VIAL_GET_KEYBOARD_ID = 0x00
 CMD_VIAL_GET_SIZE = 0x01
@@ -34,6 +38,8 @@ class Keyboard:
         self.layout = dict()
         self.encoder_layout = dict()
         self.rows = self.cols = self.layers = 0
+        self.layouts = None
+        self.layout_options = 0
         self.keys = []
         self.encoders = []
 
@@ -83,6 +89,8 @@ class Keyboard:
 
             payload = json.loads(lzma.decompress(payload))
 
+        self.layouts = payload.get("layouts")
+
         self.rows = payload["matrix"]["rows"]
         self.cols = payload["matrix"]["cols"]
 
@@ -125,6 +133,10 @@ class Keyboard:
                 self.encoder_layout[(layer, idx, 0)] = struct.unpack(">H", data[0:2])[0]
                 self.encoder_layout[(layer, idx, 1)] = struct.unpack(">H", data[2:4])[0]
 
+        if self.layouts:
+            data = self.usb_send(self.dev, struct.pack("BB", CMD_VIA_GET_KEYBOARD_VALUE, VIA_LAYOUT_OPTIONS))
+            self.layout_options = struct.unpack(">I", data[2:6])[0]
+
     def set_key(self, layer, row, col, code):
         key = (layer, row, col)
         if self.layout[key] != code:
@@ -137,6 +149,11 @@ class Keyboard:
             self.usb_send(self.dev, struct.pack(">BBBBBH", CMD_VIA_VIAL_PREFIX, CMD_VIAL_SET_ENCODER,
                                                 layer, index, direction, code))
             self.encoder_layout[key] = code
+
+    def set_layout_options(self, options):
+        if self.layout_options != options:
+            self.layout_options = options
+            self.usb_send(self.dev, struct.pack(">BBI", CMD_VIA_SET_KEYBOARD_VALUE, VIA_LAYOUT_OPTIONS, options))
 
     def save_layout(self):
         """ Serializes current layout to a binary """
