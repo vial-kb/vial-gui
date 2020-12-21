@@ -6,8 +6,7 @@ import lzma
 from collections import OrderedDict
 
 from kle_serial import Serial as KleSerial
-from util import MSG_LEN, hid_send
-
+from util import MSG_LEN, hid_send, chunks
 
 CMD_VIA_GET_KEYBOARD_VALUE = 0x02
 CMD_VIA_SET_KEYBOARD_VALUE = 0x03
@@ -23,6 +22,7 @@ CMD_VIAL_GET_SIZE = 0x01
 CMD_VIAL_GET_DEFINITION = 0x02
 CMD_VIAL_GET_ENCODER = 0x03
 CMD_VIAL_SET_ENCODER = 0x04
+CMD_VIAL_GET_KEYMAP_FAST = 0x05
 
 
 class Keyboard:
@@ -115,7 +115,7 @@ class Keyboard:
                 row, col = int(row), int(col)
                 key.row = row
                 key.col = col
-                self.rowcol[(row, col)] = True
+                self.rowcol.setdefault(row, []).append(col)
                 self.keys.append(key)
 
             # bottom right corner determines layout index and option in this layout
@@ -129,10 +129,17 @@ class Keyboard:
         """ Load current key mapping from the keyboard """
 
         for layer in range(self.layers):
-            for row, col in self.rowcol.keys():
-                data = self.usb_send(self.dev, struct.pack("BBBB", CMD_VIA_GET_KEYCODE, layer, row, col))
-                keycode = struct.unpack(">H", data[4:6])[0]
-                self.layout[(layer, row, col)] = keycode
+            for row, cols in self.rowcol.items():
+                for chunk in chunks(cols, 16):
+                    req = struct.pack("BBBB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_GET_KEYMAP_FAST, layer, row)
+                    for col in chunk:
+                        req += struct.pack("B", col)
+                    req += b"\xFF" * (MSG_LEN - len(req))
+
+                    data = self.usb_send(self.dev, req)
+                    for x, col in enumerate(chunk):
+                        keycode = struct.unpack(">H", data[x*2:x*2+2])[0]
+                        self.layout[(layer, row, col)] = keycode
 
         for layer in range(self.layers):
             for idx in self.encoderpos:
