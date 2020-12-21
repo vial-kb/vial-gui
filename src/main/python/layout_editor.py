@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
+from PyQt5 import QtCore
 from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtWidgets import QLabel, QCheckBox, QComboBox, QGridLayout
+from PyQt5.QtWidgets import QLabel, QCheckBox, QComboBox, QGridLayout, QWidget, QSizePolicy
 
 from basic_editor import BasicEditor
 from vial_device import VialKeyboard
@@ -88,8 +89,12 @@ class LayoutEditor(BasicEditor):
 
         self.widgets = []
 
+        w = QWidget()
+        w.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
         self.container = QGridLayout()
-        self.addLayout(self.container)
+        w.setLayout(self.container)
+        self.addWidget(w)
+        self.setAlignment(w, QtCore.Qt.AlignHCenter)
 
     def rebuild(self, device):
         super().rebuild(device)
