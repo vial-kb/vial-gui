@@ -127,6 +127,8 @@ class LayoutEditor(BasicEditor):
         return isinstance(self.device, VialKeyboard) and "labels" in self.device.keyboard.layouts
 
     def pack(self):
+        if not self.choices:
+            return 0
         val = ""
         for choice in self.choices:
             val += choice.pack()
