@@ -99,7 +99,7 @@ class LayoutEditor(BasicEditor):
     def rebuild(self, device):
         super().rebuild(device)
 
-        if not self.valid:
+        if not self.valid():
             return
 
         for choice in self.choices:
@@ -116,7 +116,7 @@ class LayoutEditor(BasicEditor):
         self.unpack(self.device.keyboard.layout_options)
 
     def valid(self):
-        return isinstance(self.device, VialKeyboard) and self.device.keyboard.layouts
+        return isinstance(self.device, VialKeyboard) and "labels" in self.device.keyboard.layouts
 
     def pack(self):
         val = ""
