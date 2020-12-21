@@ -115,7 +115,7 @@ class LayoutEditor(BasicEditor):
 
     def pack(self):
         val = ""
-        for choice in self.choices[::-1]:
+        for choice in self.choices:
             val += choice.pack()
         return int(val, 2)
 

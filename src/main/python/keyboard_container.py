@@ -17,6 +17,8 @@ class KeyboardContainer(QWidget):
     def __init__(self, layout_editor):
         super().__init__()
 
+        self.layout_editor = layout_editor
+
         self.layout_layers = QHBoxLayout()
         layer_label = QLabel(tr("KeyboardContainer", "Layer"))
 
@@ -39,7 +41,7 @@ class KeyboardContainer(QWidget):
         self.keyboard = None
         self.current_layer = 0
 
-        layout_editor.changed.connect(self.refresh_layer_display)
+        layout_editor.changed.connect(self.on_layout_changed)
 
     def rebuild_layers(self):
         self.number_layers_changed.emit()
@@ -66,13 +68,10 @@ class KeyboardContainer(QWidget):
         self.container.set_keys(keyboard.keys, keyboard.encoders)
 
         self.current_layer = 0
-        self.refresh_layer_display()
+        self.on_layout_changed()
 
     def refresh_layer_display(self):
         """ Refresh text on key widgets to display data corresponding to current layer """
-
-        if self.keyboard is None:
-            return
 
         self.container.update_layout()
 
@@ -150,3 +149,10 @@ class KeyboardContainer(QWidget):
     def restore_layout(self, data):
         self.keyboard.restore_layout(data)
         self.refresh_layer_display()
+
+    def on_layout_changed(self):
+        if self.keyboard is None:
+            return
+
+        self.refresh_layer_display()
+        self.keyboard.set_layout_options(self.layout_editor.pack())

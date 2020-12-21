@@ -39,7 +39,7 @@ class Keyboard:
         self.encoder_layout = dict()
         self.rows = self.cols = self.layers = 0
         self.layouts = None
-        self.layout_options = 0
+        self.layout_options = -1
         self.keys = []
         self.encoders = []
 
@@ -158,7 +158,7 @@ class Keyboard:
             self.encoder_layout[key] = code
 
     def set_layout_options(self, options):
-        if self.layout_options != options:
+        if self.layout_options != -1 and self.layout_options != options:
             self.layout_options = options
             self.usb_send(self.dev, struct.pack(">BBI", CMD_VIA_SET_KEYBOARD_VALUE, VIA_LAYOUT_OPTIONS, options))
 
