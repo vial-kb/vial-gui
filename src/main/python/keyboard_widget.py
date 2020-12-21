@@ -184,7 +184,6 @@ class KeyboardWidget(QWidget):
         self.widgets += self.common_widgets
         for idx in self.widgets_for_layout.keys():
             option = self.layout_editor.get_choice(idx)
-            print("index {} option {}".format(idx, option))
             self.widgets += self.widgets_for_layout[idx][option]
 
         # determine maximum width and height of container

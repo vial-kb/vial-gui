@@ -39,6 +39,8 @@ class KeyboardContainer(QWidget):
         self.keyboard = None
         self.current_layer = 0
 
+        layout_editor.changed.connect(self.refresh_layer_display)
+
     def rebuild_layers(self):
         self.number_layers_changed.emit()
 
@@ -68,6 +70,11 @@ class KeyboardContainer(QWidget):
 
     def refresh_layer_display(self):
         """ Refresh text on key widgets to display data corresponding to current layer """
+
+        if self.keyboard is None:
+            return
+
+        self.container.update_layout()
 
         for label in self.layer_labels:
             label.setStyleSheet(LAYER_BTN_STYLE)

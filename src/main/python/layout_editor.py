@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
+from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QLabel, QCheckBox, QComboBox, QGridLayout
 
 from basic_editor import BasicEditor
@@ -7,11 +8,13 @@ from vial_device import VialKeyboard
 
 class BooleanChoice:
 
-    def __init__(self, container, label):
+    def __init__(self, cb, container, label):
+        self.cb = cb
         self.choice = False
 
         self.widget_label = QLabel(label)
         self.widget_checkbox = QCheckBox()
+        self.widget_checkbox.stateChanged.connect(self.on_checkbox)
 
         row = container.rowCount()
         container.addWidget(self.widget_label, row, 0)
@@ -31,16 +34,22 @@ class BooleanChoice:
         self.choice = bool(value)
         self.widget_checkbox.setChecked(self.choice)
 
+    def on_checkbox(self):
+        self.choice = self.widget_checkbox.isChecked()
+        self.cb()
+
 
 class SelectChoice:
 
-    def __init__(self, container, label, options):
+    def __init__(self, cb, container, label, options):
+        self.cb = cb
         self.choice = 0
         self.options = options
 
         self.widget_label = QLabel(label)
         self.widget_options = QComboBox()
         self.widget_options.addItems(options)
+        self.widget_options.currentIndexChanged.connect(self.on_selection)
 
         row = container.rowCount()
         container.addWidget(self.widget_label, row, 0)
@@ -62,8 +71,14 @@ class SelectChoice:
         self.choice = value
         self.widget_options.setCurrentIndex(self.choice)
 
+    def on_selection(self):
+        self.choice = self.widget_options.currentIndex()
+        self.cb()
+
 
 class LayoutEditor(BasicEditor):
+
+    changed = pyqtSignal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -88,9 +103,10 @@ class LayoutEditor(BasicEditor):
 
         for item in device.keyboard.layouts["labels"]:
             if isinstance(item, str):
-                self.choices.append(BooleanChoice(self.container, item))
+                choice = BooleanChoice(self.on_changed, self.container, item)
             else:
-                self.choices.append(SelectChoice(self.container, item[0], item[1:]))
+                choice = SelectChoice(self.on_changed, self.container, item[0], item[1:])
+            self.choices.append(choice)
 
         self.unpack(self.device.keyboard.layout_options)
 
@@ -118,3 +134,6 @@ class LayoutEditor(BasicEditor):
 
     def set_choice(self, index, value):
         self.choices[index].change(value)
+
+    def on_changed(self):
+        self.changed.emit()
