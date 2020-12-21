@@ -102,6 +102,8 @@ class LayoutEditor(BasicEditor):
         if not self.valid():
             return
 
+        self.blockSignals(True)
+
         for choice in self.choices:
             choice.delete()
         self.choices = []
@@ -114,6 +116,8 @@ class LayoutEditor(BasicEditor):
             self.choices.append(choice)
 
         self.unpack(self.device.keyboard.layout_options)
+
+        self.blockSignals(False)
 
     def valid(self):
         return isinstance(self.device, VialKeyboard) and "labels" in self.device.keyboard.layouts
@@ -136,9 +140,6 @@ class LayoutEditor(BasicEditor):
 
     def get_choice(self, index):
         return int(self.choices[index].pack(), 2)
-
-    def set_choice(self, index, value):
-        self.choices[index].change(value)
 
     def on_changed(self):
         self.changed.emit()
