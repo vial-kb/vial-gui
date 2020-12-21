@@ -1,14 +1,13 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
-from PyQt5.QtWidgets import QVBoxLayout
-
+from basic_editor import BasicEditor
 from keyboard_container import KeyboardContainer
 from keycodes import recreate_layer_keycodes
 from tabbed_keycodes import TabbedKeycodes
 from vial_device import VialKeyboard
 
 
-class KeymapEditor(QVBoxLayout):
+class KeymapEditor(BasicEditor):
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -32,7 +31,7 @@ class KeymapEditor(QVBoxLayout):
         self.keyboard_container.set_key(code)
 
     def rebuild(self, device):
-        self.device = device
+        super().rebuild(device)
         if isinstance(self.device, VialKeyboard):
             self.keyboard_container.rebuild(device.keyboard)
 

@@ -7,9 +7,9 @@ import threading
 
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtGui import QFontDatabase
-from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QLineEdit, QToolButton, QPlainTextEdit, QProgressBar,\
-    QFileDialog, QDialog
+from PyQt5.QtWidgets import QHBoxLayout, QLineEdit, QToolButton, QPlainTextEdit, QProgressBar,QFileDialog, QDialog
 
+from basic_editor import BasicEditor
 from util import tr, chunks
 from vial_device import VialBootloader
 
@@ -66,7 +66,7 @@ def cmd_flash(device, firmware, log_cb, progress_cb, complete_cb, error_cb):
     complete_cb("Done!")
 
 
-class FirmwareFlasher(QVBoxLayout):
+class FirmwareFlasher(BasicEditor):
     log_signal = pyqtSignal(object)
     progress_signal = pyqtSignal(object)
     complete_signal = pyqtSignal(object)
@@ -110,7 +110,7 @@ class FirmwareFlasher(QVBoxLayout):
         self.device = None
 
     def rebuild(self, device):
-        self.device = device
+        super().rebuild(device)
         self.txt_logger.clear()
         if isinstance(self.device, VialBootloader):
             self.log("Valid Vial Bootloader device at {}".format(self.device.desc["path"].decode("utf-8")))

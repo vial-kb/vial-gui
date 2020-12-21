@@ -8,6 +8,7 @@ import json
 
 from firmware_flasher import FirmwareFlasher
 from keymap_editor import KeymapEditor
+from layout_editor import LayoutEditor
 from util import tr, find_vial_devices
 
 
@@ -33,7 +34,11 @@ class MainWindow(QMainWindow):
         layout_combobox.addWidget(self.btn_refresh_devices)
 
         self.keymap_editor = KeymapEditor()
+        self.layout_editor = LayoutEditor()
         self.firmware_flasher = FirmwareFlasher(self)
+
+        self.editors = [(self.keymap_editor, "Keymap"), (self.layout_editor, "Layout"),
+                        (self.firmware_flasher, "Firmware updater")]
 
         self.tabs = QTabWidget()
         self.refresh_tabs()
@@ -66,7 +71,6 @@ class MainWindow(QMainWindow):
         exit_act.setShortcut("Ctrl+Q")
         exit_act.triggered.connect(qApp.exit)
 
-        menubar = self.menuBar()
         file_menu = self.menuBar().addMenu(tr("Menu", "File"))
         file_menu.addAction(layout_load_act)
         file_menu.addAction(layout_save_act)
@@ -112,14 +116,14 @@ class MainWindow(QMainWindow):
         if self.current_device is not None:
             self.current_device.open(self.sideload_json if self.current_device.sideload else None)
 
-        self.keymap_editor.rebuild(self.current_device)
-        self.firmware_flasher.rebuild(self.current_device)
+        for editor, lbl in self.editors:
+            editor.rebuild(self.current_device)
 
         self.refresh_tabs()
 
     def refresh_tabs(self):
         self.tabs.clear()
-        for container, lbl in [(self.keymap_editor, "Keymap"), (self.firmware_flasher, "Firmware updater")]:
+        for container, lbl in self.editors:
             if not container.valid():
                 continue
 
