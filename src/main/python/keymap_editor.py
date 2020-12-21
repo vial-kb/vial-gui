@@ -8,7 +8,7 @@ from tabbed_keycodes import TabbedKeycodes
 from vial_device import VialKeyboard
 
 
-class LayoutEditor(QVBoxLayout):
+class KeymapEditor(QVBoxLayout):
 
     def __init__(self, parent=None):
         super().__init__(parent)

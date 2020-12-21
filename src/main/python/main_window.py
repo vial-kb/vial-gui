@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import QWidget, QComboBox, QToolButton, QHBoxLayout, QVBoxL
 import json
 
 from firmware_flasher import FirmwareFlasher
-from layout_editor import LayoutEditor
+from keymap_editor import KeymapEditor
 from util import tr, find_vial_devices
 
 
@@ -32,7 +32,7 @@ class MainWindow(QMainWindow):
         layout_combobox.addWidget(self.combobox_devices)
         layout_combobox.addWidget(self.btn_refresh_devices)
 
-        self.layout_editor = LayoutEditor()
+        self.keymap_editor = KeymapEditor()
         self.firmware_flasher = FirmwareFlasher(self)
 
         self.tabs = QTabWidget()
@@ -83,7 +83,7 @@ class MainWindow(QMainWindow):
         if dialog.exec_() == QDialog.Accepted:
             with open(dialog.selectedFiles()[0], "rb") as inf:
                 data = inf.read()
-            self.layout_editor.restore_layout(data)
+            self.keymap_editor.restore_layout(data)
 
     def on_layout_save(self):
         dialog = QFileDialog()
@@ -92,7 +92,7 @@ class MainWindow(QMainWindow):
         dialog.setNameFilters(["Vial layout (*.vil)"])
         if dialog.exec_() == QDialog.Accepted:
             with open(dialog.selectedFiles()[0], "wb") as outf:
-                outf.write(self.layout_editor.save_layout())
+                outf.write(self.keymap_editor.save_layout())
 
     def on_click_refresh(self):
         self.devices = find_vial_devices(self.sideload_vid, self.sideload_pid)
@@ -112,14 +112,14 @@ class MainWindow(QMainWindow):
         if self.current_device is not None:
             self.current_device.open(self.sideload_json if self.current_device.sideload else None)
 
-        self.layout_editor.rebuild(self.current_device)
+        self.keymap_editor.rebuild(self.current_device)
         self.firmware_flasher.rebuild(self.current_device)
 
         self.refresh_tabs()
 
     def refresh_tabs(self):
         self.tabs.clear()
-        for container, lbl in [(self.layout_editor, "Layout"), (self.firmware_flasher, "Firmware updater")]:
+        for container, lbl in [(self.keymap_editor, "Keymap"), (self.firmware_flasher, "Firmware updater")]:
             if not container.valid():
                 continue
 
