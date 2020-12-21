@@ -42,6 +42,7 @@ class Keyboard:
         self.layout_options = -1
         self.keys = []
         self.encoders = []
+        self.sideload = False
 
         self.vial_protocol = self.keyboard_id = -1
 
@@ -67,6 +68,7 @@ class Keyboard:
 
         if sideload_json is not None:
             payload = sideload_json
+            self.sideload = True
         else:
             # get keyboard identification
             data = self.usb_send(self.dev, struct.pack("BB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_GET_KEYBOARD_ID))
@@ -130,16 +132,24 @@ class Keyboard:
 
         for layer in range(self.layers):
             for row, cols in self.rowcol.items():
-                for chunk in chunks(cols, 16):
-                    req = struct.pack("BBBB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_GET_KEYMAP_FAST, layer, row)
-                    for col in chunk:
-                        req += struct.pack("B", col)
-                    req += b"\xFF" * (MSG_LEN - len(req))
-
-                    data = self.usb_send(self.dev, req)
-                    for x, col in enumerate(chunk):
-                        keycode = struct.unpack(">H", data[x*2:x*2+2])[0]
+                # if this is a sideload, we have to assume it's a VIA keyboard
+                # and does not support fast keymap retrieval
+                if self.sideload:
+                    for col in cols:
+                        data = self.usb_send(self.dev, struct.pack("BBBB", CMD_VIA_GET_KEYCODE, layer, row, col))
+                        keycode = struct.unpack(">H", data[4:6])[0]
                         self.layout[(layer, row, col)] = keycode
+                else:
+                    for chunk in chunks(cols, 16):
+                        req = struct.pack("BBBB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_GET_KEYMAP_FAST, layer, row)
+                        for col in chunk:
+                            req += struct.pack("B", col)
+                        req += b"\xFF" * (MSG_LEN - len(req))
+
+                        data = self.usb_send(self.dev, req)
+                        for x, col in enumerate(chunk):
+                            keycode = struct.unpack(">H", data[x*2:x*2+2])[0]
+                            self.layout[(layer, row, col)] = keycode
 
         for layer in range(self.layers):
             for idx in self.encoderpos:

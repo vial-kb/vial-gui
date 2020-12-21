@@ -93,8 +93,12 @@ class TestKeyboard(unittest.TestCase):
         dev.expect_keymap(keymap)
         if encoders is not None:
             dev.expect_encoders(encoders)
+        # layout options
+        dev.expect("0202", "020200000000")
 
         kb = Keyboard(dev, dev.sim_send)
+        # simulate old VIA keymap retrieval in tests for now
+        kb.sideload = True
         kb.reload()
 
         return kb, dev
