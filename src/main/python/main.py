@@ -45,10 +45,6 @@ class UncaughtHook(QtCore.QObject):
         sys._excepthook(exc_type, exc_value, exc_traceback)
 
 
-# create a global instance of our class to register the hook
-qt_exception_hook = UncaughtHook()
-
-
 if __name__ == '__main__':
     appctxt = ApplicationContext()       # 1. Instantiate ApplicationContext
     qt_exception_hook = UncaughtHook()
