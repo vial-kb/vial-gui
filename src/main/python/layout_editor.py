@@ -22,7 +22,9 @@ class BooleanChoice:
         container.addWidget(self.widget_checkbox, row, 1)
 
     def delete(self):
+        self.widget_label.hide()
         self.widget_label.deleteLater()
+        self.widget_checkbox.hide()
         self.widget_checkbox.deleteLater()
 
     def pack(self):
@@ -57,7 +59,9 @@ class SelectChoice:
         container.addWidget(self.widget_options, row, 1)
 
     def delete(self):
+        self.widget_label.hide()
         self.widget_label.deleteLater()
+        self.widget_options.hide()
         self.widget_options.deleteLater()
 
     def pack(self):

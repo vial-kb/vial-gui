@@ -66,5 +66,6 @@ class TabbedKeycodes(QTabWidget):
 
     def recreate_layer_keycode_buttons(self):
         for btn in self.layer_keycode_buttons:
+            btn.hide()
             btn.deleteLater()
         self.layer_keycode_buttons = self.create_buttons(self.layout_layers, KEYCODES_LAYERS)

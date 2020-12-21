@@ -48,6 +48,7 @@ class KeyboardContainer(QWidget):
 
         # delete old layer labels
         for label in self.layer_labels:
+            label.hide()
             label.deleteLater()
         self.layer_labels = []
 
