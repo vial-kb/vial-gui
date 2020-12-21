@@ -8,7 +8,7 @@ from vial_device import VialKeyboard
 class BooleanChoice:
 
     def __init__(self, container, label):
-        self.choice = 0
+        self.choice = False
 
         self.widget_label = QLabel(label)
         self.widget_checkbox = QCheckBox()
@@ -22,13 +22,14 @@ class BooleanChoice:
         self.widget_checkbox.deleteLater()
 
     def pack(self):
-        return str(self.choice)
+        return str(int(self.choice))
 
     def unpack(self, value):
         self.change(int(value))
 
     def change(self, value):
-        self.widget_checkbox.setChecked(bool(value))
+        self.choice = bool(value)
+        self.widget_checkbox.setChecked(self.choice)
 
 
 class SelectChoice:
@@ -111,3 +112,9 @@ class LayoutEditor(BasicEditor):
             sz = len(choice.pack())
             choice.unpack(value[-sz:])
             value = value[:-sz]
+
+    def get_choice(self, index):
+        return int(self.choices[index].pack(), 2)
+
+    def set_choice(self, index, value):
+        self.choices[index].change(value)

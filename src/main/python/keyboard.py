@@ -118,6 +118,13 @@ class Keyboard:
                 self.rowcol[(row, col)] = True
                 self.keys.append(key)
 
+            # bottom right corner determines layout index and option in this layout
+            key.layout_index = -1
+            key.layout_option = -1
+            if key.labels[8]:
+                idx, opt = key.labels[8].split(",")
+                key.layout_index, key.layout_option = int(idx), int(opt)
+
     def reload_keymap(self):
         """ Load current key mapping from the keyboard """
 

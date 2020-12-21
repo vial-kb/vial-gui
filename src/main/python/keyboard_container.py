@@ -14,8 +14,8 @@ class KeyboardContainer(QWidget):
 
     number_layers_changed = pyqtSignal()
 
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self, layout_editor):
+        super().__init__()
 
         self.layout_layers = QHBoxLayout()
         layer_label = QLabel(tr("KeyboardContainer", "Layer"))
@@ -26,7 +26,7 @@ class KeyboardContainer(QWidget):
         layout_labels_container.addStretch()
 
         # contains the actual keyboard
-        self.container = KeyboardWidget()
+        self.container = KeyboardWidget(layout_editor)
         self.container.clicked.connect(self.on_key_clicked)
 
         layout = QVBoxLayout()
@@ -35,7 +35,6 @@ class KeyboardContainer(QWidget):
         layout.setAlignment(self.container, Qt.AlignHCenter)
         self.setLayout(layout)
 
-        self.keys = []
         self.layer_labels = []
         self.keyboard = None
         self.current_layer = 0
@@ -59,11 +58,6 @@ class KeyboardContainer(QWidget):
     def rebuild(self, keyboard):
         self.keyboard = keyboard
 
-        # delete current layout
-        for key in self.keys:
-            key.deleteLater()
-        self.keys = []
-
         # get number of layers
         self.rebuild_layers()
 
@@ -79,7 +73,7 @@ class KeyboardContainer(QWidget):
             label.setStyleSheet(LAYER_BTN_STYLE)
         self.layer_labels[self.current_layer].setStyleSheet(ACTIVE_LAYER_BTN_STYLE)
 
-        for widget in self.container.keys:
+        for widget in self.container.widgets:
             if widget.desc.row is not None:
                 code = self.keyboard.layout[(self.current_layer, widget.desc.row, widget.desc.col)]
             else:

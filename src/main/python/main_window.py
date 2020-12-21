@@ -33,8 +33,8 @@ class MainWindow(QMainWindow):
         layout_combobox.addWidget(self.combobox_devices)
         layout_combobox.addWidget(self.btn_refresh_devices)
 
-        self.keymap_editor = KeymapEditor()
         self.layout_editor = LayoutEditor()
+        self.keymap_editor = KeymapEditor(self.layout_editor)
         self.firmware_flasher = FirmwareFlasher(self)
 
         self.editors = [(self.keymap_editor, "Keymap"), (self.layout_editor, "Layout"),
@@ -116,8 +116,8 @@ class MainWindow(QMainWindow):
         if self.current_device is not None:
             self.current_device.open(self.sideload_json if self.current_device.sideload else None)
 
-        for editor, lbl in self.editors:
-            editor.rebuild(self.current_device)
+        for e in [self.layout_editor, self.keymap_editor, self.firmware_flasher]:
+            e.rebuild(self.current_device)
 
         self.refresh_tabs()
 
