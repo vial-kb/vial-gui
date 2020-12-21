@@ -37,12 +37,13 @@ def find_vial_devices(sideload_vid, sideload_pid):
 
     filtered = []
     for dev in hid.enumerate():
-        if VIAL_SERIAL_NUMBER_MAGIC in dev["serial_number"] and is_rawhid(dev):
+        if dev["vendor_id"] == sideload_vid and dev["product_id"] == sideload_pid and is_rawhid(dev):
+            filtered.append(VialKeyboard(dev, sideload=True))
+        elif VIAL_SERIAL_NUMBER_MAGIC in dev["serial_number"] and is_rawhid(dev):
             filtered.append(VialKeyboard(dev))
         elif VIBL_SERIAL_NUMBER_MAGIC in dev["serial_number"]:
             filtered.append(VialBootloader(dev))
-        elif dev["vendor_id"] == sideload_vid and dev["product_id"] == sideload_pid and is_rawhid(dev):
-            filtered.append(VialKeyboard(dev, sideload=True))
+
     return filtered
 
 
