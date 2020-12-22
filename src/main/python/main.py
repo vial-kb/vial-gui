@@ -7,6 +7,7 @@ from fbs_runtime.application_context.PyQt5 import ApplicationContext
 
 import sys
 
+from linux_keystroke_recorder import linux_keystroke_recorder
 from main_window import MainWindow
 from constants import WINDOW_WIDTH, WINDOW_HEIGHT
 
@@ -46,10 +47,13 @@ class UncaughtHook(QtCore.QObject):
 
 
 if __name__ == '__main__':
-    appctxt = ApplicationContext()       # 1. Instantiate ApplicationContext
-    qt_exception_hook = UncaughtHook()
-    window = MainWindow()
-    window.resize(WINDOW_WIDTH, WINDOW_HEIGHT)
-    window.show()
-    exit_code = appctxt.app.exec_()      # 2. Invoke appctxt.app.exec_()
-    sys.exit(exit_code)
+    if len(sys.argv) == 2 and sys.argv[1] == "--linux-recorder":
+        linux_keystroke_recorder()
+    else:
+        appctxt = ApplicationContext()       # 1. Instantiate ApplicationContext
+        qt_exception_hook = UncaughtHook()
+        window = MainWindow()
+        window.resize(WINDOW_WIDTH, WINDOW_HEIGHT)
+        window.show()
+        exit_code = appctxt.app.exec_()      # 2. Invoke appctxt.app.exec_()
+        sys.exit(exit_code)

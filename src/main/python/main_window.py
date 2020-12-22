@@ -9,6 +9,7 @@ import json
 from firmware_flasher import FirmwareFlasher
 from keymap_editor import KeymapEditor
 from layout_editor import LayoutEditor
+from macro_recorder import MacroRecorder
 from util import tr, find_vial_devices
 
 
@@ -36,8 +37,9 @@ class MainWindow(QMainWindow):
         self.layout_editor = LayoutEditor()
         self.keymap_editor = KeymapEditor(self.layout_editor)
         self.firmware_flasher = FirmwareFlasher(self)
+        self.macro_recorder = MacroRecorder()
 
-        self.editors = [(self.keymap_editor, "Keymap"), (self.layout_editor, "Layout"),
+        self.editors = [(self.keymap_editor, "Keymap"), (self.layout_editor, "Layout"), (self.macro_recorder, "Macros"),
                         (self.firmware_flasher, "Firmware updater")]
 
         self.tabs = QTabWidget()
@@ -116,7 +118,7 @@ class MainWindow(QMainWindow):
         if self.current_device is not None:
             self.current_device.open(self.sideload_json if self.current_device.sideload else None)
 
-        for e in [self.layout_editor, self.keymap_editor, self.firmware_flasher]:
+        for e in [self.layout_editor, self.keymap_editor, self.firmware_flasher, self.macro_recorder]:
             e.rebuild(self.current_device)
 
         self.refresh_tabs()
