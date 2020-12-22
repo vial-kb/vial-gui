@@ -3,7 +3,7 @@ import lzma
 import struct
 
 
-from keyboard import Keyboard
+from keyboard_comm import Keyboard
 from util import chunks
 
 LAYOUT_2x2 = """

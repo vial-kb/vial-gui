@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 from hidproxy import hid
-from keyboard import Keyboard
+from keyboard_comm import Keyboard
 
 
 class VialDevice:
