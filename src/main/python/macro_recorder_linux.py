@@ -136,6 +136,9 @@ class LinuxRecorder(QWidget):
         self.process.start("pkexec", args, QProcess.Unbuffered | QProcess.ReadWrite)
 
     def on_stop(self):
+        self.stop()
+
+    def stop(self):
         self.process.write(b"q")
         self.process.waitForFinished()
         self.process.close()

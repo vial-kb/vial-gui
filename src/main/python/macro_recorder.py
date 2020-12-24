@@ -32,8 +32,13 @@ class MacroRecorder(BasicEditor):
             return
 
     def on_record_clicked(self):
-        self.keystrokes = []
-        self.recorder.start()
+        if not self.recording:
+            self.recording = True
+            self.keystrokes = []
+            self.recorder.start()
+        else:
+            self.recording = False
+            self.recorder.stop()
 
     def on_stop(self):
         self.keystrokes = macro_optimize(self.keystrokes)
