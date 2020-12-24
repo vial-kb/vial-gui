@@ -241,6 +241,8 @@ class MacroRecorder(BasicEditor):
         if offset == 0:
             return
         index = self.lines.index(obj)
+        if index + offset < 0 or index + offset >= len(self.lines):
+            return
         other = self.lines.index(self.lines[index + offset])
         self.lines[index].remove()
         self.lines[other].remove()
