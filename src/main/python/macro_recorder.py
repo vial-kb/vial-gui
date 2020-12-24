@@ -7,6 +7,7 @@ from basic_editor import BasicEditor
 from macro_key import KeyString
 from macro_optimizer import macro_optimize
 from macro_recorder_linux import LinuxRecorder
+from util import tr
 from vial_device import VialKeyboard
 
 
@@ -170,13 +171,24 @@ class MacroRecorder(BasicEditor):
 
         self.container = QGridLayout()
 
-        btn = QPushButton("Record")
-        btn.clicked.connect(self.on_record_clicked)
-        self.addWidget(btn)
-        self.addLayout(self.container)
-        btn_add = QPushButton("Add action")
+        btn_record = QToolButton()
+        btn_record.setText(tr("MacroRecorder", "Record macro"))
+        btn_record.setToolButtonStyle(Qt.ToolButtonTextOnly)
+        btn_record.clicked.connect(self.on_record)
+        btn_add = QToolButton()
+        btn_add.setText(tr("MacroRecorder", "Add action"))
+        btn_add.setToolButtonStyle(Qt.ToolButtonTextOnly)
         btn_add.clicked.connect(self.on_add)
+
+        layout_buttons = QHBoxLayout()
+        layout_buttons.addStretch()
+        layout_buttons.addWidget(btn_add)
+        layout_buttons.addWidget(btn_record)
+
+        self.addLayout(self.container)
+        self.addLayout(layout_buttons)
         self.addWidget(btn_add)
+        self.addStretch()
 
     def valid(self):
         return isinstance(self.device, VialKeyboard)
@@ -186,7 +198,7 @@ class MacroRecorder(BasicEditor):
         if not self.valid():
             return
 
-    def on_record_clicked(self):
+    def on_record(self):
         if not self.recording:
             self.recording = True
             self.keystrokes = []
