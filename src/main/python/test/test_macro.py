@@ -2,9 +2,8 @@
 import unittest
 
 from keycodes import find_keycode
-from macro_key import KeyDown, KeyTap
-from macro_optimizer import remove_repeats
-
+from macro_key import KeyDown, KeyTap, KeyUp, KeyString
+from macro_optimizer import remove_repeats, replace_with_tap, replace_with_string
 
 KC_A = find_keycode(0x04)
 KC_B = find_keycode(0x05)
@@ -20,3 +19,11 @@ class TestMacro(unittest.TestCase):
 
         # don't remove repeated taps
         self.assertEqual(remove_repeats([KeyTap(KC_A), KeyTap(KC_A)]), [KeyTap(KC_A), KeyTap(KC_A)])
+
+    def test_replace_tap(self):
+        self.assertEqual(replace_with_tap([KeyDown(KC_A)]), [KeyDown(KC_A)])
+        self.assertEqual(replace_with_tap([KeyDown(KC_A), KeyUp(KC_A)]), [KeyTap(KC_A)])
+        self.assertEqual(replace_with_tap([KeyUp(KC_A), KeyDown(KC_A)]), [KeyUp(KC_A), KeyDown(KC_A)])
+
+    def test_replace_string(self):
+        self.assertEqual(replace_with_string([KeyTap(KC_A), KeyTap(KC_B)]), [KeyString("ab")])
