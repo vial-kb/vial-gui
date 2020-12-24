@@ -2,12 +2,12 @@
 from keycodes import keycode_label
 
 
-class BasicAction:
+class BasicKey:
 
     pass
 
 
-class KeyDown(BasicAction):
+class KeyDown(BasicKey):
 
     def __init__(self, keycode):
         self.keycode = keycode
@@ -19,7 +19,7 @@ class KeyDown(BasicAction):
         return isinstance(other, KeyDown) and other.keycode == self.keycode
 
 
-class KeyUp(BasicAction):
+class KeyUp(BasicKey):
 
     def __init__(self, keycode):
         self.keycode = keycode
@@ -31,7 +31,7 @@ class KeyUp(BasicAction):
         return isinstance(other, KeyUp) and other.keycode == self.keycode
 
 
-class KeyTap(BasicAction):
+class KeyTap(BasicKey):
 
     def __init__(self, keycode):
         self.keycode = keycode
@@ -43,7 +43,7 @@ class KeyTap(BasicAction):
         return isinstance(other, KeyTap) and other.keycode == self.keycode
 
 
-class KeyString(BasicAction):
+class KeyString(BasicKey):
 
     def __init__(self, string):
         self.string = string
