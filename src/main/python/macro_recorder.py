@@ -9,6 +9,7 @@ from fbs_runtime.application_context import is_frozen
 from basic_editor import BasicEditor
 from keycodes import KEYCODES_BASIC
 from macro_key import KeyDown, KeyUp
+from macro_optimizer import macro_optimize
 from util import tr
 from vial_device import VialKeyboard
 
@@ -202,6 +203,7 @@ class MacroRecorder(BasicEditor):
         self.recorder.start()
 
     def on_stop(self):
+        self.keystrokes = macro_optimize(self.keystrokes)
         print(self.keystrokes)
 
     def on_keystroke(self, keystroke):
