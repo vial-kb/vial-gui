@@ -218,12 +218,7 @@ class MacroRecorder(BasicEditor):
             self.tabs.addTab(w, "Macro {}".format(x + 1))
 
         # deserialize macros that came from keyboard
-        macros = self.keyboard.macro.split(b"\x00")
-        for x, tab in enumerate(self.macro_tabs):
-            macro = b"\x00"
-            if len(macros) > x:
-                macro = macros[x]
-            tab.deserialize(macro)
+        self.deserialize(self.keyboard.macro)
 
         self.on_change()
 
@@ -265,7 +260,19 @@ class MacroRecorder(BasicEditor):
         self.keystrokes.append(keystroke)
 
     def on_change(self):
-        memory = 0
-        for x, macro in enumerate(self.macro_tabs):
-            memory += len(macro.serialize())
+        memory = len(self.serialize())
         self.lbl_memory.setText("Memory used by macros: {}/{}".format(memory, self.keyboard.macro_memory))
+
+    def deserialize(self, data):
+        macros = data.split(b"\x00")
+        for x, tab in enumerate(self.macro_tabs[:self.keyboard.macro_count]):
+            macro = b"\x00"
+            if len(macros) > x:
+                macro = macros[x]
+            tab.deserialize(macro)
+
+    def serialize(self):
+        data = b""
+        for tab in self.macro_tabs[:self.keyboard.macro_count]:
+            data += tab.serialize() + b"\x00"
+        return data
