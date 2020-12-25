@@ -117,7 +117,7 @@ class MacroTab(QVBoxLayout):
                 if len(sequence) > 0 and isinstance(sequence[-1], list) and sequence[-1][0] == data[0]:
                     sequence[-1][1].append(data[1])
                 else:
-                    sequence.append((data[0], [data[1]]))
+                    sequence.append([data[0], [data[1]]])
 
                 data.pop(0)
                 data.pop(0)
@@ -139,7 +139,7 @@ class MacroTab(QVBoxLayout):
                     keycode = find_keycode(code)
                     if keycode:
                         keycodes.append(keycode)
-                cls = {SS_TAP_CODE: ActionTap, SS_DOWN_CODE: ActionText, SS_UP_CODE: ActionUp}[s[0]]
+                cls = {SS_TAP_CODE: ActionTap, SS_DOWN_CODE: ActionDown, SS_UP_CODE: ActionUp}[s[0]]
                 self.add_action(cls(self.container, keycodes))
 
     def on_change(self):
