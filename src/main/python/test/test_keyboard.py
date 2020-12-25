@@ -95,6 +95,10 @@ class TestKeyboard(unittest.TestCase):
             dev.expect_encoders(encoders)
         # layout options
         dev.expect("0202", "020200000000")
+        # macro count
+        dev.expect("0C", "0C00")
+        # macro buffer size
+        dev.expect("0D", "0D0000")
 
         kb = Keyboard(dev, dev.sim_send)
         # simulate old VIA keymap retrieval in tests for now

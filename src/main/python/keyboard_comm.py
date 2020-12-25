@@ -170,7 +170,7 @@ class Keyboard:
         """ Loads macro information from the keyboard """
         data = self.usb_send(self.dev, struct.pack("B", CMD_VIA_MACRO_GET_COUNT))
         self.macro_count = data[1]
-        data = self.usb_send(self.dev, struct.pack(">H", CMD_VIA_MACRO_GET_BUFFER_SIZE))
+        data = self.usb_send(self.dev, struct.pack("B", CMD_VIA_MACRO_GET_BUFFER_SIZE))
         self.macro_memory = struct.unpack(">H", data[1:3])[0]
 
     def set_key(self, layer, row, col, code):
