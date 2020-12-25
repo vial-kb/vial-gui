@@ -14,6 +14,8 @@ CMD_VIA_GET_KEYCODE = 0x04
 CMD_VIA_SET_KEYCODE = 0x05
 CMD_VIA_MACRO_GET_COUNT = 0x0C
 CMD_VIA_MACRO_GET_BUFFER_SIZE = 0x0D
+CMD_VIA_MACRO_GET_BUFFER = 0x0E
+CMD_VIA_MACRO_SET_BUFFER = 0x0F
 CMD_VIA_GET_LAYER_COUNT = 0x11
 CMD_VIA_VIAL_PREFIX = 0xFE
 
@@ -47,6 +49,7 @@ class Keyboard:
         self.sideload = False
         self.macro_count = 0
         self.macro_memory = 0
+        self.macro = b""
 
         self.vial_protocol = self.keyboard_id = -1
 
@@ -172,6 +175,14 @@ class Keyboard:
         self.macro_count = data[1]
         data = self.usb_send(self.dev, struct.pack("B", CMD_VIA_MACRO_GET_BUFFER_SIZE))
         self.macro_memory = struct.unpack(">H", data[1:3])[0]
+
+        self.macro = b""
+        # now retrieve the entire buffer, 28 bytes at a time, as that is what fits into a packet
+        chunk = 28
+        for x in range(0, self.macro_memory, chunk):
+            sz = min(chunk, self.macro_memory - x)
+            data = self.usb_send(self.dev, struct.pack(">BHB", CMD_VIA_MACRO_GET_BUFFER, x, sz))
+            self.macro += data[4:4+sz]
 
     def set_key(self, layer, row, col, code):
         key = (layer, row, col)
