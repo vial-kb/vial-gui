@@ -1,6 +1,8 @@
 # coding: utf-8
 # SPDX-License-Identifier: GPL-2.0-or-later
-from PyQt5.QtCore import Qt
+import struct
+
+from PyQt5.QtCore import Qt, pyqtSignal, QObject
 from PyQt5.QtWidgets import QPushButton, QLineEdit, QGridLayout, QHBoxLayout, QComboBox, QToolButton, QVBoxLayout, \
     QTabWidget, QWidget, QLabel
 
@@ -16,9 +18,12 @@ from vial_device import VialKeyboard
 KC_NO = KEYCODES_BASIC[0]
 
 
-class BasicAction:
+class BasicAction(QObject):
+
+    changed = pyqtSignal()
 
     def __init__(self, container):
+        super().__init__()
         self.container = container
 
 
@@ -28,6 +33,7 @@ class ActionText(BasicAction):
         super().__init__(container)
         self.text = QLineEdit()
         self.text.setText(text)
+        self.text.textChanged.connect(self.on_change)
 
     def insert(self, row):
         self.container.addWidget(self.text, row, 2)
@@ -38,6 +44,12 @@ class ActionText(BasicAction):
     def delete(self):
         self.text.setParent(None)
         self.text.deleteLater()
+
+    def serialize(self):
+        return self.text.text().encode("utf-8")
+
+    def on_change(self):
+        self.changed.emit()
 
 
 class ActionSequence(BasicAction):
@@ -97,6 +109,7 @@ class ActionSequence(BasicAction):
     def on_add(self):
         self.sequence.append(KC_NO)
         self.recreate_sequence()
+        self.changed.emit()
 
     def on_change(self):
         for x in range(len(self.sequence)):
@@ -105,17 +118,50 @@ class ActionSequence(BasicAction):
                 # asked to remove this item
                 del self.sequence[x]
                 self.recreate_sequence()
-                return
+                break
             else:
                 self.sequence[x] = KEYCODES_BASIC[self.widgets[x].currentIndex() - 2]
+        self.changed.emit()
+
+    def serialize_prefix(self):
+        raise NotImplementedError
+
+    def serialize(self):
+        out = b""
+        for k in self.sequence:
+            out += self.serialize_prefix()
+            out += struct.pack("B", k.code)
+        return out
 
 
-class MacroLine:
+class ActionDown(ActionSequence):
+
+    def serialize_prefix(self):
+        return b"\x02"
+
+
+class ActionUp(ActionSequence):
+
+    def serialize_prefix(self):
+        return b"\x03"
+
+
+class ActionTap(ActionSequence):
+
+    def serialize_prefix(self):
+        return b"\x01"
+
+
+class MacroLine(QObject):
+
+    changed = pyqtSignal()
 
     types = ["Text", "Down", "Up", "Tap"]
-    type_to_cls = [ActionText, ActionSequence, ActionSequence, ActionSequence]
+    type_to_cls = [ActionText, ActionDown, ActionUp, ActionTap]
 
     def __init__(self, parent, action):
+        super().__init__()
+
         self.parent = parent
         self.container = parent.container
 
@@ -137,6 +183,7 @@ class MacroLine:
         self.select_type.currentIndexChanged.connect(self.on_change_type)
 
         self.action = action
+        self.action.changed.connect(self.on_change)
         self.row = -1
 
         self.btn_remove = QToolButton()
@@ -174,6 +221,7 @@ class MacroLine:
         self.action.remove()
         self.action.delete()
         self.action = self.type_to_cls[self.select_type.currentIndex()](self.container)
+        self.action.changed.connect(self.on_change)
         self.action.insert(self.row)
 
     def on_remove_clicked(self):
@@ -185,8 +233,16 @@ class MacroLine:
     def on_move_down(self):
         self.parent.on_move(self, 1)
 
+    def on_change(self):
+        self.changed.emit()
+
+    def serialize(self):
+        return self.action.serialize()
+
 
 class MacroTab(QVBoxLayout):
+
+    changed = pyqtSignal()
 
     def __init__(self):
         super().__init__()
@@ -216,7 +272,9 @@ class MacroTab(QVBoxLayout):
         self.addStretch()
 
     def on_add(self):
-        self.lines.append(MacroLine(self, ActionText(self.container)))
+        line = MacroLine(self, ActionText(self.container))
+        line.changed.connect(self.on_change)
+        self.lines.append(line)
         self.lines[-1].insert(self.container.rowCount())
 
     def on_remove(self, obj):
@@ -243,6 +301,15 @@ class MacroTab(QVBoxLayout):
         self.lines[index].insert(index)
         self.lines[other].insert(other)
 
+    def serialize(self):
+        out = b""
+        for line in self.lines:
+            out += line.serialize()
+        return out
+
+    def on_change(self):
+        self.changed.emit()
+
 
 class MacroRecorder(BasicEditor):
 
@@ -259,9 +326,11 @@ class MacroRecorder(BasicEditor):
 
         self.tabs = QTabWidget()
         for x in range(32):
-            self.macro_tabs.append(MacroTab())
+            tab = MacroTab()
+            tab.changed.connect(self.on_change)
+            self.macro_tabs.append(tab)
             w = QWidget()
-            w.setLayout(self.macro_tabs[-1])
+            w.setLayout(tab)
             self.tabs.addTab(w, "Macro {}".format(x + 1))
 
         buttons = QHBoxLayout()
@@ -304,3 +373,7 @@ class MacroRecorder(BasicEditor):
 
     def on_keystroke(self, keystroke):
         self.keystrokes.append(keystroke)
+
+    def on_change(self):
+        for x, macro in enumerate(self.macro_tabs):
+            print(x, macro.serialize())
