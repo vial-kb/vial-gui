@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import QPushButton, QGridLayout, QHBoxLayout, QToolButton, 
 
 from basic_editor import BasicEditor
 from keycodes import find_keycode
-from macro_action import ActionText, ActionTap, ActionDown, ActionUp
+from macro_action import ActionText, ActionTap, ActionDown, ActionUp, SS_TAP_CODE, SS_DOWN_CODE, SS_UP_CODE
 from macro_key import KeyString, KeyDown, KeyUp, KeyTap
 from macro_line import MacroLine
 from macro_optimizer import macro_optimize
@@ -108,6 +108,40 @@ class MacroTab(QVBoxLayout):
             out += line.serialize()
         return out
 
+    def deserialize(self, data):
+        sequence = []
+        data = bytearray(data)
+        while len(data) > 0:
+            if data[0] in [SS_TAP_CODE, SS_DOWN_CODE, SS_UP_CODE]:
+                # append to previous *_CODE if it's the same type, otherwise create a new entry
+                if len(sequence) > 0 and isinstance(sequence[-1], list) and sequence[-1][0] == data[0]:
+                    sequence[-1][1].append(data[1])
+                else:
+                    sequence.append((data[0], [data[1]]))
+
+                data.pop(0)
+                data.pop(0)
+            else:
+                # append to previous string if it is a string, otherwise create a new entry
+                ch = chr(data[0])
+                if len(sequence) > 0 and isinstance(sequence[-1], str):
+                    sequence[-1] += ch
+                else:
+                    sequence.append(ch)
+                data.pop(0)
+        for s in sequence:
+            if isinstance(s, str):
+                self.add_action(ActionText(self.container, s))
+            else:
+                # map integer values to qmk keycodes
+                keycodes = []
+                for code in s[1]:
+                    keycode = find_keycode(code)
+                    if keycode:
+                        keycodes.append(keycode)
+                cls = {SS_TAP_CODE: ActionTap, SS_DOWN_CODE: ActionText, SS_UP_CODE: ActionUp}[s[0]]
+                self.add_action(cls(self.container, keycodes))
+
     def on_change(self):
         self.changed.emit()
 
@@ -182,6 +216,14 @@ class MacroRecorder(BasicEditor):
             self.tabs.removeTab(x)
         for x, w in enumerate(self.macro_tab_w[:self.keyboard.macro_count]):
             self.tabs.addTab(w, "Macro {}".format(x + 1))
+
+        # deserialize macros that came from keyboard
+        macros = self.keyboard.macro.split(b"\x00")
+        for x, tab in enumerate(self.macro_tabs):
+            macro = b"\x00"
+            if len(macros) > x:
+                macro = macros[x]
+            tab.deserialize(macro)
 
         self.on_change()
 

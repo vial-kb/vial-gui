@@ -10,6 +10,10 @@ from util import tr
 
 KC_NO = KEYCODES_BASIC[0]
 
+SS_TAP_CODE = 1
+SS_DOWN_CODE = 2
+SS_UP_CODE = 3
+
 
 class BasicAction(QObject):
 
