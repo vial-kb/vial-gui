@@ -31,6 +31,7 @@ class MacroLine(QObject):
 
         self.arrows.addWidget(self.btn_up)
         self.arrows.addWidget(self.btn_down)
+        self.arrows.setSpacing(0)
 
         self.select_type = QComboBox()
         self.select_type.addItems(self.types)
