@@ -57,6 +57,7 @@ class MacroTab(QVBoxLayout):
         line.changed.connect(self.on_change)
         self.lines.append(line)
         line.insert(self.container.rowCount())
+        self.changed.emit()
 
     def on_add(self):
         self.add_action(ActionText(self.container))
@@ -71,6 +72,7 @@ class MacroTab(QVBoxLayout):
             line.remove()
         for x, line in enumerate(self.lines):
             line.insert(x)
+        self.changed.emit()
 
     def on_move(self, obj, offset):
         if offset == 0:
@@ -84,6 +86,7 @@ class MacroTab(QVBoxLayout):
         self.lines[index], self.lines[other] = self.lines[other], self.lines[index]
         self.lines[index].insert(index)
         self.lines[other].insert(other)
+        self.changed.emit()
 
     def serialize(self):
         out = b""
