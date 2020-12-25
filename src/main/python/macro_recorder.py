@@ -123,14 +123,18 @@ class MacroRecorder(BasicEditor):
             w.setLayout(tab)
             self.tabs.addTab(w, "Macro {}".format(x + 1))
 
+        self.lbl_memory = QLabel()
+
         buttons = QHBoxLayout()
-        buttons.addWidget(QLabel("Memory used by macros: 123/345"))
+        buttons.addWidget(self.lbl_memory)
         buttons.addStretch()
         buttons.addWidget(QPushButton("Save"))
         buttons.addWidget(QPushButton("Revert"))
 
         self.addWidget(self.tabs)
         self.addLayout(buttons)
+
+        self.on_change()
 
     def valid(self):
         return isinstance(self.device, VialKeyboard)
@@ -165,5 +169,7 @@ class MacroRecorder(BasicEditor):
         self.keystrokes.append(keystroke)
 
     def on_change(self):
+        memory = 0
         for x, macro in enumerate(self.macro_tabs):
-            print(x, macro.serialize())
+            memory += len(macro.serialize())
+        self.lbl_memory.setText("Memory used by macros: {}/345".format(memory))
