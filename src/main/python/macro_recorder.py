@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
+import sys
 
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import QPushButton, QGridLayout, QHBoxLayout, QToolButton, QVBoxLayout, \
@@ -21,7 +22,7 @@ class MacroTab(QVBoxLayout):
     record = pyqtSignal(object, bool)
     record_stop = pyqtSignal()
 
-    def __init__(self):
+    def __init__(self, enable_recorder):
         super().__init__()
 
         self.lines = []
@@ -36,6 +37,8 @@ class MacroTab(QVBoxLayout):
 
         self.btn_record = QPushButton(tr("MacroRecorder", "Record macro"))
         self.btn_record.setMenu(menu_record)
+        if not enable_recorder:
+            self.btn_record.hide()
 
         self.btn_record_stop = QPushButton(tr("MacroRecorder", "Stop recording"))
         self.btn_record_stop.clicked.connect(lambda: self.record_stop.emit())
@@ -174,9 +177,14 @@ class MacroRecorder(BasicEditor):
         self.macro_tabs = []
         self.macro_tab_w = []
 
-        self.recorder = LinuxRecorder()
-        self.recorder.keystroke.connect(self.on_keystroke)
-        self.recorder.stopped.connect(self.on_stop)
+        self.recorder = None
+
+        if sys.platform.startswith("linux"):
+            self.recorder = LinuxRecorder()
+
+        if self.recorder:
+            self.recorder.keystroke.connect(self.on_keystroke)
+            self.recorder.stopped.connect(self.on_stop)
         self.recording = False
 
         self.recording_tab = None
@@ -184,7 +192,7 @@ class MacroRecorder(BasicEditor):
 
         self.tabs = QTabWidget()
         for x in range(32):
-            tab = MacroTab()
+            tab = MacroTab(self.recorder is not None)
             tab.changed.connect(self.on_change)
             tab.record.connect(self.on_record)
             tab.record_stop.connect(self.on_tab_stop)
