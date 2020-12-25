@@ -12,6 +12,8 @@ CMD_VIA_GET_KEYBOARD_VALUE = 0x02
 CMD_VIA_SET_KEYBOARD_VALUE = 0x03
 CMD_VIA_GET_KEYCODE = 0x04
 CMD_VIA_SET_KEYCODE = 0x05
+CMD_VIA_MACRO_GET_COUNT = 0x0C
+CMD_VIA_MACRO_GET_BUFFER_SIZE = 0x0D
 CMD_VIA_GET_LAYER_COUNT = 0x11
 CMD_VIA_VIAL_PREFIX = 0xFE
 
@@ -43,6 +45,8 @@ class Keyboard:
         self.keys = []
         self.encoders = []
         self.sideload = False
+        self.macro_count = 0
+        self.macro_memory = 0
 
         self.vial_protocol = self.keyboard_id = -1
 
@@ -57,6 +61,7 @@ class Keyboard:
         self.reload_layout(sideload_json)
         self.reload_layers()
         self.reload_keymap()
+        self.reload_macros()
 
     def reload_layers(self):
         """ Get how many layers the keyboard has """
@@ -160,6 +165,13 @@ class Keyboard:
         if self.layouts:
             data = self.usb_send(self.dev, struct.pack("BB", CMD_VIA_GET_KEYBOARD_VALUE, VIA_LAYOUT_OPTIONS))
             self.layout_options = struct.unpack(">I", data[2:6])[0]
+
+    def reload_macros(self):
+        """ Loads macro information from the keyboard """
+        data = self.usb_send(self.dev, struct.pack("B", CMD_VIA_MACRO_GET_COUNT))
+        self.macro_count = data[1]
+        data = self.usb_send(self.dev, struct.pack(">H", CMD_VIA_MACRO_GET_BUFFER_SIZE))
+        self.macro_memory = struct.unpack(">H", data[1:3])[0]
 
     def set_key(self, layer, row, col, code):
         key = (layer, row, col)

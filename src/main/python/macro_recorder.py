@@ -132,8 +132,11 @@ class MacroRecorder(BasicEditor):
     def __init__(self):
         super().__init__()
 
+        self.keyboard = None
+
         self.keystrokes = []
         self.macro_tabs = []
+        self.macro_tab_w = []
 
         self.recorder = LinuxRecorder()
         self.recorder.keystroke.connect(self.on_keystroke)
@@ -152,7 +155,7 @@ class MacroRecorder(BasicEditor):
             self.macro_tabs.append(tab)
             w = QWidget()
             w.setLayout(tab)
-            self.tabs.addTab(w, "Macro {}".format(x + 1))
+            self.macro_tab_w.append(w)
 
         self.lbl_memory = QLabel()
 
@@ -165,8 +168,6 @@ class MacroRecorder(BasicEditor):
         self.addWidget(self.tabs)
         self.addLayout(buttons)
 
-        self.on_change()
-
     def valid(self):
         return isinstance(self.device, VialKeyboard)
 
@@ -174,6 +175,15 @@ class MacroRecorder(BasicEditor):
         super().rebuild(device)
         if not self.valid():
             return
+        self.keyboard = self.device.keyboard
+
+        # only show the number of macro editors that keyboard supports
+        for x in range(self.tabs.count()):
+            self.tabs.removeTab(x)
+        for x, w in enumerate(self.macro_tab_w[:self.keyboard.macro_count]):
+            self.tabs.addTab(w, "Macro {}".format(x + 1))
+
+        self.on_change()
 
     def on_record(self, tab, append):
         self.recording_tab = tab
@@ -181,7 +191,7 @@ class MacroRecorder(BasicEditor):
 
         self.recording_tab.pre_record()
 
-        for x, w in enumerate(self.macro_tabs):
+        for x, w in enumerate(self.macro_tabs[:self.keyboard.macro_count]):
             if tab != w:
                 self.tabs.tabBar().setTabEnabled(x, False)
 
@@ -193,7 +203,7 @@ class MacroRecorder(BasicEditor):
         self.recorder.stop()
 
     def on_stop(self):
-        for x in range(len(self.macro_tabs)):
+        for x in range(self.keyboard.macro_count):
             self.tabs.tabBar().setTabEnabled(x, True)
 
         if not self.recording_append:
@@ -216,4 +226,4 @@ class MacroRecorder(BasicEditor):
         memory = 0
         for x, macro in enumerate(self.macro_tabs):
             memory += len(macro.serialize())
-        self.lbl_memory.setText("Memory used by macros: {}/345".format(memory))
+        self.lbl_memory.setText("Memory used by macros: {}/{}".format(memory, self.keyboard.macro_memory))
