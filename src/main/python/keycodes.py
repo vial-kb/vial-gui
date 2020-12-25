@@ -20,9 +20,12 @@ class Keycode:
 
 K = Keycode
 
-KEYCODES_BASIC = [
+KEYCODES_SPECIAL = [
     K(0x00, "KC_NO", ""),
     K(0x01, "KC_TRNS", "▽"),
+]
+
+KEYCODES_BASIC = [
     K(0x04, "KC_A", "A"),
     K(0x05, "KC_B", "B"),
     K(0x06, "KC_C", "C"),
@@ -430,8 +433,8 @@ def recreate_keycodes():
     """ Regenerates global KEYCODES array """
 
     KEYCODES.clear()
-    KEYCODES.extend(KEYCODES_BASIC + KEYCODES_SHIFTED + KEYCODES_ISO + KEYCODES_LAYERS + KEYCODES_QUANTUM + KEYCODES_BACKLIGHT +
-                    KEYCODES_MEDIA + KEYCODES_MACRO)
+    KEYCODES.extend(KEYCODES_SPECIAL + KEYCODES_BASIC + KEYCODES_SHIFTED + KEYCODES_ISO + KEYCODES_LAYERS +
+                    KEYCODES_QUANTUM + KEYCODES_BACKLIGHT + KEYCODES_MEDIA + KEYCODES_MACRO)
 
 
 def recreate_layer_keycodes(layers):
