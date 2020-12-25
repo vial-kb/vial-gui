@@ -440,8 +440,10 @@ def recreate_keycodes():
                     KEYCODES_QUANTUM + KEYCODES_BACKLIGHT + KEYCODES_MEDIA + KEYCODES_MACRO)
 
 
-def recreate_layer_keycodes(layers):
-    """ Generates layer keycodes based on number of layers a keyboard provides """
+def recreate_keyboard_keycodes(keyboard):
+    """ Generates keycodes based on information the keyboard provides (e.g. layer keycodes, macros) """
+
+    layers = keyboard.layers
 
     def generate_keycodes_for_mask(label, mask):
         keycodes = []
@@ -465,6 +467,11 @@ def recreate_layer_keycodes(layers):
     for x in range(layers):
         KEYCODES_LAYERS.append(Keycode(LT(x), "LT({}, kc)".format(x), "LT {}\n(kc)".format(x),
                                        "kc on tap, switch to layer {} while held".format(x), masked=True))
+
+    KEYCODES_MACRO.clear()
+    for x in range(keyboard.macro_count):
+        lbl = "M{}".format(x)
+        KEYCODES_MACRO.append(Keycode(0x5F12 + x, lbl, lbl))
 
     recreate_keycodes()
 

@@ -2,7 +2,7 @@
 
 from basic_editor import BasicEditor
 from keyboard_container import KeyboardContainer
-from keycodes import recreate_layer_keycodes
+from keycodes import recreate_keyboard_keycodes
 from tabbed_keycodes import TabbedKeycodes
 from vial_device import VialKeyboard
 
@@ -13,7 +13,6 @@ class KeymapEditor(BasicEditor):
         super().__init__()
 
         self.keyboard_container = KeyboardContainer(layout_editor)
-        self.keyboard_container.number_layers_changed.connect(self.on_number_layers_changed)
 
         self.tabbed_keycodes = TabbedKeycodes()
         self.tabbed_keycodes.keycode_changed.connect(self.on_keycode_changed)
@@ -23,17 +22,16 @@ class KeymapEditor(BasicEditor):
 
         self.device = None
 
-    def on_number_layers_changed(self):
-        recreate_layer_keycodes(self.keyboard_container.keyboard.layers)
-        self.tabbed_keycodes.recreate_layer_keycode_buttons()
-
     def on_keycode_changed(self, code):
         self.keyboard_container.set_key(code)
 
     def rebuild(self, device):
         super().rebuild(device)
-        if isinstance(self.device, VialKeyboard):
+        if self.valid():
             self.keyboard_container.rebuild(device.keyboard)
+            recreate_keyboard_keycodes(self.keyboard_container.keyboard)
+            self.tabbed_keycodes.recreate_keycode_buttons()
+            self.keyboard_container.refresh_layer_display()
 
     def valid(self):
         return isinstance(self.device, VialKeyboard)

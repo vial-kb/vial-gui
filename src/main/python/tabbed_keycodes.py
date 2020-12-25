@@ -37,6 +37,8 @@ class TabbedKeycodes(QTabWidget):
             layout = FlowLayout()
             if tab == self.tab_layers:
                 self.layout_layers = layout
+            elif tab == self.tab_macro:
+                self.layout_macro = layout
 
             self.create_buttons(layout, keycodes)
 
@@ -50,6 +52,7 @@ class TabbedKeycodes(QTabWidget):
             self.addTab(tab, tr("TabbedKeycodes", label))
 
         self.layer_keycode_buttons = []
+        self.macro_keycode_buttons = []
 
     def create_buttons(self, layout, keycodes):
         buttons = []
@@ -64,8 +67,9 @@ class TabbedKeycodes(QTabWidget):
 
         return buttons
 
-    def recreate_layer_keycode_buttons(self):
-        for btn in self.layer_keycode_buttons:
+    def recreate_keycode_buttons(self):
+        for btn in self.layer_keycode_buttons + self.macro_keycode_buttons:
             btn.hide()
             btn.deleteLater()
         self.layer_keycode_buttons = self.create_buttons(self.layout_layers, KEYCODES_LAYERS)
+        self.macro_keycode_buttons = self.create_buttons(self.layout_macro, KEYCODES_MACRO)

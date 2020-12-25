@@ -12,8 +12,6 @@ from util import tr
 
 class KeyboardContainer(QWidget):
 
-    number_layers_changed = pyqtSignal()
-
     def __init__(self, layout_editor):
         super().__init__()
 
@@ -44,8 +42,6 @@ class KeyboardContainer(QWidget):
         layout_editor.changed.connect(self.on_layout_changed)
 
     def rebuild_layers(self):
-        self.number_layers_changed.emit()
-
         # delete old layer labels
         for label in self.layer_labels:
             label.hide()
