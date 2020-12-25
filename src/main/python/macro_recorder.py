@@ -1,7 +1,8 @@
 # coding: utf-8
 # SPDX-License-Identifier: GPL-2.0-or-later
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QPushButton, QLineEdit, QGridLayout, QHBoxLayout, QComboBox, QToolButton
+from PyQt5.QtWidgets import QPushButton, QLineEdit, QGridLayout, QHBoxLayout, QComboBox, QToolButton, QVBoxLayout, \
+    QTabWidget, QWidget, QLabel
 
 from basic_editor import BasicEditor
 from keycodes import KEYCODES_BASIC
@@ -185,25 +186,20 @@ class MacroLine:
         self.parent.on_move(self, 1)
 
 
-class MacroRecorder(BasicEditor):
+class MacroTab(QVBoxLayout):
 
     def __init__(self):
         super().__init__()
 
-        self.keystrokes = []
         self.lines = []
-
-        self.recorder = LinuxRecorder()
-        self.recorder.keystroke.connect(self.on_keystroke)
-        self.recorder.stopped.connect(self.on_stop)
-        self.recording = False
 
         self.container = QGridLayout()
 
         btn_record = QToolButton()
         btn_record.setText(tr("MacroRecorder", "Record macro"))
         btn_record.setToolButtonStyle(Qt.ToolButtonTextOnly)
-        btn_record.clicked.connect(self.on_record)
+        # btn_record.clicked.connect(self.on_record)
+
         btn_add = QToolButton()
         btn_add.setText(tr("MacroRecorder", "Add action"))
         btn_add.setToolButtonStyle(Qt.ToolButtonTextOnly)
@@ -218,6 +214,64 @@ class MacroRecorder(BasicEditor):
         self.addLayout(layout_buttons)
         self.addWidget(btn_add)
         self.addStretch()
+
+    def on_add(self):
+        self.lines.append(MacroLine(self, ActionText(self.container)))
+        self.lines[-1].insert(self.container.rowCount())
+
+    def on_remove(self, obj):
+        for line in self.lines:
+            if line == obj:
+                line.remove()
+                line.delete()
+        self.lines.remove(obj)
+        for line in self.lines:
+            line.remove()
+        for x, line in enumerate(self.lines):
+            line.insert(x)
+
+    def on_move(self, obj, offset):
+        if offset == 0:
+            return
+        index = self.lines.index(obj)
+        if index + offset < 0 or index + offset >= len(self.lines):
+            return
+        other = self.lines.index(self.lines[index + offset])
+        self.lines[index].remove()
+        self.lines[other].remove()
+        self.lines[index], self.lines[other] = self.lines[other], self.lines[index]
+        self.lines[index].insert(index)
+        self.lines[other].insert(other)
+
+
+class MacroRecorder(BasicEditor):
+
+    def __init__(self):
+        super().__init__()
+
+        self.keystrokes = []
+        self.macro_tabs = []
+
+        self.recorder = LinuxRecorder()
+        self.recorder.keystroke.connect(self.on_keystroke)
+        self.recorder.stopped.connect(self.on_stop)
+        self.recording = False
+
+        self.tabs = QTabWidget()
+        for x in range(32):
+            self.macro_tabs.append(MacroTab())
+            w = QWidget()
+            w.setLayout(self.macro_tabs[-1])
+            self.tabs.addTab(w, "Macro {}".format(x + 1))
+
+        buttons = QHBoxLayout()
+        buttons.addWidget(QLabel("Memory used by macros: 123/345"))
+        buttons.addStretch()
+        buttons.addWidget(QPushButton("Save"))
+        buttons.addWidget(QPushButton("Revert"))
+
+        self.addWidget(self.tabs)
+        self.addLayout(buttons)
 
     def valid(self):
         return isinstance(self.device, VialKeyboard)
@@ -250,31 +304,3 @@ class MacroRecorder(BasicEditor):
 
     def on_keystroke(self, keystroke):
         self.keystrokes.append(keystroke)
-
-    def on_add(self):
-        self.lines.append(MacroLine(self, ActionText(self.container)))
-        self.lines[-1].insert(self.container.rowCount())
-
-    def on_remove(self, obj):
-        for line in self.lines:
-            if line == obj:
-                line.remove()
-                line.delete()
-        self.lines.remove(obj)
-        for line in self.lines:
-            line.remove()
-        for x, line in enumerate(self.lines):
-            line.insert(x)
-
-    def on_move(self, obj, offset):
-        if offset == 0:
-            return
-        index = self.lines.index(obj)
-        if index + offset < 0 or index + offset >= len(self.lines):
-            return
-        other = self.lines.index(self.lines[index + offset])
-        self.lines[index].remove()
-        self.lines[other].remove()
-        self.lines[index], self.lines[other] = self.lines[other], self.lines[index]
-        self.lines[index].insert(index)
-        self.lines[other].insert(other)
