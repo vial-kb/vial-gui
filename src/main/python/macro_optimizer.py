@@ -29,55 +29,12 @@ def replace_with_tap(sequence):
     return out
 
 
-PRINTABLE = {
-    "KC_1": "1", "KC_2": "2", "KC_3": "3", "KC_4": "4", "KC_5": "5", "KC_6": "6", "KC_7": "7",
-    "KC_8": "8", "KC_9": "9", "KC_0": "0",
-    "KC_MINUS": "-",
-    "KC_EQUAL": "=",
-    "KC_Q": "q",
-    "KC_W": "w",
-    "KC_E": "e",
-    "KC_R": "r",
-    "KC_T": "t",
-    "KC_Y": "y",
-    "KC_U": "u",
-    "KC_I": "i",
-    "KC_O": "o",
-    "KC_P": "p",
-    "KC_LBRACKET": "[",
-    "KC_RBRACKET": "]",
-    "KC_A": "a",
-    "KC_S": "s",
-    "KC_D": "d",
-    "KC_F": "f",
-    "KC_G": "g",
-    "KC_H": "h",
-    "KC_J": "j",
-    "KC_K": "k",
-    "KC_L": "l",
-    "KC_SCOLON": ";",
-    "KC_QUOTE": "'",
-    "KC_GRAVE": "`",
-    "KC_BSLASH": "\\",
-    "KC_Z": "z",
-    "KC_X": "x",
-    "KC_C": "c",
-    "KC_V": "v",
-    "KC_B": "b",
-    "KC_N": "n",
-    "KC_M": "m",
-    "KC_COMMA": ",",
-    "KC_DOT": ".",
-    "KC_SLASH": "/",
-}
-
-
 def is_printable_tap(k):
-    return isinstance(k, KeyTap) and k.keycode.qmk_id in PRINTABLE
+    return isinstance(k, KeyTap) and k.keycode.printable
 
 
 def get_printable_char(k):
-    return PRINTABLE[k.keycode.qmk_id]
+    return k.keycode.printable
 
 
 def replace_with_string(sequence):
