@@ -270,6 +270,8 @@ class MacroRecorder(BasicEditor):
             else:
                 cls = {KeyDown: ActionDown, KeyUp: ActionUp, KeyTap: ActionTap}[type(k)]
                 self.recording_tab.add_action(cls(self.recording_tab.container, [k.keycode]))
+        # merge: i.e. replace multiple instances of KeyDown with a single multi-key ActionDown, etc
+        self.recording_tab.deserialize(self.recording_tab.serialize())
 
     def on_keystroke(self, keystroke):
         self.keystrokes.append(keystroke)
