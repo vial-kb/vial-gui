@@ -198,10 +198,11 @@ class MacroRecorder(BasicEditor):
         buttons = QHBoxLayout()
         buttons.addWidget(self.lbl_memory)
         buttons.addStretch()
-        btn_save = QPushButton(tr("MacroRecorder", "Save"))
+        self.btn_save = QPushButton(tr("MacroRecorder", "Save"))
+        self.btn_save.clicked.connect(self.on_save)
         btn_revert = QPushButton(tr("MacroRecorder", "Revert"))
         btn_revert.clicked.connect(self.on_revert)
-        buttons.addWidget(btn_save)
+        buttons.addWidget(self.btn_save)
         buttons.addWidget(btn_revert)
 
         self.addWidget(self.tabs)
@@ -267,6 +268,8 @@ class MacroRecorder(BasicEditor):
     def on_change(self):
         memory = len(self.serialize())
         self.lbl_memory.setText("Memory used by macros: {}/{}".format(memory, self.keyboard.macro_memory))
+        self.btn_save.setEnabled(memory <= self.keyboard.macro_memory)
+        self.lbl_memory.setStyleSheet("QLabel { color: red; }" if memory > self.keyboard.macro_memory else "")
 
     def deserialize(self, data):
         macros = data.split(b"\x00")
@@ -285,3 +288,6 @@ class MacroRecorder(BasicEditor):
     def on_revert(self):
         self.keyboard.reload_macros()
         self.deserialize(self.keyboard.macro)
+
+    def on_save(self):
+        self.keyboard.set_macro(self.serialize())

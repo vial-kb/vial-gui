@@ -28,6 +28,9 @@ CMD_VIAL_GET_ENCODER = 0x03
 CMD_VIAL_SET_ENCODER = 0x04
 CMD_VIAL_GET_KEYMAP_FAST = 0x05
 
+# how much of a macro we can read/write per packet
+MACRO_CHUNK = 28
+
 
 class Keyboard:
     """ Low-level communication with a vial-enabled keyboard """
@@ -177,10 +180,9 @@ class Keyboard:
         self.macro_memory = struct.unpack(">H", data[1:3])[0]
 
         self.macro = b""
-        # now retrieve the entire buffer, 28 bytes at a time, as that is what fits into a packet
-        chunk = 28
-        for x in range(0, self.macro_memory, chunk):
-            sz = min(chunk, self.macro_memory - x)
+        # now retrieve the entire buffer, MACRO_CHUNK bytes at a time, as that is what fits into a packet
+        for x in range(0, self.macro_memory, MACRO_CHUNK):
+            sz = min(MACRO_CHUNK, self.macro_memory - x)
             data = self.usb_send(self.dev, struct.pack(">BHB", CMD_VIA_MACRO_GET_BUFFER, x, sz))
             self.macro += data[4:4+sz]
 
@@ -201,6 +203,14 @@ class Keyboard:
         if self.layout_options != -1 and self.layout_options != options:
             self.layout_options = options
             self.usb_send(self.dev, struct.pack(">BBI", CMD_VIA_SET_KEYBOARD_VALUE, VIA_LAYOUT_OPTIONS, options))
+
+    def set_macro(self, data):
+        if len(data) > self.macro_memory:
+            raise RuntimeError("the macro is too big: got {} max {}".format(len(data), self.macro_memory))
+
+        for x, chunk in enumerate(chunks(data, MACRO_CHUNK)):
+            off = x * MACRO_CHUNK
+            self.usb_send(self.dev, struct.pack(">BHB", CMD_VIA_MACRO_SET_BUFFER, off, len(chunk)) + chunk)
 
     def save_layout(self):
         """ Serializes current layout to a binary """
