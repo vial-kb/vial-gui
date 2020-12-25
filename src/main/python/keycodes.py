@@ -130,7 +130,9 @@ KEYCODES_BASIC = [
     K(0xE5, "KC_RSHIFT", "RShift"),
     K(0xE6, "KC_RALT", "RAlt"),
     K(0xE7, "KC_RGUI", "RGui"),
+]
 
+KEYCODES_SHIFTED = [
     K(0x235, "KC_TILD", "~"),
     K(0x21E, "KC_EXLM", "!"),
     K(0x21F, "KC_AT", "@"),
@@ -428,7 +430,7 @@ def recreate_keycodes():
     """ Regenerates global KEYCODES array """
 
     KEYCODES.clear()
-    KEYCODES.extend(KEYCODES_BASIC + KEYCODES_ISO + KEYCODES_LAYERS + KEYCODES_QUANTUM + KEYCODES_BACKLIGHT +
+    KEYCODES.extend(KEYCODES_BASIC + KEYCODES_SHIFTED + KEYCODES_ISO + KEYCODES_LAYERS + KEYCODES_QUANTUM + KEYCODES_BACKLIGHT +
                     KEYCODES_MEDIA + KEYCODES_MACRO)
 
 

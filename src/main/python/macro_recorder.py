@@ -4,11 +4,15 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QPushButton, QLineEdit, QGridLayout, QHBoxLayout, QComboBox, QToolButton
 
 from basic_editor import BasicEditor
+from keycodes import KEYCODES_BASIC
 from macro_key import KeyString
 from macro_optimizer import macro_optimize
 from macro_recorder_linux import LinuxRecorder
 from util import tr
 from vial_device import VialKeyboard
+
+
+KC_NO = KEYCODES_BASIC[0]
 
 
 class BasicAction:
@@ -46,6 +50,7 @@ class ActionSequence(BasicAction):
         self.btn_plus = QToolButton()
         self.btn_plus.setText("+")
         self.btn_plus.setToolButtonStyle(Qt.ToolButtonTextOnly)
+        self.btn_plus.clicked.connect(self.on_add)
 
         self.layout = QHBoxLayout()
         self.layout.addStretch()
@@ -61,8 +66,16 @@ class ActionSequence(BasicAction):
 
         for item in self.sequence:
             w = QComboBox()
-            w.addItem(item.keycode.qmk_id)
+            w.view().setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+            w.setStyleSheet("QComboBox { combobox-popup: 0; }")
+            w.addItem(tr("MacroEditor", "Remove"))
+            w.insertSeparator(1)
+            for k in KEYCODES_BASIC:
+                w.addItem(k.label.replace("\n", ""))
+            w.setCurrentIndex(2 + KEYCODES_BASIC.index(item))
+            w.currentIndexChanged.connect(self.on_change)
             self.layout.insertWidget(self.layout.count() - 1, w)
+            self.widgets.append(w)
         self.layout.insertWidget(self.layout.count() - 1, self.btn_plus)
 
     def insert(self, row):
@@ -80,9 +93,25 @@ class ActionSequence(BasicAction):
         self.layout.setParent(None)
         self.layout.deleteLater()
 
+    def on_add(self):
+        self.sequence.append(KC_NO)
+        self.recreate_sequence()
+
+    def on_change(self):
+        for x in range(len(self.sequence)):
+            index = self.widgets[x].currentIndex()
+            if index == 0:
+                # asked to remove this item
+                del self.sequence[x]
+                self.recreate_sequence()
+                return
+            else:
+                self.sequence[x] = KEYCODES_BASIC[self.widgets[x].currentIndex() - 2]
+
 
 class MacroLine:
 
+    types = ["Text", "Down", "Up", "Tap"]
     type_to_cls = [ActionText, ActionSequence, ActionSequence, ActionSequence]
 
     def __init__(self, parent, action):
@@ -103,7 +132,7 @@ class MacroLine:
         self.arrows.addWidget(self.btn_down)
 
         self.select_type = QComboBox()
-        self.select_type.addItems(["Text", "Down", "Up", "Tap"])
+        self.select_type.addItems(self.types)
         self.select_type.currentIndexChanged.connect(self.on_change_type)
 
         self.action = action
