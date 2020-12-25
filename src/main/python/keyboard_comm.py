@@ -185,6 +185,10 @@ class Keyboard:
             sz = min(MACRO_CHUNK, self.macro_memory - x)
             data = self.usb_send(self.dev, struct.pack(">BHB", CMD_VIA_MACRO_GET_BUFFER, x, sz))
             self.macro += data[4:4+sz]
+        # macros are stored as NUL-separated strings, so let's clean up the buffer
+        # ensuring we only get macro_count strings after we split by NUL
+        macros = self.macro.split(b"\x00") + [b""] * self.macro_count
+        self.macro = b"\x00".join(macros[:self.macro_count]) + b"\x00"
 
     def set_key(self, layer, row, col, code):
         key = (layer, row, col)
@@ -211,6 +215,7 @@ class Keyboard:
         for x, chunk in enumerate(chunks(data, MACRO_CHUNK)):
             off = x * MACRO_CHUNK
             self.usb_send(self.dev, struct.pack(">BHB", CMD_VIA_MACRO_SET_BUFFER, off, len(chunk)) + chunk)
+        self.macro = data
 
     def save_layout(self):
         """ Serializes current layout to a binary """

@@ -221,12 +221,21 @@ class MacroRecorder(BasicEditor):
         for x in range(self.tabs.count()):
             self.tabs.removeTab(x)
         for x, w in enumerate(self.macro_tab_w[:self.keyboard.macro_count]):
-            self.tabs.addTab(w, "Macro {}".format(x + 1))
+            self.tabs.addTab(w, "")
+        self.update_tab_titles()
 
         # deserialize macros that came from keyboard
         self.deserialize(self.keyboard.macro)
 
         self.on_change()
+
+    def update_tab_titles(self):
+        macros = self.keyboard.macro.split(b"\x00")
+        for x, w in enumerate(self.macro_tab_w[:self.keyboard.macro_count]):
+            title = "Macro {}".format(x + 1)
+            if macros[x] != self.macro_tabs[x].serialize():
+                title += "*"
+            self.tabs.setTabText(x, title)
 
     def on_record(self, tab, append):
         self.recording_tab = tab
@@ -266,10 +275,12 @@ class MacroRecorder(BasicEditor):
         self.keystrokes.append(keystroke)
 
     def on_change(self):
-        memory = len(self.serialize())
+        data = self.serialize()
+        memory = len(data)
         self.lbl_memory.setText("Memory used by macros: {}/{}".format(memory, self.keyboard.macro_memory))
-        self.btn_save.setEnabled(memory <= self.keyboard.macro_memory)
+        self.btn_save.setEnabled(data != self.keyboard.macro and memory <= self.keyboard.macro_memory)
         self.lbl_memory.setStyleSheet("QLabel { color: red; }" if memory > self.keyboard.macro_memory else "")
+        self.update_tab_titles()
 
     def deserialize(self, data):
         macros = data.split(b"\x00")
@@ -291,3 +302,4 @@ class MacroRecorder(BasicEditor):
 
     def on_save(self):
         self.keyboard.set_macro(self.serialize())
+        self.on_change()
