@@ -109,6 +109,8 @@ class MacroTab(QVBoxLayout):
         return out
 
     def deserialize(self, data):
+        self.clear()
+
         sequence = []
         data = bytearray(data)
         while len(data) > 0:
@@ -196,8 +198,11 @@ class MacroRecorder(BasicEditor):
         buttons = QHBoxLayout()
         buttons.addWidget(self.lbl_memory)
         buttons.addStretch()
-        buttons.addWidget(QPushButton("Save"))
-        buttons.addWidget(QPushButton("Revert"))
+        btn_save = QPushButton(tr("MacroRecorder", "Save"))
+        btn_revert = QPushButton(tr("MacroRecorder", "Revert"))
+        btn_revert.clicked.connect(self.on_revert)
+        buttons.addWidget(btn_save)
+        buttons.addWidget(btn_revert)
 
         self.addWidget(self.tabs)
         self.addLayout(buttons)
@@ -276,3 +281,7 @@ class MacroRecorder(BasicEditor):
         for tab in self.macro_tabs[:self.keyboard.macro_count]:
             data += tab.serialize() + b"\x00"
         return data
+
+    def on_revert(self):
+        self.keyboard.reload_macros()
+        self.deserialize(self.keyboard.macro)
