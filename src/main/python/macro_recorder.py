@@ -2,12 +2,12 @@
 
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import QPushButton, QGridLayout, QHBoxLayout, QToolButton, QVBoxLayout, \
-    QTabWidget, QWidget, QLabel
+    QTabWidget, QWidget, QLabel, QMenu
 
 from basic_editor import BasicEditor
 from keycodes import find_keycode
-from macro_action import ActionText, ActionSequence, ActionTap
-from macro_key import KeyString
+from macro_action import ActionText, ActionTap, ActionDown, ActionUp
+from macro_key import KeyString, KeyDown, KeyUp, KeyTap
 from macro_line import MacroLine
 from macro_optimizer import macro_optimize
 from macro_recorder_linux import LinuxRecorder
@@ -18,6 +18,8 @@ from vial_device import VialKeyboard
 class MacroTab(QVBoxLayout):
 
     changed = pyqtSignal()
+    record = pyqtSignal(object, bool)
+    record_stop = pyqtSignal()
 
     def __init__(self):
         super().__init__()
@@ -26,30 +28,38 @@ class MacroTab(QVBoxLayout):
 
         self.container = QGridLayout()
 
-        btn_record = QToolButton()
-        btn_record.setText(tr("MacroRecorder", "Record macro"))
-        btn_record.setToolButtonStyle(Qt.ToolButtonTextOnly)
-        # btn_record.clicked.connect(self.on_record)
+        menu_record = QMenu()
+        menu_record.addAction(tr("MacroRecorder", "Append to current"))\
+            .triggered.connect(lambda: self.record.emit(self, True))
+        menu_record.addAction(tr("MacroRecorder", "Replace everything"))\
+            .triggered.connect(lambda: self.record.emit(self, False))
 
-        btn_add = QToolButton()
-        btn_add.setText(tr("MacroRecorder", "Add action"))
-        btn_add.setToolButtonStyle(Qt.ToolButtonTextOnly)
-        btn_add.clicked.connect(self.on_add)
+        self.btn_record = QPushButton(tr("MacroRecorder", "Record macro"))
+        self.btn_record.setMenu(menu_record)
 
-        btn_tap_enter = QToolButton()
-        btn_tap_enter.setText(tr("MacroRecorder", "Tap Enter"))
-        btn_tap_enter.setToolButtonStyle(Qt.ToolButtonTextOnly)
-        btn_tap_enter.clicked.connect(self.on_tap_enter)
+        self.btn_record_stop = QPushButton(tr("MacroRecorder", "Stop recording"))
+        self.btn_record_stop.clicked.connect(lambda: self.record_stop.emit())
+        self.btn_record_stop.hide()
+
+        self.btn_add = QToolButton()
+        self.btn_add.setText(tr("MacroRecorder", "Add action"))
+        self.btn_add.setToolButtonStyle(Qt.ToolButtonTextOnly)
+        self.btn_add.clicked.connect(self.on_add)
+
+        self.btn_tap_enter = QToolButton()
+        self.btn_tap_enter.setText(tr("MacroRecorder", "Tap Enter"))
+        self.btn_tap_enter.setToolButtonStyle(Qt.ToolButtonTextOnly)
+        self.btn_tap_enter.clicked.connect(self.on_tap_enter)
 
         layout_buttons = QHBoxLayout()
         layout_buttons.addStretch()
-        layout_buttons.addWidget(btn_add)
-        layout_buttons.addWidget(btn_tap_enter)
-        layout_buttons.addWidget(btn_record)
+        layout_buttons.addWidget(self.btn_add)
+        layout_buttons.addWidget(self.btn_tap_enter)
+        layout_buttons.addWidget(self.btn_record)
+        layout_buttons.addWidget(self.btn_record_stop)
 
         self.addLayout(self.container)
         self.addLayout(layout_buttons)
-        self.addWidget(btn_add)
         self.addStretch()
 
     def add_action(self, act):
@@ -73,6 +83,10 @@ class MacroTab(QVBoxLayout):
         for x, line in enumerate(self.lines):
             line.insert(x)
         self.changed.emit()
+
+    def clear(self):
+        for line in self.lines[:]:
+            self.on_remove(line)
 
     def on_move(self, obj, offset):
         if offset == 0:
@@ -100,6 +114,18 @@ class MacroTab(QVBoxLayout):
     def on_tap_enter(self):
         self.add_action(ActionTap(self.container, [find_keycode(0x28)]))
 
+    def pre_record(self):
+        self.btn_record.hide()
+        self.btn_add.hide()
+        self.btn_tap_enter.hide()
+        self.btn_record_stop.show()
+
+    def post_record(self):
+        self.btn_record.show()
+        self.btn_add.show()
+        self.btn_tap_enter.show()
+        self.btn_record_stop.hide()
+
 
 class MacroRecorder(BasicEditor):
 
@@ -114,10 +140,15 @@ class MacroRecorder(BasicEditor):
         self.recorder.stopped.connect(self.on_stop)
         self.recording = False
 
+        self.recording_tab = None
+        self.recording_append = False
+
         self.tabs = QTabWidget()
         for x in range(32):
             tab = MacroTab()
             tab.changed.connect(self.on_change)
+            tab.record.connect(self.on_record)
+            tab.record_stop.connect(self.on_tab_stop)
             self.macro_tabs.append(tab)
             w = QWidget()
             w.setLayout(tab)
@@ -144,26 +175,39 @@ class MacroRecorder(BasicEditor):
         if not self.valid():
             return
 
-    def on_record(self):
-        if not self.recording:
-            self.recording = True
-            self.keystrokes = []
-            self.recorder.start()
-        else:
-            self.recording = False
-            self.recorder.stop()
+    def on_record(self, tab, append):
+        self.recording_tab = tab
+        self.recording_append = append
+
+        self.recording_tab.pre_record()
+
+        for x, w in enumerate(self.macro_tabs):
+            if tab != w:
+                self.tabs.tabBar().setTabEnabled(x, False)
+
+        self.recording = True
+        self.keystrokes = []
+        self.recorder.start()
+
+    def on_tab_stop(self):
+        self.recorder.stop()
 
     def on_stop(self):
+        for x in range(len(self.macro_tabs)):
+            self.tabs.tabBar().setTabEnabled(x, True)
+
+        if not self.recording_append:
+            self.recording_tab.clear()
+
+        self.recording_tab.post_record()
+
         self.keystrokes = macro_optimize(self.keystrokes)
         for k in self.keystrokes:
             if isinstance(k, KeyString):
-                self.lines.append(MacroLine(self, ActionText(self.container, k.string)))
+                self.recording_tab.add_action(ActionText(self.recording_tab.container, k.string))
             else:
-                self.lines.append(MacroLine(self, ActionSequence(self.container, [k])))
-
-        for x, line in enumerate(self.lines):
-            line.insert(x)
-        print(self.keystrokes)
+                cls = {KeyDown: ActionDown, KeyUp: ActionUp, KeyTap: ActionTap}[type(k)]
+                self.recording_tab.add_action(cls(self.recording_tab.container, [k.keycode]))
 
     def on_keystroke(self, keystroke):
         self.keystrokes.append(keystroke)

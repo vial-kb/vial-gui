@@ -109,6 +109,7 @@ class LinuxRecorder(QWidget):
         super().__init__()
 
         self.process = QProcess()
+        self.process.readyReadStandardOutput.connect(self.on_output)
 
         self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint | QtCore.Qt.X11BypassWindowManagerHint)
 
@@ -132,7 +133,6 @@ class LinuxRecorder(QWidget):
             args += sys.argv
         args += ["--linux-recorder"]
 
-        self.process.readyReadStandardOutput.connect(self.on_output)
         self.process.start("pkexec", args, QProcess.Unbuffered | QProcess.ReadWrite)
 
     def on_stop(self):
