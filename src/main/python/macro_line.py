@@ -35,6 +35,7 @@ class MacroLine(QObject):
 
         self.select_type = QComboBox()
         self.select_type.addItems(self.types)
+        self.select_type.setCurrentIndex(self.type_to_cls.index(type(action)))
         self.select_type.currentIndexChanged.connect(self.on_change_type)
 
         self.action = action

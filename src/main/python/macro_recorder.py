@@ -5,7 +5,8 @@ from PyQt5.QtWidgets import QPushButton, QGridLayout, QHBoxLayout, QToolButton, 
     QTabWidget, QWidget, QLabel
 
 from basic_editor import BasicEditor
-from macro_action import ActionText, ActionSequence
+from keycodes import find_keycode
+from macro_action import ActionText, ActionSequence, ActionTap
 from macro_key import KeyString
 from macro_line import MacroLine
 from macro_optimizer import macro_optimize
@@ -35,9 +36,15 @@ class MacroTab(QVBoxLayout):
         btn_add.setToolButtonStyle(Qt.ToolButtonTextOnly)
         btn_add.clicked.connect(self.on_add)
 
+        btn_tap_enter = QToolButton()
+        btn_tap_enter.setText(tr("MacroRecorder", "Tap Enter"))
+        btn_tap_enter.setToolButtonStyle(Qt.ToolButtonTextOnly)
+        btn_tap_enter.clicked.connect(self.on_tap_enter)
+
         layout_buttons = QHBoxLayout()
         layout_buttons.addStretch()
         layout_buttons.addWidget(btn_add)
+        layout_buttons.addWidget(btn_tap_enter)
         layout_buttons.addWidget(btn_record)
 
         self.addLayout(self.container)
@@ -45,11 +52,14 @@ class MacroTab(QVBoxLayout):
         self.addWidget(btn_add)
         self.addStretch()
 
-    def on_add(self):
-        line = MacroLine(self, ActionText(self.container))
+    def add_action(self, act):
+        line = MacroLine(self, act)
         line.changed.connect(self.on_change)
         self.lines.append(line)
-        self.lines[-1].insert(self.container.rowCount())
+        line.insert(self.container.rowCount())
+
+    def on_add(self):
+        self.add_action(ActionText(self.container))
 
     def on_remove(self, obj):
         for line in self.lines:
@@ -83,6 +93,9 @@ class MacroTab(QVBoxLayout):
 
     def on_change(self):
         self.changed.emit()
+
+    def on_tap_enter(self):
+        self.add_action(ActionTap(self.container, [find_keycode(0x28)]))
 
 
 class MacroRecorder(BasicEditor):
