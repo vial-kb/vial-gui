@@ -103,8 +103,6 @@ class ActionSequence(BasicAction):
             w.deleteLater()
         self.btn_plus.setParent(None)
         self.btn_plus.deleteLater()
-        self.layout.setParent(None)
-        self.layout.deleteLater()
         self.layout_container.setParent(None)
         self.layout_container.deleteLater()
 
