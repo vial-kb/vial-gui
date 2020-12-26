@@ -3,7 +3,7 @@ import sys
 
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import QPushButton, QGridLayout, QHBoxLayout, QToolButton, QVBoxLayout, \
-    QTabWidget, QWidget, QLabel, QMenu
+    QTabWidget, QWidget, QLabel, QMenu, QScrollArea, QFrame
 
 from basic_editor import BasicEditor
 from keycodes import find_keycode
@@ -61,9 +61,22 @@ class MacroTab(QVBoxLayout):
         layout_buttons.addWidget(self.btn_record)
         layout_buttons.addWidget(self.btn_record_stop)
 
-        self.addLayout(self.container)
+        vbox = QVBoxLayout()
+        vbox.addLayout(self.container)
+        vbox.addStretch()
+
+        w = QWidget()
+        w.setLayout(vbox)
+        w.setObjectName("w")
+        scroll = QScrollArea()
+        scroll.setFrameShape(QFrame.NoFrame)
+        scroll.setStyleSheet("QScrollArea { background-color:transparent; }")
+        w.setStyleSheet("#w { background-color:transparent; }")
+        scroll.setWidgetResizable(True)
+        scroll.setWidget(w)
+
+        self.addWidget(scroll)
         self.addLayout(layout_buttons)
-        self.addStretch()
 
     def add_action(self, act):
         line = MacroLine(self, act)
