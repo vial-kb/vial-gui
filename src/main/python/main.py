@@ -7,7 +7,6 @@ from fbs_runtime.application_context.PyQt5 import ApplicationContext
 
 import sys
 
-from linux_keystroke_recorder import linux_keystroke_recorder
 from main_window import MainWindow
 from constants import WINDOW_WIDTH, WINDOW_HEIGHT
 
@@ -48,6 +47,8 @@ class UncaughtHook(QtCore.QObject):
 
 if __name__ == '__main__':
     if len(sys.argv) == 2 and sys.argv[1] == "--linux-recorder":
+        from linux_keystroke_recorder import linux_keystroke_recorder
+
         linux_keystroke_recorder()
     else:
         appctxt = ApplicationContext()       # 1. Instantiate ApplicationContext
