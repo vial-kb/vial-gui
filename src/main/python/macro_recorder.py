@@ -12,6 +12,7 @@ from macro_key import KeyString, KeyDown, KeyUp, KeyTap
 from macro_line import MacroLine
 from macro_optimizer import macro_optimize
 from macro_recorder_linux import LinuxRecorder
+from macro_recorder_windows import WindowsRecorder
 from util import tr
 from vial_device import VialKeyboard
 
@@ -194,6 +195,8 @@ class MacroRecorder(BasicEditor):
 
         if sys.platform.startswith("linux"):
             self.recorder = LinuxRecorder()
+        elif sys.platform.startswith("win"):
+            self.recorder = WindowsRecorder()
 
         if self.recorder:
             self.recorder.keystroke.connect(self.on_keystroke)
