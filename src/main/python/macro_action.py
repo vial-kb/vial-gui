@@ -2,8 +2,9 @@
 import struct
 
 from PyQt5.QtCore import QObject, pyqtSignal, Qt
-from PyQt5.QtWidgets import QLineEdit, QToolButton, QHBoxLayout, QComboBox
+from PyQt5.QtWidgets import QLineEdit, QToolButton, QComboBox, QWidget, QSizePolicy
 
+from flowlayout import FlowLayout
 from keycodes import KEYCODES_BASIC
 from util import tr
 
@@ -62,8 +63,10 @@ class ActionSequence(BasicAction):
         self.btn_plus.setToolButtonStyle(Qt.ToolButtonTextOnly)
         self.btn_plus.clicked.connect(self.on_add)
 
-        self.layout = QHBoxLayout()
-        self.layout.addStretch()
+        self.layout = FlowLayout()
+        self.layout_container = QWidget()
+        self.layout_container.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Maximum)
+        self.layout_container.setLayout(self.layout)
         self.widgets = []
         self.recreate_sequence()
 
@@ -84,15 +87,15 @@ class ActionSequence(BasicAction):
                 w.addItem(k.label.replace("\n", ""))
             w.setCurrentIndex(2 + KEYCODES_BASIC.index(item))
             w.currentIndexChanged.connect(self.on_change)
-            self.layout.insertWidget(self.layout.count() - 1, w)
+            self.layout.addWidget(w)
             self.widgets.append(w)
-        self.layout.insertWidget(self.layout.count() - 1, self.btn_plus)
+        self.layout.addWidget(self.btn_plus)
 
     def insert(self, row):
-        self.container.addLayout(self.layout, row, 2)
+        self.container.addWidget(self.layout_container, row, 2)
 
     def remove(self):
-        self.container.removeItem(self.layout)
+        self.container.removeWidget(self.layout_container)
 
     def delete(self):
         for w in self.widgets:
@@ -102,6 +105,8 @@ class ActionSequence(BasicAction):
         self.btn_plus.deleteLater()
         self.layout.setParent(None)
         self.layout.deleteLater()
+        self.layout_container.setParent(None)
+        self.layout_container.deleteLater()
 
     def on_add(self):
         self.sequence.append(KC_NO)
