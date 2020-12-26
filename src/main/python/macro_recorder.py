@@ -69,7 +69,7 @@ class MacroTab(QVBoxLayout):
         line = MacroLine(self, act)
         line.changed.connect(self.on_change)
         self.lines.append(line)
-        line.insert(self.container.rowCount())
+        line.insert(len(self.lines) - 1)
         self.changed.emit()
 
     def on_add(self):
