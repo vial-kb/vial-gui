@@ -11,7 +11,8 @@ from PyQt5.QtGui import QFontDatabase
 from PyQt5.QtWidgets import QHBoxLayout, QLineEdit, QToolButton, QPlainTextEdit, QProgressBar,QFileDialog, QDialog
 
 from basic_editor import BasicEditor
-from util import tr, chunks, find_vial_devices
+from keyboard_comm import Keyboard, CMD_VIA_VIAL_PREFIX, CMD_VIAL_GET_KEYBOARD_ID
+from util import tr, chunks, find_vial_devices, MSG_LEN
 from vial_device import VialBootloader, VialKeyboard
 
 
@@ -149,6 +150,8 @@ class FirmwareFlasher(BasicEditor):
 
         self.device = None
 
+        self.layout_restore = self.uid_restore = None
+
     def rebuild(self, device):
         super().rebuild(device)
         self.txt_logger.clear()
@@ -190,9 +193,16 @@ class FirmwareFlasher(BasicEditor):
         self.log("Preparing to flash...")
         self.lock_ui()
 
+        self.layout_restore = self.uid_restore = None
+
         # TODO: this needs to switch to the secure assisted-reset feature before public release
         if isinstance(self.device, VialKeyboard):
-            uid = self.device.keyboard.get_uid()
+            # back up current layout
+            self.log("Backing up current layout...")
+            self.layout_restore = self.device.keyboard.save_layout()
+
+            # keep track of which keyboard we should restore saved layout to
+            self.uid_restore = self.device.keyboard.get_uid()
 
             self.log("Restarting in bootloader mode...")
             self.device.keyboard.reset()
@@ -208,8 +218,9 @@ class FirmwareFlasher(BasicEditor):
                     if isinstance(dev, VialBootloader):
                         dev.open()
                         # TODO: update version check before release
-                        if bl_get_version(dev) != BL_SUPPORTED_VERSION or bl_get_uid(dev) != uid:
+                        if bl_get_version(dev) != BL_SUPPORTED_VERSION or bl_get_uid(dev) != self.uid_restore:
                             dev.close()
+                            continue
                         found = dev
                         break
                 if found:
@@ -241,6 +252,36 @@ class FirmwareFlasher(BasicEditor):
     def _on_complete(self, msg):
         self.log(msg)
         self.progress_bar.setValue(100)
+
+        # if we were asked to restore a layout, find keyboard with matching UID and restore the layout to it
+        if self.layout_restore:
+            while True:
+                self.log("Looking for devices...")
+                QCoreApplication.processEvents()
+                time.sleep(1)
+                devices = find_vial_devices()
+                found = None
+                for dev in devices:
+                    if isinstance(dev, VialKeyboard):
+                        try:
+                            dev.open()
+                        except OSError:
+                            continue
+                        if dev.keyboard.get_uid() != self.uid_restore:
+                            dev.close()
+                            continue
+                        found = dev
+                        break
+                if found:
+                    self.log("Found Vial keyboard at {}".format(found.desc["path"].decode("utf-8")))
+                    self.device = found
+                    break
+            self.log("Restoring saved layout...")
+            QCoreApplication.processEvents()
+            found.keyboard.restore_layout(self.layout_restore)
+            found.close()
+            self.log("Done!")
+
         self.unlock_ui()
 
     def _on_error(self, msg):
