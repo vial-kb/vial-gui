@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 import datetime
+import hashlib
 import struct
 import time
 import threading
@@ -32,8 +33,21 @@ CHUNK = 64
 
 
 def cmd_flash(device, firmware, log_cb, progress_cb, complete_cb, error_cb):
-    while len(firmware) % CHUNK != 0:
-        firmware += b"\x00"
+    if firmware[0:8] != b"VIALFW00":
+        return error_cb("Error: Invalid signature")
+
+    fw_uid = firmware[8:16]
+    fw_ts = struct.unpack("<Q", firmware[16:24])[0]
+    log_cb("* Firmware build date: {} (UTC)".format(datetime.datetime.utcfromtimestamp(fw_ts)))
+
+    fw_hash = firmware[32:64]
+    fw_payload = firmware[64:]
+
+    if hashlib.sha256(fw_payload).digest() != fw_hash:
+        return error_cb("Error: Firmware failed integrity check\n\texpected={}\n\tgot={}".format(
+            fw_hash.hex(),
+            hashlib.sha256(fw_payload).hexdigest()
+        ))
 
     # Check bootloader is correct version
     device.send(b"VC\x00")
@@ -42,22 +56,35 @@ def cmd_flash(device, firmware, log_cb, progress_cb, complete_cb, error_cb):
     if data[0] != 0:
         return error_cb("Error: Unsupported bootloader version")
 
-    # TODO: Check vial ID against firmware package
     device.send(b"VC\x01")
     data = device.recv(8)
     log_cb("* Vial ID: {}".format(data.hex()))
 
+    if data == b"\xFF" * 8:
+        log_cb("\n\n\n!!! WARNING !!!\nBootloader UID is not set, make sure to configure it"
+               " before releasing production firmware\n!!! WARNING !!!\n\n")
+
+    if data != fw_uid:
+        return error_cb("Error: Firmware package was built for different device\n\texpected={}\n\tgot={}".format(
+            fw_uid.hex(),
+            data.hex()
+        ))
+
+    # OK all checks complete, we can flash now
+    while len(fw_payload) % CHUNK != 0:
+        fw_payload += b"\x00"
+
     # Flash
     log_cb("Flashing...")
-    device.send(b"VC\x02" + struct.pack("<H", len(firmware) // CHUNK))
+    device.send(b"VC\x02" + struct.pack("<H", len(fw_payload) // CHUNK))
     total = 0
-    for part in chunks(firmware, CHUNK):
+    for part in chunks(fw_payload, CHUNK):
         if len(part) < CHUNK:
             part += b"\x00" * (CHUNK - len(part))
         if not send_retries(device, part):
             return error_cb("Error while sending data, firmware is corrupted")
         total += len(part)
-        progress_cb(total / len(firmware))
+        progress_cb(total / len(fw_payload))
 
     # Reboot
     log_cb("Rebooting...")
@@ -121,10 +148,9 @@ class FirmwareFlasher(BasicEditor):
 
     def on_click_select_file(self):
         dialog = QFileDialog()
-        # TODO: this should be .vfw for Vial Firmware
-        dialog.setDefaultSuffix("bin")
+        dialog.setDefaultSuffix("vfw")
         dialog.setAcceptMode(QFileDialog.AcceptOpen)
-        dialog.setNameFilters(["Vial Firmware (*.bin)"])
+        dialog.setNameFilters(["Vial Firmware (*.vfw)"])
         if dialog.exec_() == QDialog.Accepted:
             self.selected_firmware_path = dialog.selectedFiles()[0]
             self.txt_file_selector.setText(self.selected_firmware_path)
