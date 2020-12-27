@@ -4,7 +4,7 @@ import struct
 
 
 from keyboard_comm import Keyboard
-from util import chunks
+from util import chunks, MSG_LEN
 
 LAYOUT_2x2 = """
 {"name":"test","vendorId":"0x0000","productId":"0x1111","lighting":"none","matrix":{"rows":2,"cols":2},"layouts":{"keymap":[["0,0","0,1"],["1,0","1,1"]]}}
@@ -28,6 +28,7 @@ class SimulatedDevice:
             inp = bytes.fromhex(inp)
         if isinstance(out, str):
             out = bytes.fromhex(out)
+        out += b"\x00" * (MSG_LEN - len(out))
         self.expect_data.append((inp, out))
 
     def expect_keyboard_id(self, kbid):
@@ -46,10 +47,15 @@ class SimulatedDevice:
         self.expect("11", struct.pack("BB", 0x11, layers))
 
     def expect_keymap(self, keymap):
-        for l, layer in enumerate(keymap):
-            for r, row in enumerate(layer):
-                for c, col in enumerate(row):
-                    self.expect(struct.pack("BBBB", 4, l, r, c), struct.pack(">BBBBH", 4, l, r, c, col))
+        buffer = b""
+        for layer in keymap:
+            for row in layer:
+                for col in row:
+                    buffer += struct.pack(">H", col)
+        # client will retrieve our keymap buffer in chunks of 28 bytes
+        for x, chunk in enumerate(chunks(buffer, 28)):
+            query = struct.pack(">BHB", 0x12, x, len(chunk))
+            self.expect(query, query + chunk)
 
     def expect_encoders(self, encoders):
         for l, layer in enumerate(encoders):
@@ -101,8 +107,6 @@ class TestKeyboard(unittest.TestCase):
         dev.expect("0D", "0D0000")
 
         kb = Keyboard(dev, dev.sim_send)
-        # simulate old VIA keymap retrieval in tests for now
-        kb.sideload = True
         kb.reload()
 
         return kb, dev

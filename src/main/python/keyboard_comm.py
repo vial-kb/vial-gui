@@ -17,6 +17,7 @@ CMD_VIA_MACRO_GET_BUFFER_SIZE = 0x0D
 CMD_VIA_MACRO_GET_BUFFER = 0x0E
 CMD_VIA_MACRO_SET_BUFFER = 0x0F
 CMD_VIA_GET_LAYER_COUNT = 0x11
+CMD_VIA_KEYMAP_GET_BUFFER = 0x12
 CMD_VIA_VIAL_PREFIX = 0xFE
 
 VIA_LAYOUT_OPTIONS = 0x02
@@ -26,10 +27,9 @@ CMD_VIAL_GET_SIZE = 0x01
 CMD_VIAL_GET_DEFINITION = 0x02
 CMD_VIAL_GET_ENCODER = 0x03
 CMD_VIAL_SET_ENCODER = 0x04
-CMD_VIAL_GET_KEYMAP_FAST = 0x05
 
-# how much of a macro we can read/write per packet
-MACRO_CHUNK = 28
+# how much of a macro/keymap buffer we can read/write per packet
+BUFFER_FETCH_CHUNK = 28
 
 
 class Keyboard:
@@ -128,7 +128,7 @@ class Keyboard:
                 row, col = int(row), int(col)
                 key.row = row
                 key.col = col
-                self.rowcol.setdefault(row, []).append(col)
+                self.rowcol[(row, col)] = True
                 self.keys.append(key)
 
             # bottom right corner determines layout index and option in this layout
@@ -141,26 +141,21 @@ class Keyboard:
     def reload_keymap(self):
         """ Load current key mapping from the keyboard """
 
-        for layer in range(self.layers):
-            for row, cols in self.rowcol.items():
-                # if this is a sideload, we have to assume it's a VIA keyboard
-                # and does not support fast keymap retrieval
-                if self.sideload:
-                    for col in cols:
-                        data = self.usb_send(self.dev, struct.pack("BBBB", CMD_VIA_GET_KEYCODE, layer, row, col))
-                        keycode = struct.unpack(">H", data[4:6])[0]
-                        self.layout[(layer, row, col)] = keycode
-                else:
-                    for chunk in chunks(cols, 16):
-                        req = struct.pack("BBBB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_GET_KEYMAP_FAST, layer, row)
-                        for col in chunk:
-                            req += struct.pack("B", col)
-                        req += b"\xFF" * (MSG_LEN - len(req))
+        keymap = b""
+        # calculate what the size of keymap will be and retrieve the entire binary buffer
+        size = self.layers * self.rows * self.cols * 2
+        for x in range(0, size, BUFFER_FETCH_CHUNK):
+            offset = x
+            sz = min(size - offset, BUFFER_FETCH_CHUNK)
+            data = self.usb_send(self.dev, struct.pack(">BHB", CMD_VIA_KEYMAP_GET_BUFFER, offset, sz))
+            keymap += data[4:4+sz]
 
-                        data = self.usb_send(self.dev, req)
-                        for x, col in enumerate(chunk):
-                            keycode = struct.unpack(">H", data[x*2:x*2+2])[0]
-                            self.layout[(layer, row, col)] = keycode
+        for layer in range(self.layers):
+            for row, col in self.rowcol.keys():
+                # determine where this (layer, row, col) will be located in keymap array
+                offset = layer * self.rows * self.cols * 2 + row * self.cols * 2 + col * 2
+                keycode = struct.unpack(">H", keymap[offset:offset+2])[0]
+                self.layout[(layer, row, col)] = keycode
 
         for layer in range(self.layers):
             for idx in self.encoderpos:
@@ -181,8 +176,8 @@ class Keyboard:
 
         self.macro = b""
         # now retrieve the entire buffer, MACRO_CHUNK bytes at a time, as that is what fits into a packet
-        for x in range(0, self.macro_memory, MACRO_CHUNK):
-            sz = min(MACRO_CHUNK, self.macro_memory - x)
+        for x in range(0, self.macro_memory, BUFFER_FETCH_CHUNK):
+            sz = min(BUFFER_FETCH_CHUNK, self.macro_memory - x)
             data = self.usb_send(self.dev, struct.pack(">BHB", CMD_VIA_MACRO_GET_BUFFER, x, sz))
             self.macro += data[4:4+sz]
         # macros are stored as NUL-separated strings, so let's clean up the buffer
@@ -212,8 +207,8 @@ class Keyboard:
         if len(data) > self.macro_memory:
             raise RuntimeError("the macro is too big: got {} max {}".format(len(data), self.macro_memory))
 
-        for x, chunk in enumerate(chunks(data, MACRO_CHUNK)):
-            off = x * MACRO_CHUNK
+        for x, chunk in enumerate(chunks(data, BUFFER_FETCH_CHUNK)):
+            off = x * BUFFER_FETCH_CHUNK
             self.usb_send(self.dev, struct.pack(">BHB", CMD_VIA_MACRO_SET_BUFFER, off, len(chunk)) + chunk)
         self.macro = data
 
