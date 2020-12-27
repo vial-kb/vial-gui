@@ -90,6 +90,7 @@ class MainWindow(QMainWindow):
             with open(dialog.selectedFiles()[0], "rb") as inf:
                 data = inf.read()
             self.keymap_editor.restore_layout(data)
+            self.rebuild()
 
     def on_layout_save(self):
         dialog = QFileDialog()
@@ -118,10 +119,13 @@ class MainWindow(QMainWindow):
         if self.current_device is not None:
             self.current_device.open(self.sideload_json if self.current_device.sideload else None)
 
-        for e in [self.layout_editor, self.keymap_editor, self.firmware_flasher, self.macro_recorder]:
-            e.rebuild(self.current_device)
+        self.rebuild()
 
         self.refresh_tabs()
+
+    def rebuild(self):
+        for e in [self.layout_editor, self.keymap_editor, self.firmware_flasher, self.macro_recorder]:
+            e.rebuild(self.current_device)
 
     def refresh_tabs(self):
         self.tabs.clear()

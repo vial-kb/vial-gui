@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
-
+import base64
 import struct
 import json
 import lzma
@@ -175,15 +175,16 @@ class Keyboard:
         self.macro_memory = struct.unpack(">H", data[1:3])[0]
 
         self.macro = b""
-        # now retrieve the entire buffer, MACRO_CHUNK bytes at a time, as that is what fits into a packet
-        for x in range(0, self.macro_memory, BUFFER_FETCH_CHUNK):
-            sz = min(BUFFER_FETCH_CHUNK, self.macro_memory - x)
-            data = self.usb_send(self.dev, struct.pack(">BHB", CMD_VIA_MACRO_GET_BUFFER, x, sz))
-            self.macro += data[4:4+sz]
-        # macros are stored as NUL-separated strings, so let's clean up the buffer
-        # ensuring we only get macro_count strings after we split by NUL
-        macros = self.macro.split(b"\x00") + [b""] * self.macro_count
-        self.macro = b"\x00".join(macros[:self.macro_count]) + b"\x00"
+        if self.macro_memory:
+            # now retrieve the entire buffer, MACRO_CHUNK bytes at a time, as that is what fits into a packet
+            for x in range(0, self.macro_memory, BUFFER_FETCH_CHUNK):
+                sz = min(BUFFER_FETCH_CHUNK, self.macro_memory - x)
+                data = self.usb_send(self.dev, struct.pack(">BHB", CMD_VIA_MACRO_GET_BUFFER, x, sz))
+                self.macro += data[4:4+sz]
+            # macros are stored as NUL-separated strings, so let's clean up the buffer
+            # ensuring we only get macro_count strings after we split by NUL
+            macros = self.macro.split(b"\x00") + [b""] * self.macro_count
+            self.macro = b"\x00".join(macros[:self.macro_count]) + b"\x00"
 
     def set_key(self, layer, row, col, code):
         key = (layer, row, col)
@@ -216,6 +217,7 @@ class Keyboard:
         """ Serializes current layout to a binary """
 
         # TODO: increase version before release
+        # TODO: store keyboard UID here as well
         data = {"version": 0}
         layout = []
         for l in range(self.layers):
@@ -228,7 +230,8 @@ class Keyboard:
                     val = self.layout.get((l, r, c), -1)
                     row.append(val)
         data["layout"] = layout
-        # TODO: this should also save/restore macros, when implemented
+        data["layout_options"] = self.layout_options
+        data["macro"] = base64.b64encode(self.macro).decode("utf-8")
         return json.dumps(data).encode("utf-8")
 
     def restore_layout(self, data):
@@ -240,3 +243,5 @@ class Keyboard:
                 for c, col in enumerate(row):
                     if (l, r, c) in self.layout:
                         self.set_key(l, r, c, col)
+        self.set_layout_options(data["layout_options"])
+        self.set_macro(base64.b64decode(data["macro"]))
