@@ -32,7 +32,7 @@ def is_rawhid(dev):
     return dev["interface_number"] == 1
 
 
-def find_vial_devices(sideload_vid, sideload_pid):
+def find_vial_devices(sideload_vid=None, sideload_pid=None):
     from vial_device import VialBootloader, VialKeyboard
 
     filtered = []

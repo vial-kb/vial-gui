@@ -6,13 +6,16 @@ import struct
 import time
 import threading
 
-from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtCore import pyqtSignal, QCoreApplication
 from PyQt5.QtGui import QFontDatabase
 from PyQt5.QtWidgets import QHBoxLayout, QLineEdit, QToolButton, QPlainTextEdit, QProgressBar,QFileDialog, QDialog
 
 from basic_editor import BasicEditor
-from util import tr, chunks
-from vial_device import VialBootloader
+from util import tr, chunks, find_vial_devices
+from vial_device import VialBootloader, VialKeyboard
+
+
+BL_SUPPORTED_VERSION = 0
 
 
 def send_retries(dev, data, retries=20):
@@ -30,6 +33,18 @@ def send_retries(dev, data, retries=20):
 
 
 CHUNK = 64
+
+
+def bl_get_version(dev):
+    dev.send(b"VC\x00")
+    data = dev.recv(8)
+    return data[0]
+
+
+def bl_get_uid(dev):
+    dev.send(b"VC\x01")
+    data = dev.recv(8)
+    return data
 
 
 def cmd_flash(device, firmware, log_cb, progress_cb, complete_cb, error_cb):
@@ -50,24 +65,22 @@ def cmd_flash(device, firmware, log_cb, progress_cb, complete_cb, error_cb):
         ))
 
     # Check bootloader is correct version
-    device.send(b"VC\x00")
-    data = device.recv(8)
-    log_cb("* Bootloader version: {}".format(data[0]))
-    if data[0] != 0:
+    ver = bl_get_version(device)
+    log_cb("* Bootloader version: {}".format(ver))
+    if ver != BL_SUPPORTED_VERSION:
         return error_cb("Error: Unsupported bootloader version")
 
-    device.send(b"VC\x01")
-    data = device.recv(8)
-    log_cb("* Vial ID: {}".format(data.hex()))
+    uid = bl_get_uid(device)
+    log_cb("* Vial ID: {}".format(uid.hex()))
 
-    if data == b"\xFF" * 8:
+    if uid == b"\xFF" * 8:
         log_cb("\n\n\n!!! WARNING !!!\nBootloader UID is not set, make sure to configure it"
                " before releasing production firmware\n!!! WARNING !!!\n\n")
 
-    if data != fw_uid:
+    if uid != fw_uid:
         return error_cb("Error: Firmware package was built for different device\n\texpected={}\n\tgot={}".format(
             fw_uid.hex(),
-            data.hex()
+            uid.hex()
         ))
 
     # OK all checks complete, we can flash now
@@ -139,12 +152,18 @@ class FirmwareFlasher(BasicEditor):
     def rebuild(self, device):
         super().rebuild(device)
         self.txt_logger.clear()
+
+        if not self.valid():
+            return
+
         if isinstance(self.device, VialBootloader):
             self.log("Valid Vial Bootloader device at {}".format(self.device.desc["path"].decode("utf-8")))
+        elif isinstance(self.device, VialKeyboard):
+            self.log("Vial keyboard detected")
 
     def valid(self):
-        # TODO: it is also valid to flash a VialKeyboard which supports optional "vibl-integration" feature
-        return isinstance(self.device, VialBootloader)
+        return isinstance(self.device, VialBootloader) or\
+               isinstance(self.device, VialKeyboard) and self.device.keyboard.vibl
 
     def on_click_select_file(self):
         dialog = QFileDialog()
@@ -170,6 +189,34 @@ class FirmwareFlasher(BasicEditor):
 
         self.log("Preparing to flash...")
         self.lock_ui()
+
+        # TODO: this needs to switch to the secure assisted-reset feature before public release
+        if isinstance(self.device, VialKeyboard):
+            uid = self.device.keyboard.get_uid()
+
+            self.log("Restarting in bootloader mode...")
+            self.device.keyboard.reset()
+
+            # watch for bootloaders to appear and ask them for their UID, return one that matches the keyboard
+            while True:
+                self.log("Looking for devices...")
+                QCoreApplication.processEvents()
+                time.sleep(1)
+                devices = find_vial_devices()
+                found = None
+                for dev in devices:
+                    if isinstance(dev, VialBootloader):
+                        dev.open()
+                        # TODO: update version check before release
+                        if bl_get_version(dev) != BL_SUPPORTED_VERSION or bl_get_uid(dev) != uid:
+                            dev.close()
+                        found = dev
+                        break
+                if found:
+                    self.log("Found Vial Bootloader device at {}".format(found.desc["path"].decode("utf-8")))
+                    self.device = found
+                    break
+
         threading.Thread(target=lambda: cmd_flash(
             self.device, firmware, self.on_log, self.on_progress, self.on_complete, self.on_error)).start()
 

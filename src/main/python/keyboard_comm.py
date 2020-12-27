@@ -54,6 +54,7 @@ class Keyboard:
         self.macro_count = 0
         self.macro_memory = 0
         self.macro = b""
+        self.vibl = False
 
         self.vial_protocol = self.keyboard_id = -1
 
@@ -102,6 +103,10 @@ class Keyboard:
                 sz -= MSG_LEN
 
             payload = json.loads(lzma.decompress(payload))
+
+        if "vial" in payload:
+            vial = payload["vial"]
+            self.vibl = vial.get("vibl", False)
 
         self.layouts = payload.get("layouts")
 
@@ -275,3 +280,13 @@ class Keyboard:
 
         self.set_layout_options(data["layout_options"])
         self.set_macro(base64.b64decode(data["macro"]))
+
+    def reset(self):
+        self.usb_send(self.dev, struct.pack("B", 0xB))
+        self.dev.close()
+
+    def get_uid(self):
+        """ Retrieve UID from the keyboard, explicitly sending a query packet """
+        data = self.usb_send(self.dev, struct.pack("BB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_GET_KEYBOARD_ID))
+        keyboard_id = data[4:12]
+        return keyboard_id
