@@ -35,18 +35,6 @@ def send_retries(dev, data, retries=20):
 CHUNK = 64
 
 
-def bl_get_version(dev):
-    dev.send(b"VC\x00")
-    data = dev.recv(8)
-    return data[0]
-
-
-def bl_get_uid(dev):
-    dev.send(b"VC\x01")
-    data = dev.recv(8)
-    return data
-
-
 def cmd_flash(device, firmware, log_cb, progress_cb, complete_cb, error_cb):
     if firmware[0:8] != b"VIALFW00":
         return error_cb("Error: Invalid signature")
@@ -65,12 +53,14 @@ def cmd_flash(device, firmware, log_cb, progress_cb, complete_cb, error_cb):
         ))
 
     # Check bootloader is correct version
-    ver = bl_get_version(device)
+    device.send(b"VC\x00")
+    ver = device.recv(8)[0]
     log_cb("* Bootloader version: {}".format(ver))
     if ver != BL_SUPPORTED_VERSION:
         return error_cb("Error: Unsupported bootloader version")
 
-    uid = bl_get_uid(device)
+    device.send(b"VC\x01")
+    uid = device.recv(8)
     log_cb("* Vial ID: {}".format(uid.hex()))
 
     if uid == b"\xFF" * 8:
@@ -167,6 +157,13 @@ class FirmwareFlasher(BasicEditor):
         return isinstance(self.device, VialBootloader) or\
                isinstance(self.device, VialKeyboard) and self.device.keyboard.vibl
 
+    def find_device_with_uid(self, cls, uid):
+        devices = find_vial_devices()
+        for dev in devices:
+            if isinstance(dev, cls) and dev.get_uid() == uid:
+                return dev
+        return None
+
     def on_click_select_file(self):
         dialog = QFileDialog()
         dialog.setDefaultSuffix("vfw")
@@ -207,25 +204,16 @@ class FirmwareFlasher(BasicEditor):
             self.device.keyboard.reset()
 
             # watch for bootloaders to appear and ask them for their UID, return one that matches the keyboard
-            while True:
+            found = None
+            while found is None:
                 self.log("Looking for devices...")
                 QCoreApplication.processEvents()
                 time.sleep(1)
-                devices = find_vial_devices()
-                found = None
-                for dev in devices:
-                    if isinstance(dev, VialBootloader):
-                        dev.open()
-                        # TODO: update version check before release
-                        if bl_get_version(dev) != BL_SUPPORTED_VERSION or bl_get_uid(dev) != self.uid_restore:
-                            dev.close()
-                            continue
-                        found = dev
-                        break
-                if found:
-                    self.log("Found Vial Bootloader device at {}".format(found.desc["path"].decode("utf-8")))
-                    self.device = found
-                    break
+                found = self.find_device_with_uid(VialBootloader, self.uid_restore)
+
+            self.log("Found Vial Bootloader device at {}".format(found.desc["path"].decode("utf-8")))
+            found.open()
+            self.device = found
 
         threading.Thread(target=lambda: cmd_flash(
             self.device, firmware, self.on_log, self.on_progress, self.on_complete, self.on_error)).start()
@@ -254,27 +242,16 @@ class FirmwareFlasher(BasicEditor):
 
         # if we were asked to restore a layout, find keyboard with matching UID and restore the layout to it
         if self.layout_restore:
-            while True:
+            found = None
+            while found is None:
                 self.log("Looking for devices...")
                 QCoreApplication.processEvents()
                 time.sleep(1)
-                devices = find_vial_devices()
-                found = None
-                for dev in devices:
-                    if isinstance(dev, VialKeyboard):
-                        try:
-                            dev.open()
-                        except OSError:
-                            continue
-                        if dev.keyboard.get_uid() != self.uid_restore:
-                            dev.close()
-                            continue
-                        found = dev
-                        break
-                if found:
-                    self.log("Found Vial keyboard at {}".format(found.desc["path"].decode("utf-8")))
-                    self.device = found
-                    break
+                found = self.find_device_with_uid(VialKeyboard, self.uid_restore)
+
+            self.log("Found Vial keyboard at {}".format(found.desc["path"].decode("utf-8")))
+            found.open()
+            self.device = found
             self.log("Restoring saved layout...")
             QCoreApplication.processEvents()
             found.keyboard.restore_layout(self.layout_restore)
