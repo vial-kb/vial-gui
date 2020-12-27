@@ -10,6 +10,7 @@ from firmware_flasher import FirmwareFlasher
 from keymap_editor import KeymapEditor
 from layout_editor import LayoutEditor
 from macro_recorder import MacroRecorder
+from unlocker import Unlocker
 from util import tr, find_vial_devices
 
 
@@ -17,6 +18,9 @@ class MainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
+
+        self.unlocker = Unlocker()
+
         self.current_device = None
         self.devices = []
         self.sideload_json = None

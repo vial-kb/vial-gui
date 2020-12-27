@@ -30,6 +30,12 @@ class Unlocker(QWidget):
         self.setLayout(layout)
         self.setWindowFlag(Qt.Dialog)
 
+        Unlocker.obj = self
+
+    @classmethod
+    def get(cls):
+        return cls.obj
+
     def perform_unlock(self, keyboard):
         # if it's already unlocked, don't need to do anything
         if keyboard.get_lock() == 0:
