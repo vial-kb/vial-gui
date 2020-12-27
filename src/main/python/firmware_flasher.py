@@ -11,6 +11,7 @@ from PyQt5.QtGui import QFontDatabase
 from PyQt5.QtWidgets import QHBoxLayout, QLineEdit, QToolButton, QPlainTextEdit, QProgressBar,QFileDialog, QDialog
 
 from basic_editor import BasicEditor
+from unlocker import Unlocker
 from util import tr, chunks, find_vial_devices
 from vial_device import VialBootloader, VialKeyboard
 
@@ -141,6 +142,8 @@ class FirmwareFlasher(BasicEditor):
 
         self.layout_restore = self.uid_restore = None
 
+        self.unlocker = Unlocker()
+
     def rebuild(self, device):
         super().rebuild(device)
         self.txt_logger.clear()
@@ -191,7 +194,6 @@ class FirmwareFlasher(BasicEditor):
 
         self.layout_restore = self.uid_restore = None
 
-        # TODO: this needs to switch to the secure assisted-reset feature before public release
         if isinstance(self.device, VialKeyboard):
             # back up current layout
             self.log("Backing up current layout...")
@@ -199,6 +201,8 @@ class FirmwareFlasher(BasicEditor):
 
             # keep track of which keyboard we should restore saved layout to
             self.uid_restore = self.device.keyboard.get_uid()
+
+            self.unlocker.perform_unlock(self.device.keyboard)
 
             self.log("Restarting in bootloader mode...")
             self.device.keyboard.reset()
