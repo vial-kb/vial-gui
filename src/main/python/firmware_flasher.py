@@ -11,8 +11,7 @@ from PyQt5.QtGui import QFontDatabase
 from PyQt5.QtWidgets import QHBoxLayout, QLineEdit, QToolButton, QPlainTextEdit, QProgressBar,QFileDialog, QDialog
 
 from basic_editor import BasicEditor
-from keyboard_comm import Keyboard, CMD_VIA_VIAL_PREFIX, CMD_VIAL_GET_KEYBOARD_ID
-from util import tr, chunks, find_vial_devices, MSG_LEN
+from util import tr, chunks, find_vial_devices
 from vial_device import VialBootloader, VialKeyboard
 
 
