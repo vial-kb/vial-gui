@@ -42,6 +42,7 @@ class Keyboard:
         # n.b. using OrderedDict here to make order of layout requests consistent for tests
         self.rowcol = OrderedDict()
         self.encoderpos = OrderedDict()
+        self.encoder_count = 0
         self.layout = dict()
         self.encoder_layout = dict()
         self.rows = self.cols = self.layers = 0
@@ -122,6 +123,7 @@ class Keyboard:
                 key.encoder_idx = idx
                 key.encoder_dir = direction
                 self.encoderpos[idx] = True
+                self.encoder_count = max(self.encoder_count, idx + 1)
                 self.encoders.append(key)
             elif key.labels[0] and "," in key.labels[0]:
                 row, col = key.labels[0].split(",")
@@ -219,6 +221,7 @@ class Keyboard:
         # TODO: increase version before release
         # TODO: store keyboard UID here as well
         data = {"version": 0}
+
         layout = []
         for l in range(self.layers):
             layer = []
@@ -229,19 +232,40 @@ class Keyboard:
                 for c in range(self.cols):
                     val = self.layout.get((l, r, c), -1)
                     row.append(val)
+
+        encoder_layout = []
+        for l in range(self.layers):
+            layer = []
+            for e in range(self.encoder_count):
+                cw = (l, e, 0)
+                ccw = (l, e, 1)
+                layer.append([self.encoder_layout.get(cw, -1), self.encoder_layout.get(ccw, -1)])
+            encoder_layout.append(layer)
+
         data["layout"] = layout
+        data["encoder_layout"] = encoder_layout
         data["layout_options"] = self.layout_options
         data["macro"] = base64.b64encode(self.macro).decode("utf-8")
+
         return json.dumps(data).encode("utf-8")
 
     def restore_layout(self, data):
         """ Restores saved layout """
 
         data = json.loads(data.decode("utf-8"))
+
+        # restore keymap
         for l, layer in enumerate(data["layout"]):
             for r, row in enumerate(layer):
                 for c, col in enumerate(row):
                     if (l, r, c) in self.layout:
                         self.set_key(l, r, c, col)
+
+        # restore encoders
+        for l, layer in enumerate(data["encoder_layout"]):
+            for e, encoder in enumerate(layer):
+                self.set_encoder(l, e, 0, encoder[0])
+                self.set_encoder(l, e, 1, encoder[1])
+
         self.set_layout_options(data["layout_options"])
         self.set_macro(base64.b64decode(data["macro"]))
