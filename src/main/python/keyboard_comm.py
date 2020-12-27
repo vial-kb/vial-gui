@@ -189,12 +189,18 @@ class Keyboard:
             self.macro = b"\x00".join(macros[:self.macro_count]) + b"\x00"
 
     def set_key(self, layer, row, col, code):
+        if code < 0:
+            return
+
         key = (layer, row, col)
         if self.layout[key] != code:
             self.usb_send(self.dev, struct.pack(">BBBBH", CMD_VIA_SET_KEYCODE, layer, row, col, code))
             self.layout[key] = code
 
     def set_encoder(self, layer, index, direction, code):
+        if code < 0:
+            return
+
         key = (layer, index, direction)
         if self.encoder_layout[key] != code:
             self.usb_send(self.dev, struct.pack(">BBBBBH", CMD_VIA_VIAL_PREFIX, CMD_VIAL_SET_ENCODER,
