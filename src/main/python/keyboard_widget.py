@@ -146,9 +146,10 @@ class KeyboardWidget(QWidget):
 
         # find the global top-left position, all the keys will be shifted to the left/up by that position
         for key, cls in keys:
-            obj = cls(key)
-            top_x = min(top_x, obj.x)
-            top_y = min(top_y, obj.y)
+            if key.layout_index == -1:
+                obj = cls(key)
+                top_x = min(top_x, obj.x)
+                top_y = min(top_y, obj.y)
 
         # obtain common widgets, that is, ones which are always displayed and require no extra transforms
         for key, cls in keys:
