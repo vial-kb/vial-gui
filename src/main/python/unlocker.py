@@ -20,7 +20,8 @@ class Unlocker(QWidget):
 
         layout.addWidget(QLabel(tr("Unlocker", "In order to proceed, the keyboard must be set into unlocked mode.\n"
                                                "You should only perform this operation on computers that you trust.")))
-        layout.addWidget(QLabel(tr("Unlocker", "To exit this mode, you will need to replug the keyboard.")))
+        layout.addWidget(QLabel(tr("Unlocker", "To exit this mode, you will need to replug the keyboard\n"
+                                               "or select Security->Lock from the menu.")))
         layout.addWidget(QLabel(tr("Unlocker", "Press and hold the following keys until the progress bar "
                                                "below fills up:")))
 

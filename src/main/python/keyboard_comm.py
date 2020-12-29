@@ -30,6 +30,7 @@ CMD_VIAL_SET_ENCODER = 0x04
 CMD_VIAL_GET_LOCK = 0x05
 CMD_VIAL_UNLOCK_START = 0x06
 CMD_VIAL_UNLOCK_POLL = 0x07
+CMD_VIAL_LOCK = 0x08
 
 # how much of a macro/keymap buffer we can read/write per packet
 BUFFER_FETCH_CHUNK = 28
@@ -316,3 +317,6 @@ class Keyboard:
     def unlock_poll(self):
         data = self.usb_send(self.dev, struct.pack("BB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_UNLOCK_POLL))
         return data
+
+    def lock(self):
+        self.usb_send(self.dev, struct.pack("BB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_LOCK))
