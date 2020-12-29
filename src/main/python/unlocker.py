@@ -4,12 +4,13 @@ import time
 from PyQt5.QtCore import QCoreApplication, Qt
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QProgressBar
 
+from keyboard_widget import KeyboardWidget
 from util import tr
 
 
 class Unlocker(QWidget):
 
-    def __init__(self):
+    def __init__(self, layout_editor):
         super().__init__()
         self.keyboard = None
 
@@ -23,7 +24,11 @@ class Unlocker(QWidget):
         layout.addWidget(QLabel(tr("Unlocker", "Press and hold the following keys until the progress bar "
                                                "below fills up:")))
 
-        # TODO: add image/text reference of keys user needs to hold
+        self.keyboard_reference = KeyboardWidget(layout_editor)
+        self.keyboard_reference.set_enabled(False)
+        self.keyboard_reference.set_scale(0.5)
+        layout.addWidget(self.keyboard_reference)
+        layout.setAlignment(self.keyboard_reference, Qt.AlignHCenter)
 
         layout.addWidget(self.progress)
 
@@ -36,10 +41,28 @@ class Unlocker(QWidget):
     def get(cls):
         return cls.obj
 
+    def update_reference(self, keyboard):
+        """ Updates keycap reference image """
+
+        self.keyboard_reference.set_keys(keyboard.keys, keyboard.encoders)
+
+        # use "active" background to indicate keys to hold
+        lock_keys = keyboard.get_lock_keys()
+        for w in self.keyboard_reference.widgets:
+            if (w.desc.row, w.desc.col) in lock_keys:
+                w.setActive(True)
+
+        self.keyboard_reference.update_layout()
+        self.keyboard_reference.update()
+        self.keyboard_reference.updateGeometry()
+
     def perform_unlock(self, keyboard):
         # if it's already unlocked, don't need to do anything
-        if keyboard.get_lock() == 0:
+        lock = keyboard.get_lock()
+        if lock == 0:
             return
+
+        self.update_reference(keyboard)
 
         self.progress.setMaximum(1)
         self.progress.setValue(0)
@@ -64,3 +87,6 @@ class Unlocker(QWidget):
 
         # ok all done, the keyboard is now set to insecure state
         self.hide()
+
+    def closeEvent(self, ev):
+        ev.ignore()

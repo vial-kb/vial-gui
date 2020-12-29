@@ -19,8 +19,6 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.unlocker = Unlocker()
-
         self.current_device = None
         self.devices = []
         self.sideload_json = None
@@ -45,6 +43,7 @@ class MainWindow(QMainWindow):
 
         self.editors = [(self.keymap_editor, "Keymap"), (self.layout_editor, "Layout"), (self.macro_recorder, "Macros"),
                         (self.firmware_flasher, "Firmware updater")]
+        self.unlocker = Unlocker(self.layout_editor)
 
         self.tabs = QTabWidget()
         self.refresh_tabs()

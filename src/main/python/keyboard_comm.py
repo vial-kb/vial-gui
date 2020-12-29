@@ -298,6 +298,18 @@ class Keyboard:
         data = self.usb_send(self.dev, struct.pack("BB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_GET_LOCK))
         return data[0]
 
+    def get_lock_keys(self):
+        """ Return keys users have to hold to unlock the keyboard as a list of rowcols """
+
+        data = self.usb_send(self.dev, struct.pack("BB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_GET_LOCK))
+        rowcol = []
+        for x in range(15):
+            row = data[2 + x * 2]
+            col = data[3 + x * 2]
+            if row != 255 and col != 255:
+                rowcol.append((row, col))
+        return rowcol
+
     def unlock_start(self):
         self.usb_send(self.dev, struct.pack("BB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_UNLOCK_START))
 
