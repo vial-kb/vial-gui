@@ -58,7 +58,7 @@ class TabbedKeycodes(QTabWidget):
         buttons = []
 
         for keycode in keycodes:
-            btn = QPushButton(keycode.label)
+            btn = QPushButton(keycode.label.replace("&", "&&"))
             btn.setFixedSize(KEYCODE_BTN_WIDTH, KEYCODE_BTN_HEIGHT)
             btn.setToolTip(keycode_tooltip(keycode.code))
             btn.clicked.connect(lambda st, k=keycode: self.keycode_changed.emit(k.code))
