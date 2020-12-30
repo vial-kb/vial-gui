@@ -55,7 +55,6 @@ class Keyboard:
         self.layout_options = -1
         self.keys = []
         self.encoders = []
-        self.sideload = False
         self.macro_count = 0
         self.macro_memory = 0
         self.macro = b""
@@ -86,7 +85,6 @@ class Keyboard:
 
         if sideload_json is not None:
             payload = sideload_json
-            self.sideload = True
         else:
             # get keyboard identification
             data = self.usb_send(self.dev, struct.pack("BB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_GET_KEYBOARD_ID))
@@ -304,11 +302,19 @@ class Keyboard:
         return keyboard_id
 
     def get_unlock_status(self):
+        # VIA keyboards are always unlocked
+        if self.vial_protocol < 0:
+            return 1
+
         data = self.usb_send(self.dev, struct.pack("BB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_GET_UNLOCK_STATUS))
         return data[0]
 
     def get_unlock_keys(self):
         """ Return keys users have to hold to unlock the keyboard as a list of rowcols """
+
+        # VIA keyboards don't have unlock keys
+        if self.vial_protocol < 0:
+            return []
 
         data = self.usb_send(self.dev, struct.pack("BB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_GET_UNLOCK_STATUS))
         rowcol = []
@@ -320,11 +326,20 @@ class Keyboard:
         return rowcol
 
     def unlock_start(self):
+        if self.vial_protocol < 0:
+            return
+
         self.usb_send(self.dev, struct.pack("BB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_UNLOCK_START))
 
     def unlock_poll(self):
+        if self.vial_protocol < 0:
+            return b""
+
         data = self.usb_send(self.dev, struct.pack("BB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_UNLOCK_POLL))
         return data
 
     def lock(self):
+        if self.vial_protocol < 0:
+            return
+
         self.usb_send(self.dev, struct.pack("BB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_LOCK))
