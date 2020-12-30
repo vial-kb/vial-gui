@@ -48,7 +48,7 @@ class Unlocker(QWidget):
         self.keyboard_reference.set_keys(keyboard.keys, keyboard.encoders)
 
         # use "active" background to indicate keys to hold
-        lock_keys = keyboard.get_lock_keys()
+        lock_keys = keyboard.get_unlock_keys()
         for w in self.keyboard_reference.widgets:
             if (w.desc.row, w.desc.col) in lock_keys:
                 w.setActive(True)
@@ -59,8 +59,8 @@ class Unlocker(QWidget):
 
     def perform_unlock(self, keyboard):
         # if it's already unlocked, don't need to do anything
-        lock = keyboard.get_lock()
-        if lock == 0:
+        unlock = keyboard.get_unlock_status()
+        if unlock == 1:
             return
 
         self.update_reference(keyboard)

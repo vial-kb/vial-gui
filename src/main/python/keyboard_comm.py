@@ -27,7 +27,7 @@ CMD_VIAL_GET_SIZE = 0x01
 CMD_VIAL_GET_DEFINITION = 0x02
 CMD_VIAL_GET_ENCODER = 0x03
 CMD_VIAL_SET_ENCODER = 0x04
-CMD_VIAL_GET_LOCK = 0x05
+CMD_VIAL_GET_UNLOCK_STATUS = 0x05
 CMD_VIAL_UNLOCK_START = 0x06
 CMD_VIAL_UNLOCK_POLL = 0x07
 CMD_VIAL_LOCK = 0x08
@@ -295,14 +295,14 @@ class Keyboard:
         keyboard_id = data[4:12]
         return keyboard_id
 
-    def get_lock(self):
-        data = self.usb_send(self.dev, struct.pack("BB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_GET_LOCK))
+    def get_unlock_status(self):
+        data = self.usb_send(self.dev, struct.pack("BB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_GET_UNLOCK_STATUS))
         return data[0]
 
-    def get_lock_keys(self):
+    def get_unlock_keys(self):
         """ Return keys users have to hold to unlock the keyboard as a list of rowcols """
 
-        data = self.usb_send(self.dev, struct.pack("BB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_GET_LOCK))
+        data = self.usb_send(self.dev, struct.pack("BB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_GET_UNLOCK_STATUS))
         rowcol = []
         for x in range(15):
             row = data[2 + x * 2]
