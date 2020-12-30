@@ -6,6 +6,7 @@ import lzma
 from collections import OrderedDict
 
 from kle_serial import Serial as KleSerial
+from unlocker import Unlocker
 from util import MSG_LEN, hid_send, chunks
 
 CMD_VIA_GET_KEYBOARD_VALUE = 0x02
@@ -283,7 +284,14 @@ class Keyboard:
                 self.set_encoder(l, e, 1, encoder[1])
 
         self.set_layout_options(data["layout_options"])
-        self.set_macro(base64.b64decode(data["macro"]))
+
+        # we need to unlock the keyboard before we can restore the macros, lock it afterwards
+        # only do that if the user actually has macros defined
+        macro = base64.b64decode(data["macro"])
+        if macro:
+            Unlocker.get().perform_unlock(self)
+            self.set_macro(macro)
+            self.lock()
 
     def reset(self):
         self.usb_send(self.dev, struct.pack("B", 0xB))
