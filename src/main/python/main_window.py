@@ -91,9 +91,14 @@ class MainWindow(QMainWindow):
         keyboard_lock_act = QAction(tr("MenuSecurity", "Lock"), self)
         keyboard_lock_act.triggered.connect(self.lock_keyboard)
 
+        keyboard_reset_act = QAction(tr("MenuSecurity", "Reboot to bootloader"), self)
+        keyboard_reset_act.triggered.connect(self.reboot_to_bootloader)
+
         self.security_menu = self.menuBar().addMenu(tr("Menu", "Security"))
         self.security_menu.addAction(keyboard_unlock_act)
         self.security_menu.addAction(keyboard_lock_act)
+        self.security_menu.addSeparator()
+        self.security_menu.addAction(keyboard_reset_act)
 
     def on_layout_load(self):
         dialog = QFileDialog()
@@ -184,3 +189,8 @@ class MainWindow(QMainWindow):
     def lock_keyboard(self):
         if isinstance(self.current_device, VialKeyboard):
             self.current_device.keyboard.lock()
+
+    def reboot_to_bootloader(self):
+        if isinstance(self.current_device, VialKeyboard):
+            self.unlocker.perform_unlock(self.current_device.keyboard)
+            self.current_device.keyboard.reset()
