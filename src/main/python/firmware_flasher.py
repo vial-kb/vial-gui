@@ -36,7 +36,7 @@ def send_retries(dev, data, retries=20):
 CHUNK = 64
 
 
-def cmd_flash(device, firmware, log_cb, progress_cb, complete_cb, error_cb):
+def cmd_flash(device, firmware, enable_insecure, log_cb, progress_cb, complete_cb, error_cb):
     if firmware[0:8] != b"VIALFW00":
         return error_cb("Error: Invalid signature")
 
@@ -92,6 +92,9 @@ def cmd_flash(device, firmware, log_cb, progress_cb, complete_cb, error_cb):
 
     # Reboot
     log_cb("Rebooting...")
+    # enable insecure mode on first boot in order to restore keymap/macros
+    if enable_insecure:
+        device.send(b"VC\x04")
     device.send(b"VC\x03")
 
     complete_cb("Done!")
@@ -218,7 +221,8 @@ class FirmwareFlasher(BasicEditor):
             self.device = found
 
         threading.Thread(target=lambda: cmd_flash(
-            self.device, firmware, self.on_log, self.on_progress, self.on_complete, self.on_error)).start()
+            self.device, firmware, self.layout_restore is not None,
+            self.on_log, self.on_progress, self.on_complete, self.on_error)).start()
 
     def on_log(self, line):
         self.log_signal.emit(line)
