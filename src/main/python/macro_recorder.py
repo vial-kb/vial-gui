@@ -11,6 +11,7 @@ from macro_action import ActionText, ActionTap, ActionDown, ActionUp, SS_TAP_COD
 from macro_key import KeyString, KeyDown, KeyUp, KeyTap
 from macro_line import MacroLine
 from macro_optimizer import macro_optimize
+from unlocker import Unlocker
 from util import tr
 from vial_device import VialKeyboard
 
@@ -329,5 +330,6 @@ class MacroRecorder(BasicEditor):
         self.deserialize(self.keyboard.macro)
 
     def on_save(self):
+        Unlocker.get().perform_unlock(self.device.keyboard)
         self.keyboard.set_macro(self.serialize())
         self.on_change()

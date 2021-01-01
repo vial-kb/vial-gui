@@ -10,6 +10,8 @@ from constants import KEY_WIDTH, KEY_SPACING, KEY_HEIGHT, KEYBOARD_WIDGET_PADDIN
 class KeyWidget:
 
     def __init__(self, desc, shift_x=0, shift_y=0):
+        self.active = False
+        self.masked = False
         self.desc = desc
         self.text = ""
         self.mask_text = ""
@@ -88,6 +90,9 @@ class KeyWidget:
     def setToolTip(self, tooltip):
         self.tooltip = tooltip
 
+    def setActive(self, active):
+        self.active = active
+
 
 class EncoderWidget(KeyWidget):
 
@@ -117,6 +122,10 @@ class KeyboardWidget(QWidget):
 
     def __init__(self, layout_editor):
         super().__init__()
+
+        self.enabled = True
+        self.scale = 1
+
         self.setMouseTracking(True)
 
         self.layout_editor = layout_editor
@@ -195,8 +204,8 @@ class KeyboardWidget(QWidget):
         max_w = max_h = 0
         for key in self.widgets:
             p = key.polygon.boundingRect().bottomRight()
-            max_w = max(max_w, p.x())
-            max_h = max(max_h, p.y())
+            max_w = max(max_w, p.x() * self.scale)
+            max_h = max(max_h, p.y() * self.scale)
 
         self.width = max_w + 2 * KEYBOARD_WIDGET_PADDING
         self.height = max_h + 2 * KEYBOARD_WIDGET_PADDING
@@ -234,11 +243,12 @@ class KeyboardWidget(QWidget):
 
         for idx, key in enumerate(self.widgets):
             qp.save()
+            qp.scale(self.scale, self.scale)
             qp.translate(key.rotation_x, key.rotation_y)
             qp.rotate(key.rotation_angle)
             qp.translate(-key.rotation_x, -key.rotation_y)
 
-            if self.active_key == key and not self.active_mask:
+            if key.active or (self.active_key == key and not self.active_mask):
                 qp.setPen(active_pen)
                 qp.setBrush(active_brush)
 
@@ -280,6 +290,9 @@ class KeyboardWidget(QWidget):
         return None, False
 
     def mousePressEvent(self, ev):
+        if not self.enabled:
+            return
+
         self.active_key, self.active_mask = self.hit_test(ev.pos())
         if self.active_key is not None:
             self.clicked.emit()
@@ -302,6 +315,9 @@ class KeyboardWidget(QWidget):
             self.update()
 
     def event(self, ev):
+        if not self.enabled:
+            super().event(ev)
+
         if ev.type() == QEvent.ToolTip:
             key = self.hit_test(ev.pos())[0]
             if key is not None:
@@ -309,3 +325,9 @@ class KeyboardWidget(QWidget):
             else:
                 QToolTip.hideText()
         return super().event(ev)
+
+    def set_enabled(self, val):
+        self.enabled = val
+
+    def set_scale(self, scale):
+        self.scale = scale

@@ -6,6 +6,7 @@ import lzma
 from collections import OrderedDict
 
 from kle_serial import Serial as KleSerial
+from unlocker import Unlocker
 from util import MSG_LEN, hid_send, chunks
 
 CMD_VIA_GET_KEYBOARD_VALUE = 0x02
@@ -27,6 +28,10 @@ CMD_VIAL_GET_SIZE = 0x01
 CMD_VIAL_GET_DEFINITION = 0x02
 CMD_VIAL_GET_ENCODER = 0x03
 CMD_VIAL_SET_ENCODER = 0x04
+CMD_VIAL_GET_UNLOCK_STATUS = 0x05
+CMD_VIAL_UNLOCK_START = 0x06
+CMD_VIAL_UNLOCK_POLL = 0x07
+CMD_VIAL_LOCK = 0x08
 
 # how much of a macro/keymap buffer we can read/write per packet
 BUFFER_FETCH_CHUNK = 28
@@ -50,10 +55,10 @@ class Keyboard:
         self.layout_options = -1
         self.keys = []
         self.encoders = []
-        self.sideload = False
         self.macro_count = 0
         self.macro_memory = 0
         self.macro = b""
+        self.vibl = False
 
         self.vial_protocol = self.keyboard_id = -1
 
@@ -80,7 +85,6 @@ class Keyboard:
 
         if sideload_json is not None:
             payload = sideload_json
-            self.sideload = True
         else:
             # get keyboard identification
             data = self.usb_send(self.dev, struct.pack("BB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_GET_KEYBOARD_ID))
@@ -102,6 +106,10 @@ class Keyboard:
                 sz -= MSG_LEN
 
             payload = json.loads(lzma.decompress(payload))
+
+        if "vial" in payload:
+            vial = payload["vial"]
+            self.vibl = vial.get("vibl", False)
 
         self.layouts = payload.get("layouts")
 
@@ -274,4 +282,64 @@ class Keyboard:
                 self.set_encoder(l, e, 1, encoder[1])
 
         self.set_layout_options(data["layout_options"])
-        self.set_macro(base64.b64decode(data["macro"]))
+
+        # we need to unlock the keyboard before we can restore the macros, lock it afterwards
+        # only do that if the user actually has macros defined
+        macro = base64.b64decode(data["macro"])
+        if macro:
+            Unlocker.get().perform_unlock(self)
+            self.set_macro(macro)
+            self.lock()
+
+    def reset(self):
+        self.usb_send(self.dev, struct.pack("B", 0xB))
+        self.dev.close()
+
+    def get_uid(self):
+        """ Retrieve UID from the keyboard, explicitly sending a query packet """
+        data = self.usb_send(self.dev, struct.pack("BB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_GET_KEYBOARD_ID))
+        keyboard_id = data[4:12]
+        return keyboard_id
+
+    def get_unlock_status(self):
+        # VIA keyboards are always unlocked
+        if self.vial_protocol < 0:
+            return 1
+
+        data = self.usb_send(self.dev, struct.pack("BB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_GET_UNLOCK_STATUS))
+        return data[0]
+
+    def get_unlock_keys(self):
+        """ Return keys users have to hold to unlock the keyboard as a list of rowcols """
+
+        # VIA keyboards don't have unlock keys
+        if self.vial_protocol < 0:
+            return []
+
+        data = self.usb_send(self.dev, struct.pack("BB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_GET_UNLOCK_STATUS))
+        rowcol = []
+        for x in range(15):
+            row = data[2 + x * 2]
+            col = data[3 + x * 2]
+            if row != 255 and col != 255:
+                rowcol.append((row, col))
+        return rowcol
+
+    def unlock_start(self):
+        if self.vial_protocol < 0:
+            return
+
+        self.usb_send(self.dev, struct.pack("BB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_UNLOCK_START))
+
+    def unlock_poll(self):
+        if self.vial_protocol < 0:
+            return b""
+
+        data = self.usb_send(self.dev, struct.pack("BB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_UNLOCK_POLL))
+        return data
+
+    def lock(self):
+        if self.vial_protocol < 0:
+            return
+
+        self.usb_send(self.dev, struct.pack("BB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_LOCK))

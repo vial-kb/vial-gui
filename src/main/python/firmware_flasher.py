@@ -1,17 +1,22 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 import datetime
+import hashlib
 import struct
 import time
 import threading
 
-from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtCore import pyqtSignal, QCoreApplication
 from PyQt5.QtGui import QFontDatabase
 from PyQt5.QtWidgets import QHBoxLayout, QLineEdit, QToolButton, QPlainTextEdit, QProgressBar,QFileDialog, QDialog
 
 from basic_editor import BasicEditor
-from util import tr, chunks
-from vial_device import VialBootloader
+from unlocker import Unlocker
+from util import tr, chunks, find_vial_devices
+from vial_device import VialBootloader, VialKeyboard
+
+
+BL_SUPPORTED_VERSION = 0
 
 
 def send_retries(dev, data, retries=20):
@@ -31,36 +36,65 @@ def send_retries(dev, data, retries=20):
 CHUNK = 64
 
 
-def cmd_flash(device, firmware, log_cb, progress_cb, complete_cb, error_cb):
-    while len(firmware) % CHUNK != 0:
-        firmware += b"\x00"
+def cmd_flash(device, firmware, enable_insecure, log_cb, progress_cb, complete_cb, error_cb):
+    if firmware[0:8] != b"VIALFW00":
+        return error_cb("Error: Invalid signature")
+
+    fw_uid = firmware[8:16]
+    fw_ts = struct.unpack("<Q", firmware[16:24])[0]
+    log_cb("* Firmware build date: {} (UTC)".format(datetime.datetime.utcfromtimestamp(fw_ts)))
+
+    fw_hash = firmware[32:64]
+    fw_payload = firmware[64:]
+
+    if hashlib.sha256(fw_payload).digest() != fw_hash:
+        return error_cb("Error: Firmware failed integrity check\n\texpected={}\n\tgot={}".format(
+            fw_hash.hex(),
+            hashlib.sha256(fw_payload).hexdigest()
+        ))
 
     # Check bootloader is correct version
     device.send(b"VC\x00")
-    data = device.recv(8)
-    log_cb("* Bootloader version: {}".format(data[0]))
-    if data[0] != 0:
+    ver = device.recv(8)[0]
+    log_cb("* Bootloader version: {}".format(ver))
+    if ver != BL_SUPPORTED_VERSION:
         return error_cb("Error: Unsupported bootloader version")
 
-    # TODO: Check vial ID against firmware package
     device.send(b"VC\x01")
-    data = device.recv(8)
-    log_cb("* Vial ID: {}".format(data.hex()))
+    uid = device.recv(8)
+    log_cb("* Vial ID: {}".format(uid.hex()))
+
+    if uid == b"\xFF" * 8:
+        log_cb("\n\n\n!!! WARNING !!!\nBootloader UID is not set, make sure to configure it"
+               " before releasing production firmware\n!!! WARNING !!!\n\n")
+
+    if uid != fw_uid:
+        return error_cb("Error: Firmware package was built for different device\n\texpected={}\n\tgot={}".format(
+            fw_uid.hex(),
+            uid.hex()
+        ))
+
+    # OK all checks complete, we can flash now
+    while len(fw_payload) % CHUNK != 0:
+        fw_payload += b"\x00"
 
     # Flash
     log_cb("Flashing...")
-    device.send(b"VC\x02" + struct.pack("<H", len(firmware) // CHUNK))
+    device.send(b"VC\x02" + struct.pack("<H", len(fw_payload) // CHUNK))
     total = 0
-    for part in chunks(firmware, CHUNK):
+    for part in chunks(fw_payload, CHUNK):
         if len(part) < CHUNK:
             part += b"\x00" * (CHUNK - len(part))
         if not send_retries(device, part):
             return error_cb("Error while sending data, firmware is corrupted")
         total += len(part)
-        progress_cb(total / len(firmware))
+        progress_cb(total / len(fw_payload))
 
     # Reboot
     log_cb("Rebooting...")
+    # enable insecure mode on first boot in order to restore keymap/macros
+    if enable_insecure:
+        device.send(b"VC\x04")
     device.send(b"VC\x03")
 
     complete_cb("Done!")
@@ -109,22 +143,36 @@ class FirmwareFlasher(BasicEditor):
 
         self.device = None
 
+        self.layout_restore = self.uid_restore = None
+
     def rebuild(self, device):
         super().rebuild(device)
         self.txt_logger.clear()
+
+        if not self.valid():
+            return
+
         if isinstance(self.device, VialBootloader):
             self.log("Valid Vial Bootloader device at {}".format(self.device.desc["path"].decode("utf-8")))
+        elif isinstance(self.device, VialKeyboard):
+            self.log("Vial keyboard detected")
 
     def valid(self):
-        # TODO: it is also valid to flash a VialKeyboard which supports optional "vibl-integration" feature
-        return isinstance(self.device, VialBootloader)
+        return isinstance(self.device, VialBootloader) or\
+               isinstance(self.device, VialKeyboard) and self.device.keyboard.vibl
+
+    def find_device_with_uid(self, cls, uid):
+        devices = find_vial_devices()
+        for dev in devices:
+            if isinstance(dev, cls) and dev.get_uid() == uid:
+                return dev
+        return None
 
     def on_click_select_file(self):
         dialog = QFileDialog()
-        # TODO: this should be .vfw for Vial Firmware
-        dialog.setDefaultSuffix("bin")
+        dialog.setDefaultSuffix("vfw")
         dialog.setAcceptMode(QFileDialog.AcceptOpen)
-        dialog.setNameFilters(["Vial Firmware (*.bin)"])
+        dialog.setNameFilters(["Vial Firmware (*.vfw)"])
         if dialog.exec_() == QDialog.Accepted:
             self.selected_firmware_path = dialog.selectedFiles()[0]
             self.txt_file_selector.setText(self.selected_firmware_path)
@@ -144,8 +192,37 @@ class FirmwareFlasher(BasicEditor):
 
         self.log("Preparing to flash...")
         self.lock_ui()
+
+        self.layout_restore = self.uid_restore = None
+
+        if isinstance(self.device, VialKeyboard):
+            # back up current layout
+            self.log("Backing up current layout...")
+            self.layout_restore = self.device.keyboard.save_layout()
+
+            # keep track of which keyboard we should restore saved layout to
+            self.uid_restore = self.device.keyboard.get_uid()
+
+            Unlocker.get().perform_unlock(self.device.keyboard)
+
+            self.log("Restarting in bootloader mode...")
+            self.device.keyboard.reset()
+
+            # watch for bootloaders to appear and ask them for their UID, return one that matches the keyboard
+            found = None
+            while found is None:
+                self.log("Looking for devices...")
+                QCoreApplication.processEvents()
+                time.sleep(1)
+                found = self.find_device_with_uid(VialBootloader, self.uid_restore)
+
+            self.log("Found Vial Bootloader device at {}".format(found.desc["path"].decode("utf-8")))
+            found.open()
+            self.device = found
+
         threading.Thread(target=lambda: cmd_flash(
-            self.device, firmware, self.on_log, self.on_progress, self.on_complete, self.on_error)).start()
+            self.device, firmware, self.layout_restore is not None,
+            self.on_log, self.on_progress, self.on_complete, self.on_error)).start()
 
     def on_log(self, line):
         self.log_signal.emit(line)
@@ -168,6 +245,25 @@ class FirmwareFlasher(BasicEditor):
     def _on_complete(self, msg):
         self.log(msg)
         self.progress_bar.setValue(100)
+
+        # if we were asked to restore a layout, find keyboard with matching UID and restore the layout to it
+        if self.layout_restore:
+            found = None
+            while found is None:
+                self.log("Looking for devices...")
+                QCoreApplication.processEvents()
+                time.sleep(1)
+                found = self.find_device_with_uid(VialKeyboard, self.uid_restore)
+
+            self.log("Found Vial keyboard at {}".format(found.desc["path"].decode("utf-8")))
+            found.open()
+            self.device = found
+            self.log("Restoring saved layout...")
+            QCoreApplication.processEvents()
+            found.keyboard.restore_layout(self.layout_restore)
+            found.close()
+            self.log("Done!")
+
         self.unlock_ui()
 
     def _on_error(self, msg):

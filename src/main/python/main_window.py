@@ -10,13 +10,16 @@ from firmware_flasher import FirmwareFlasher
 from keymap_editor import KeymapEditor
 from layout_editor import LayoutEditor
 from macro_recorder import MacroRecorder
+from unlocker import Unlocker
 from util import tr, find_vial_devices
+from vial_device import VialKeyboard
 
 
 class MainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
+
         self.current_device = None
         self.devices = []
         self.sideload_json = None
@@ -41,6 +44,7 @@ class MainWindow(QMainWindow):
 
         self.editors = [(self.keymap_editor, "Keymap"), (self.layout_editor, "Layout"), (self.macro_recorder, "Macros"),
                         (self.firmware_flasher, "Firmware updater")]
+        self.unlocker = Unlocker(self.layout_editor)
 
         self.tabs = QTabWidget()
         self.refresh_tabs()
@@ -80,6 +84,16 @@ class MainWindow(QMainWindow):
         file_menu.addAction(sideload_json_act)
         file_menu.addSeparator()
         file_menu.addAction(exit_act)
+
+        keyboard_unlock_act = QAction(tr("MenuSecurity", "Unlock"), self)
+        keyboard_unlock_act.triggered.connect(self.unlock_keyboard)
+
+        keyboard_lock_act = QAction(tr("MenuSecurity", "Lock"), self)
+        keyboard_lock_act.triggered.connect(self.lock_keyboard)
+
+        self.security_menu = self.menuBar().addMenu(tr("Menu", "Security"))
+        self.security_menu.addAction(keyboard_unlock_act)
+        self.security_menu.addAction(keyboard_lock_act)
 
     def on_layout_load(self):
         dialog = QFileDialog()
@@ -124,6 +138,9 @@ class MainWindow(QMainWindow):
         self.refresh_tabs()
 
     def rebuild(self):
+        # don't show "Security" menu for bootloader mode, as the bootloader is inherently insecure
+        self.security_menu.menuAction().setVisible(isinstance(self.current_device, VialKeyboard))
+
         for e in [self.layout_editor, self.keymap_editor, self.firmware_flasher, self.macro_recorder]:
             e.rebuild(self.current_device)
 
@@ -159,3 +176,11 @@ class MainWindow(QMainWindow):
         self.tabs.setEnabled(True)
         self.combobox_devices.setEnabled(True)
         self.btn_refresh_devices.setEnabled(True)
+
+    def unlock_keyboard(self):
+        if isinstance(self.current_device, VialKeyboard):
+            self.unlocker.perform_unlock(self.current_device.keyboard)
+
+    def lock_keyboard(self):
+        if isinstance(self.current_device, VialKeyboard):
+            self.current_device.keyboard.lock()
