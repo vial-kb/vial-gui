@@ -8,7 +8,8 @@ import threading
 
 from PyQt5.QtCore import pyqtSignal, QCoreApplication
 from PyQt5.QtGui import QFontDatabase
-from PyQt5.QtWidgets import QHBoxLayout, QLineEdit, QToolButton, QPlainTextEdit, QProgressBar,QFileDialog, QDialog
+from PyQt5.QtWidgets import QHBoxLayout, QLineEdit, QToolButton, QPlainTextEdit, QProgressBar, QFileDialog, QDialog, \
+    QCheckBox
 
 from basic_editor import BasicEditor
 from unlocker import Unlocker
@@ -139,6 +140,9 @@ class FirmwareFlasher(BasicEditor):
         self.btn_flash.setText(tr("Flasher", "Flash"))
         self.btn_flash.clicked.connect(self.on_click_flash)
         progress_flash.addWidget(self.btn_flash)
+        self.chk_restore_keymap = QCheckBox(tr("Flasher", "Restore current layout after flashing"))
+        self.chk_restore_keymap.setChecked(True)
+        self.addWidget(self.chk_restore_keymap)
         self.addLayout(progress_flash)
 
         self.device = None
@@ -197,8 +201,9 @@ class FirmwareFlasher(BasicEditor):
 
         if isinstance(self.device, VialKeyboard):
             # back up current layout
-            self.log("Backing up current layout...")
-            self.layout_restore = self.device.keyboard.save_layout()
+            if self.chk_restore_keymap.isChecked():
+                self.log("Backing up current layout...")
+                self.layout_restore = self.device.keyboard.save_layout()
 
             # keep track of which keyboard we should restore saved layout to
             self.uid_restore = self.device.keyboard.get_uid()
