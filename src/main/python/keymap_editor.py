@@ -41,3 +41,7 @@ class KeymapEditor(BasicEditor):
 
     def restore_layout(self, data):
         self.keyboard_container.restore_layout(data)
+
+    def set_keymap_override(self, override):
+        self.keyboard_container.set_keymap_override(override)
+        self.tabbed_keycodes.set_keymap_override(override)

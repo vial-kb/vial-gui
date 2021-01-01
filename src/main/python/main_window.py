@@ -2,12 +2,13 @@
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QWidget, QComboBox, QToolButton, QHBoxLayout, QVBoxLayout, QMainWindow, QAction, qApp, \
-    QFileDialog, QDialog, QTabWidget
+    QFileDialog, QDialog, QTabWidget, QActionGroup
 
 import json
 
 from firmware_flasher import FirmwareFlasher
 from keymap_editor import KeymapEditor
+from keymaps import KEYMAPS
 from layout_editor import LayoutEditor
 from macro_recorder import MacroRecorder
 from unlocker import Unlocker
@@ -93,6 +94,17 @@ class MainWindow(QMainWindow):
 
         keyboard_reset_act = QAction(tr("MenuSecurity", "Reboot to bootloader"), self)
         keyboard_reset_act.triggered.connect(self.reboot_to_bootloader)
+
+        keyboard_layout_menu = self.menuBar().addMenu(tr("Menu", "Keyboard layout"))
+        keymap_group = QActionGroup(self)
+        for idx, keymap in enumerate(KEYMAPS):
+            act = QAction(tr("KeyboardLayout", keymap[0]), self)
+            act.triggered.connect(lambda checked, x=idx: self.change_keyboard_layout(x))
+            act.setCheckable(True)
+            if idx == 0:
+                act.setChecked(True)
+            keymap_group.addAction(act)
+            keyboard_layout_menu.addAction(act)
 
         self.security_menu = self.menuBar().addMenu(tr("Menu", "Security"))
         self.security_menu.addAction(keyboard_unlock_act)
@@ -194,3 +206,6 @@ class MainWindow(QMainWindow):
         if isinstance(self.current_device, VialKeyboard):
             self.unlocker.perform_unlock(self.current_device.keyboard)
             self.current_device.keyboard.reset()
+
+    def change_keyboard_layout(self, index):
+        self.keymap_editor.set_keymap_override(KEYMAPS[index][1])

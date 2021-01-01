@@ -16,6 +16,7 @@ class KeyWidget:
         self.text = ""
         self.mask_text = ""
         self.tooltip = ""
+        self.color = None
 
         self.rotation_x = (KEY_WIDTH + KEY_SPACING) * desc.rotation_x
         self.rotation_y = (KEY_HEIGHT + KEY_SPACING) * desc.rotation_y
@@ -92,6 +93,9 @@ class KeyWidget:
 
     def setActive(self, active):
         self.active = active
+
+    def setColor(self, color):
+        self.color = color
 
 
 class EncoderWidget(KeyWidget):
@@ -248,7 +252,8 @@ class KeyboardWidget(QWidget):
             qp.rotate(key.rotation_angle)
             qp.translate(-key.rotation_x, -key.rotation_y)
 
-            if key.active or (self.active_key == key and not self.active_mask):
+            active = key.active or (self.active_key == key and not self.active_mask)
+            if active:
                 qp.setPen(active_pen)
                 qp.setBrush(active_brush)
 
@@ -259,16 +264,24 @@ class KeyboardWidget(QWidget):
             # if this is a mask key, draw the inner key
             if key.masked:
                 qp.setFont(mask_font)
+                qp.save()
+                if key.color is not None and not active:
+                    qp.setPen(key.color)
                 qp.drawText(key.nonmask_rect, Qt.AlignCenter, key.text)
+                qp.restore()
 
                 if self.active_key == key and self.active_mask:
                     qp.setPen(active_pen)
                     qp.setBrush(active_brush)
 
                 qp.drawRect(key.mask_rect)
+                if key.color is not None and not active:
+                    qp.setPen(key.color)
                 qp.drawText(key.mask_rect, Qt.AlignCenter, key.mask_text)
             else:
                 # draw the legend
+                if key.color is not None and not active:
+                    qp.setPen(key.color)
                 qp.drawText(key.rect, Qt.AlignCenter, key.text)
 
             qp.restore()

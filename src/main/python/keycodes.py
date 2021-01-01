@@ -6,10 +6,12 @@ class Keycode:
 
     masked_keycodes = set()
     recorder_alias_to_keycode = dict()
+    qmk_id_to_keycode = dict()
 
     def __init__(self, code, qmk_id, label, tooltip=None, masked=False, printable=None, recorder_alias=None):
         self.code = code
         self.qmk_id = qmk_id
+        self.qmk_id_to_keycode[qmk_id] = self
         self.label = label
         self.tooltip = tooltip
         # whether this keycode requires another sub-keycode
@@ -30,6 +32,10 @@ class Keycode:
     @classmethod
     def find_by_recorder_alias(cls, alias):
         return cls.recorder_alias_to_keycode.get(alias)
+
+    @classmethod
+    def find_by_qmk_id(cls, qmk_id):
+        return cls.qmk_id_to_keycode.get(qmk_id)
 
 
 K = Keycode

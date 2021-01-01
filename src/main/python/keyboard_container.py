@@ -5,8 +5,9 @@ from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLabel, QVBoxLayout
 
 from clickable_label import ClickableLabel
 from keyboard_widget import KeyboardWidget, EncoderWidget
-from keycodes import keycode_label, keycode_tooltip, keycode_is_mask
+from keycodes import keycode_label, keycode_tooltip, keycode_is_mask, find_keycode
 from constants import LAYER_BTN_STYLE, ACTIVE_LAYER_BTN_STYLE
+from keymaps import KEYMAPS
 from util import tr
 
 
@@ -41,6 +42,8 @@ class KeyboardContainer(QWidget):
 
         layout_editor.changed.connect(self.on_layout_changed)
 
+        self.keymap_override = KEYMAPS[0][1]
+
     def rebuild_layers(self):
         # delete old layer labels
         for label in self.layer_labels:
@@ -67,6 +70,17 @@ class KeyboardContainer(QWidget):
         self.current_layer = 0
         self.on_layout_changed()
 
+    def code_is_overriden(self, code):
+        """ Check whether a country-specific keymap overrides a code """
+        key = find_keycode(code)
+        return key is not None and key.qmk_id in self.keymap_override
+
+    def get_label(self, code):
+        """ Get label for a specific keycode """
+        if self.code_is_overriden(code):
+            return self.keymap_override[find_keycode(code).qmk_id]
+        return keycode_label(code)
+
     def refresh_layer_display(self):
         """ Refresh text on key widgets to display data corresponding to current layer """
 
@@ -82,16 +96,20 @@ class KeyboardContainer(QWidget):
             else:
                 code = self.keyboard.encoder_layout[(self.current_layer, widget.desc.encoder_idx,
                                                      widget.desc.encoder_dir)]
-            text = keycode_label(code)
+            text = self.get_label(code)
             tooltip = keycode_tooltip(code)
             mask = keycode_is_mask(code)
-            mask_text = keycode_label(code & 0xFF)
+            mask_text = self.get_label(code & 0xFF)
             if mask:
                 text = text.split("\n")[0]
             widget.masked = mask
             widget.setText(text)
             widget.setMaskText(mask_text)
             widget.setToolTip(tooltip)
+            if self.code_is_overriden(code):
+                widget.setColor(Qt.blue)
+            else:
+                widget.setColor(None)
         self.container.update()
         self.container.updateGeometry()
 
@@ -153,3 +171,7 @@ class KeyboardContainer(QWidget):
 
         self.refresh_layer_display()
         self.keyboard.set_layout_options(self.layout_editor.pack())
+
+    def set_keymap_override(self, override):
+        self.keymap_override = override
+        self.refresh_layer_display()

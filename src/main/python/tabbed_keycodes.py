@@ -7,6 +7,7 @@ from constants import KEYCODE_BTN_WIDTH, KEYCODE_BTN_HEIGHT
 from flowlayout import FlowLayout
 from keycodes import keycode_tooltip, KEYCODES_BASIC, KEYCODES_ISO, KEYCODES_MACRO, KEYCODES_LAYERS, KEYCODES_QUANTUM, \
     KEYCODES_BACKLIGHT, KEYCODES_MEDIA
+from keymaps import KEYMAPS
 from util import tr
 
 
@@ -17,6 +18,8 @@ class TabbedKeycodes(QTabWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
 
+        self.keymap_override = None
+
         self.tab_basic = QScrollArea()
         self.tab_iso = QScrollArea()
         self.tab_layers = QScrollArea()
@@ -24,6 +27,8 @@ class TabbedKeycodes(QTabWidget):
         self.tab_backlight = QScrollArea()
         self.tab_media = QScrollArea()
         self.tab_macro = QScrollArea()
+
+        self.widgets = []
 
         for (tab, label, keycodes) in [
             (self.tab_basic, "Basic", KEYCODES_BASIC),
@@ -40,7 +45,7 @@ class TabbedKeycodes(QTabWidget):
             elif tab == self.tab_macro:
                 self.layout_macro = layout
 
-            self.create_buttons(layout, keycodes)
+            self.widgets += self.create_buttons(layout, keycodes)
 
             tab.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
             tab.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -53,15 +58,17 @@ class TabbedKeycodes(QTabWidget):
 
         self.layer_keycode_buttons = []
         self.macro_keycode_buttons = []
+        self.set_keymap_override(KEYMAPS[0][1])
 
     def create_buttons(self, layout, keycodes):
         buttons = []
 
         for keycode in keycodes:
-            btn = QPushButton(keycode.label.replace("&", "&&"))
+            btn = QPushButton()
             btn.setFixedSize(KEYCODE_BTN_WIDTH, KEYCODE_BTN_HEIGHT)
             btn.setToolTip(keycode_tooltip(keycode.code))
             btn.clicked.connect(lambda st, k=keycode: self.keycode_changed.emit(k.code))
+            btn.keycode = keycode
             layout.addWidget(btn)
             buttons.append(btn)
 
@@ -73,3 +80,16 @@ class TabbedKeycodes(QTabWidget):
             btn.deleteLater()
         self.layer_keycode_buttons = self.create_buttons(self.layout_layers, KEYCODES_LAYERS)
         self.macro_keycode_buttons = self.create_buttons(self.layout_macro, KEYCODES_MACRO)
+
+    def set_keymap_override(self, override):
+        self.keymap_override = override
+
+        for widget in self.widgets:
+            qmk_id = widget.keycode.qmk_id
+            if qmk_id in self.keymap_override:
+                label = self.keymap_override[qmk_id]
+                widget.setStyleSheet("QPushButton {color: blue;}")
+            else:
+                label = widget.keycode.label
+                widget.setStyleSheet("QPushButton {}")
+            widget.setText(label.replace("&", "&&"))
