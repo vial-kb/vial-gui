@@ -284,9 +284,9 @@ class Keyboard:
         self.set_layout_options(data["layout_options"])
 
         # we need to unlock the keyboard before we can restore the macros, lock it afterwards
-        # only do that if the user actually has macros defined
+        # only do that if it's different from current macros
         macro = base64.b64decode(data["macro"])
-        if macro:
+        if macro != self.macro:
             Unlocker.get().perform_unlock(self)
             self.set_macro(macro)
             self.lock()
