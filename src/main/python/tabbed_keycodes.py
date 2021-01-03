@@ -76,14 +76,19 @@ class TabbedKeycodes(QTabWidget):
 
     def recreate_keycode_buttons(self):
         for btn in self.layer_keycode_buttons + self.macro_keycode_buttons:
+            self.widgets.remove(btn)
             btn.hide()
             btn.deleteLater()
         self.layer_keycode_buttons = self.create_buttons(self.layout_layers, KEYCODES_LAYERS)
         self.macro_keycode_buttons = self.create_buttons(self.layout_macro, KEYCODES_MACRO)
+        self.widgets += self.layer_keycode_buttons + self.macro_keycode_buttons
+        self.relabel_buttons()
 
     def set_keymap_override(self, override):
         self.keymap_override = override
+        self.relabel_buttons()
 
+    def relabel_buttons(self):
         for widget in self.widgets:
             qmk_id = widget.keycode.qmk_id
             if qmk_id in self.keymap_override:
