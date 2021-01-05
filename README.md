@@ -1,10 +1,23 @@
-# vial-gui
+### vial-gui
 
-## Releases
+# Docs and getting started
+
+### Please visit [vial-kb.github.io](vial-kb.github.io) to get started with Vial
+
+Vial is an open-source cross-platform (Windows, Linux and Mac) GUI and a QMK fork for configuring your keyboard in real time, similar to VIA.
+
+
+![](https://vial-kb.github.io/img/vial-linux.png)
+
+
+---
+
+
+#### Releases
 
 Currently, no releases are provided. You can download a precompiled binary from latest GitHub Action: https://github.com/vial-kb/vial-gui/actions (need to log into a github account).
 
-## Development
+#### Development
 
 Python 3.6 is recommended (3.6 is the latest version that is officially supported by `fbs`).
 
