@@ -20,7 +20,7 @@ from vial_device import VialBootloader, VialKeyboard
 BL_SUPPORTED_VERSION = 0
 
 
-def send_retries(dev, data, retries=20):
+def send_retries(dev, data, retries=200):
     """ Sends usb packet up to 'retries' times, returns True if success, False if failed """
 
     if len(data) != 64:
@@ -31,7 +31,7 @@ def send_retries(dev, data, retries=20):
         if ret == len(data) + 1:
             return True
         elif ret < 0:
-            time.sleep(0.1)
+            time.sleep(0.01)
         else:
             return False
     return False
