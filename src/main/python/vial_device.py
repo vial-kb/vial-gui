@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 from hidproxy import hid
 from keyboard_comm import Keyboard
-from util import MSG_LEN
+from util import MSG_LEN, pad_for_vibl
 
 
 class VialDevice:
@@ -66,7 +66,7 @@ class VialBootloader(VialDevice):
             super().open()
         except OSError:
             return b""
-        self.send(b"VC\x01")
+        self.send(pad_for_vibl(b"VC\x01"))
         data = self.recv(8, timeout_ms=500)
         super().close()
         return data

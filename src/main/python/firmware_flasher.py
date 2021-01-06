@@ -13,7 +13,7 @@ from PyQt5.QtWidgets import QHBoxLayout, QLineEdit, QToolButton, QPlainTextEdit,
 
 from basic_editor import BasicEditor
 from unlocker import Unlocker
-from util import tr, chunks, find_vial_devices
+from util import tr, chunks, find_vial_devices, pad_for_vibl
 from vial_device import VialBootloader, VialKeyboard
 
 
@@ -22,6 +22,9 @@ BL_SUPPORTED_VERSION = 0
 
 def send_retries(dev, data, retries=20):
     """ Sends usb packet up to 'retries' times, returns True if success, False if failed """
+
+    if len(data) != 64:
+        raise RuntimeError("sending invalid data length")
 
     for x in range(retries):
         ret = dev.send(data)
@@ -55,13 +58,13 @@ def cmd_flash(device, firmware, enable_insecure, log_cb, progress_cb, complete_c
         ))
 
     # Check bootloader is correct version
-    device.send(b"VC\x00")
+    send_retries(device, pad_for_vibl(b"VC\x00"))
     ver = device.recv(8)[0]
     log_cb("* Bootloader version: {}".format(ver))
     if ver != BL_SUPPORTED_VERSION:
         return error_cb("Error: Unsupported bootloader version")
 
-    device.send(b"VC\x01")
+    send_retries(device, pad_for_vibl(b"VC\x01"))
     uid = device.recv(8)
     log_cb("* Vial ID: {}".format(uid.hex()))
 
@@ -81,11 +84,9 @@ def cmd_flash(device, firmware, enable_insecure, log_cb, progress_cb, complete_c
 
     # Flash
     log_cb("Flashing...")
-    device.send(b"VC\x02" + struct.pack("<H", len(fw_payload) // CHUNK))
+    send_retries(device, pad_for_vibl(b"VC\x02" + struct.pack("<H", len(fw_payload) // CHUNK)))
     total = 0
     for part in chunks(fw_payload, CHUNK):
-        if len(part) < CHUNK:
-            part += b"\x00" * (CHUNK - len(part))
         if not send_retries(device, part):
             return error_cb("Error while sending data, firmware is corrupted")
         total += len(part)
@@ -95,8 +96,8 @@ def cmd_flash(device, firmware, enable_insecure, log_cb, progress_cb, complete_c
     log_cb("Rebooting...")
     # enable insecure mode on first boot in order to restore keymap/macros
     if enable_insecure:
-        device.send(b"VC\x04")
-    device.send(b"VC\x03")
+        send_retries(device, pad_for_vibl(b"VC\x04"))
+    send_retries(device, pad_for_vibl(b"VC\x03"))
 
     complete_cb("Done!")
 

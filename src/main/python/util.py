@@ -50,3 +50,10 @@ def find_vial_devices(sideload_vid=None, sideload_pid=None):
 def chunks(data, sz):
     for i in range(0, len(data), sz):
         yield data[i:i+sz]
+
+
+def pad_for_vibl(msg):
+    """ Pads message to vibl fixed 64-byte length """
+    if len(msg) > 64:
+        raise RuntimeError("vibl message too long")
+    return msg + b"\x00" * (64 - len(msg))
