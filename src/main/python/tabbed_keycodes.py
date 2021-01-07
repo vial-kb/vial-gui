@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import QTabWidget, QWidget, QPushButton, QScrollArea
 from constants import KEYCODE_BTN_WIDTH, KEYCODE_BTN_HEIGHT
 from flowlayout import FlowLayout
 from keycodes import keycode_tooltip, KEYCODES_BASIC, KEYCODES_ISO, KEYCODES_MACRO, KEYCODES_LAYERS, KEYCODES_QUANTUM, \
-    KEYCODES_BACKLIGHT, KEYCODES_MEDIA
+    KEYCODES_BACKLIGHT, KEYCODES_MEDIA, KEYCODES_SPECIAL
 from keymaps import KEYMAPS
 from util import tr
 
@@ -31,7 +31,7 @@ class TabbedKeycodes(QTabWidget):
         self.widgets = []
 
         for (tab, label, keycodes) in [
-            (self.tab_basic, "Basic", KEYCODES_BASIC),
+            (self.tab_basic, "Basic", KEYCODES_SPECIAL + KEYCODES_BASIC),
             (self.tab_iso, "ISO/JIS", KEYCODES_ISO),
             (self.tab_layers, "Layers", KEYCODES_LAYERS),
             (self.tab_quantum, "Quantum", KEYCODES_QUANTUM),

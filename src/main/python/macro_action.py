@@ -5,11 +5,11 @@ from PyQt5.QtCore import QObject, pyqtSignal, Qt
 from PyQt5.QtWidgets import QLineEdit, QToolButton, QComboBox, QWidget, QSizePolicy
 
 from flowlayout import FlowLayout
-from keycodes import KEYCODES_BASIC
+from keycodes import KEYCODES_SPECIAL, KEYCODES_BASIC
 from util import tr
 
 
-KC_NO = KEYCODES_BASIC[0]
+KC_NO = KEYCODES_SPECIAL[0]
 
 SS_TAP_CODE = 1
 SS_DOWN_CODE = 2
