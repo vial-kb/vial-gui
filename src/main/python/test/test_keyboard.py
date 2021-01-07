@@ -63,7 +63,7 @@ class SimulatedDevice:
                 self.expect(struct.pack("BBBB", 0xFE, 3, l, e), struct.pack(">HH", enc[0], enc[1]))
 
     @staticmethod
-    def sim_send(dev, data):
+    def sim_send(dev, data, retries=1):
         if dev.expect_idx >= len(dev.expect_data):
             raise Exception("Trying to communicate more times ({}) than expected ({}); got data={}".format(
                 dev.expect_idx + 1,
