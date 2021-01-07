@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
+import time
 
 from PyQt5.QtCore import QCoreApplication
 
@@ -22,9 +23,13 @@ def hid_send(dev, msg, retries=1):
     msg += b"\x00" * (MSG_LEN - len(msg))
 
     data = b""
+    first = True
 
     while retries > 0:
         retries -= 1
+        if not first:
+            time.sleep(0.5)
+        first = False
         try:
             # add 00 at start for hidapi report id
             if dev.write(b"\x00" + msg) != MSG_LEN + 1:
