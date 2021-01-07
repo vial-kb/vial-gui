@@ -309,6 +309,14 @@ class Keyboard:
         data = self.usb_send(self.dev, struct.pack("BB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_GET_UNLOCK_STATUS))
         return data[0]
 
+    def get_unlock_in_progress(self):
+        # VIA keyboards are never being unlocked
+        if self.vial_protocol < 0:
+            return 0
+
+        data = self.usb_send(self.dev, struct.pack("BB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_GET_UNLOCK_STATUS))
+        return data[1]
+
     def get_unlock_keys(self):
         """ Return keys users have to hold to unlock the keyboard as a list of rowcols """
 

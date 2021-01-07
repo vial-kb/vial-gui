@@ -158,6 +158,11 @@ class MainWindow(QMainWindow):
         # don't show "Security" menu for bootloader mode, as the bootloader is inherently insecure
         self.security_menu.menuAction().setVisible(isinstance(self.current_device, VialKeyboard))
 
+        # if unlock process was interrupted, we must finish it first
+        if isinstance(self.current_device, VialKeyboard) and self.current_device.keyboard.get_unlock_in_progress():
+            Unlocker.get().perform_unlock(self.current_device.keyboard)
+            self.current_device.keyboard.reload()
+
         for e in [self.layout_editor, self.keymap_editor, self.firmware_flasher, self.macro_recorder]:
             e.rebuild(self.current_device)
 
