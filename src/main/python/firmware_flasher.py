@@ -267,6 +267,7 @@ class FirmwareFlasher(BasicEditor):
             self.log("Restoring saved layout...")
             QCoreApplication.processEvents()
             found.keyboard.restore_layout(self.layout_restore)
+            found.keyboard.lock()
             found.close()
             self.log("Done!")
 
