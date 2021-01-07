@@ -16,15 +16,30 @@ VIBL_SERIAL_NUMBER_MAGIC = "vibl:d4f8159c"
 MSG_LEN = 32
 
 
-def hid_send(dev, msg):
+def hid_send(dev, msg, retries=1):
     if len(msg) > MSG_LEN:
         raise RuntimeError("message must be less than 32 bytes")
     msg += b"\x00" * (MSG_LEN - len(msg))
 
-    # add 00 at start for hidapi report id
-    dev.write(b"\x00" + msg)
+    data = b""
 
-    return bytes(dev.read(MSG_LEN))
+    while retries > 0:
+        retries -= 1
+        try:
+            # add 00 at start for hidapi report id
+            if dev.write(b"\x00" + msg) != MSG_LEN + 1:
+                continue
+
+            data = bytes(dev.read(MSG_LEN, timeout_ms=500))
+            if not data:
+                continue
+        except OSError:
+            continue
+        break
+
+    if not data:
+        raise RuntimeError("failed to communicate with the device")
+    return data
 
 
 def is_rawhid(dev):
