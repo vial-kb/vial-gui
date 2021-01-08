@@ -2,7 +2,7 @@
 
 # Docs and getting started
 
-### Please visit [vial-kb.github.io](vial-kb.github.io) to get started with Vial
+### Please visit [vial-kb.github.io](https://vial-kb.github.io/) to get started with Vial
 
 Vial is an open-source cross-platform (Windows, Linux and Mac) GUI and a QMK fork for configuring your keyboard in real time, similar to VIA.
 
