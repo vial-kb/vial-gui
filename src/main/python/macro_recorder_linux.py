@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 import sys
+import os
 
 from PyQt5 import QtCore
 from PyQt5.QtCore import pyqtSignal, QProcess
@@ -38,7 +39,9 @@ class LinuxRecorder(QWidget):
         self.move(center.x() - self.width() * 0.5, 0)
 
         args = [sys.executable]
-        if is_frozen():
+        if os.getenv("APPIMAGE"):
+            args = [os.getenv("APPIMAGE")]
+        elif is_frozen():
             args += sys.argv[1:]
         else:
             args += sys.argv
