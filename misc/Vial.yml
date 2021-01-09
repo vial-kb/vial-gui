@@ -1,0 +1,21 @@
+app: Vial
+
+ingredients:
+  dist: xenial
+  sources:
+    - deb http://archive.ubuntu.com/ubuntu/ xenial main universe
+  package: Vial
+  debs:
+    - ../target/Vial.deb
+
+script:
+  - cat > ./AppRun <<\EOF
+  - #!/bin/sh
+  - HERE=$(dirname $(readlink -f "${0}"))
+  - export QT_QPA_PLATFORM=xcb
+  - exec "${HERE}/opt/Vial/Vial" "$@"
+  - EOF
+  - chmod a+x ./AppRun
+  - cp usr/share/icons/hicolor/256x256/apps/Vial.png .
+  - mv usr/share/applications/Vial.desktop .
+  - sed -i -e 's@^Version=.*@Version=1.0@g' Vial.desktop

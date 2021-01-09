@@ -7,13 +7,17 @@ jobs:
     runs-on: ubuntu-16.04
 
     steps:
-    - name: Install dependencies
-      run: sudo apt-get install libusb-1.0-0-dev libudev-dev
-
     - uses: actions/checkout@v2
     - uses: actions/setup-python@v1
       with:
         python-version: '3.6.x'
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get install libusb-1.0-0-dev libudev-dev ruby ruby-dev rubygems build-essential desktop-file-utils
+        wget https://github.com/AppImage/pkg2appimage/archive/38603d92359a48189c35debad9005e8e902e6070.zip
+        unzip *.zip
+        sudo gem install --no-document fpm
 
     - name: Setup venv
       run: |
@@ -25,13 +29,15 @@ jobs:
       run: |
         source venv/bin/activate
         fbs freeze
-        cd target
-        tar cfJ vial-linux.tar.xz Vial
+        fbs installer
+        deactivate
+        ./pkg2appimage-*/pkg2appimage misc/Vial.yml
+        mv out/Vial-*.AppImage out/Vial-x86_64.AppImage
 
     - uses: actions/upload-artifact@v1
       with:
         name: vial-linux
-        path: target/vial-linux.tar.xz
+        path: out/Vial-x86_64.AppImage
 
   build-mac:
     runs-on: macos-10.15
