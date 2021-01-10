@@ -117,6 +117,9 @@ class MainWindow(QMainWindow):
         self.security_menu.addSeparator()
         self.security_menu.addAction(keyboard_reset_act)
 
+        theme_set_default = QAction(tr("MenuTheme", "System"), self)
+        theme_set_default.triggered.connect(lambda: self.set_theme("default"))
+
         theme_set_light = QAction(tr("MenuTheme", "Light"), self)
         theme_set_light.triggered.connect(lambda: self.set_theme("light"))
 
@@ -127,6 +130,7 @@ class MainWindow(QMainWindow):
         theme_set_arc.triggered.connect(lambda: self.set_theme("arc"))
 
         self.theme_menu = self.menuBar().addMenu(tr("Menu", "Theme"))
+        self.theme_menu.addAction(theme_set_default)
         self.theme_menu.addAction(theme_set_light)
         self.theme_menu.addAction(theme_set_dark)
         self.theme_menu.addAction(theme_set_arc)
@@ -235,12 +239,15 @@ class MainWindow(QMainWindow):
         self.keymap_editor.set_keymap_override(KEYMAPS[index][1])
 
     def set_theme(self, theme):
-        if theme == "dark":
-            themes.set_theme_dark()
-            self.settings.setValue("theme", "dark")
+        if theme == "default":
+            themes.set_theme_default()
+            self.settings.setValue("theme", "default")
         elif theme == "light":
             themes.set_theme_light()
             self.settings.setValue("theme", "light")
+        elif theme == "dark":
+            themes.set_theme_dark()
+            self.settings.setValue("theme", "dark")
         elif theme == "arc":
             themes.set_theme_arc()
             self.settings.setValue("theme", "arc")

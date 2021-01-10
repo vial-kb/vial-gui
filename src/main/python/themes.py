@@ -60,10 +60,17 @@ def set_theme_light():
     QApplication.setStyle("Fusion")
 
 
+def set_theme_default():
+    QApplication.setPalette(QApplication.style().standardPalette())
+    QApplication.setStyle(None)
+
+
 def set_default_theme(theme):
-    if theme == "dark":
-        set_theme_dark()
+    if theme == "default":
+        set_theme_default()
     elif theme == "light":
         set_theme_light()
+    elif theme == "dark":
+        set_theme_dark()
     elif theme == "arc":
         set_theme_arc()
