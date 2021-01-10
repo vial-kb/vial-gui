@@ -15,11 +15,15 @@ from unlocker import Unlocker
 from util import tr, find_vial_devices
 from vial_device import VialKeyboard
 
+import themes
+
 
 class MainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
+
+        themes.set_default_theme("dark")
 
         self.current_device = None
         self.devices = []

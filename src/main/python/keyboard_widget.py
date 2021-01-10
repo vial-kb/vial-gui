@@ -1,7 +1,7 @@
 from collections import defaultdict
 
-from PyQt5.QtGui import QPainter, QColor, QPainterPath, QTransform, QBrush, QPolygonF
-from PyQt5.QtWidgets import QWidget, QToolTip
+from PyQt5.QtGui import QPainter, QColor, QPainterPath, QTransform, QBrush, QPolygonF, QPalette
+from PyQt5.QtWidgets import QWidget, QToolTip, QApplication
 from PyQt5.QtCore import Qt, QSize, QRect, QPointF, pyqtSignal, QEvent, QRectF
 
 from constants import KEY_WIDTH, KEY_SPACING, KEY_HEIGHT, KEYBOARD_WIDGET_PADDING, KEYBOARD_WIDGET_MASK_PADDING
@@ -226,20 +226,20 @@ class KeyboardWidget(QWidget):
 
         # for regular keycaps
         regular_pen = qp.pen()
-        regular_pen.setColor(QColor("black"))
+        regular_pen.setColor(QApplication.palette().color(QPalette.ButtonText))
         qp.setPen(regular_pen)
 
         regular_brush = QBrush()
-        regular_brush.setColor(QColor("white"))
+        regular_brush.setColor(QApplication.palette().color(QPalette.Button))
         regular_brush.setStyle(Qt.SolidPattern)
         qp.setBrush(regular_brush)
 
         # for currently selected keycap
         active_pen = qp.pen()
-        active_pen.setColor(QColor("white"))
+        active_pen.setColor(QApplication.palette().color(QPalette.Button))
 
         active_brush = QBrush()
-        active_brush.setColor(QColor("black"))
+        active_brush.setColor(QApplication.palette().color(QPalette.ButtonText))
         active_brush.setStyle(Qt.SolidPattern)
 
         mask_font = qp.font()
