@@ -24,7 +24,7 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         self.settings = QSettings("Vial", "Vial")
-        themes.set_default_theme(self.settings.value("theme"))
+        themes.set_theme(self.settings.value("theme"))
 
         self.current_device = None
         self.devices = []
@@ -240,14 +240,14 @@ class MainWindow(QMainWindow):
 
     def set_theme(self, theme):
         if theme == "default":
-            themes.set_theme_default()
+            themes.set_theme("default")
             self.settings.setValue("theme", "default")
         elif theme == "light":
-            themes.set_theme_light()
+            themes.set_theme("light")
             self.settings.setValue("theme", "light")
         elif theme == "dark":
-            themes.set_theme_dark()
+            themes.set_theme("dark")
             self.settings.setValue("theme", "dark")
         elif theme == "arc":
-            themes.set_theme_arc()
+            themes.set_theme("arc")
             self.settings.setValue("theme", "arc")

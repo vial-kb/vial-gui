@@ -45,32 +45,16 @@ arc_palette.setColor(QPalette.Disabled, QPalette.Text, QColor("#d3dae3"))
 arc_palette.setColor(QPalette.Disabled, QPalette.Light, QColor("#404552"))
 
 
-def set_theme_dark():
-    QApplication.setPalette(dark_palette)
-    QApplication.setStyle("Fusion")
-
-
-def set_theme_arc():
-    QApplication.setPalette(arc_palette)
-    QApplication.setStyle("Fusion")
-
-
-def set_theme_light():
-    QApplication.setPalette(QApplication.style().standardPalette())
-    QApplication.setStyle("Fusion")
-
-
-def set_theme_default():
-    QApplication.setPalette(QApplication.style().standardPalette())
-    QApplication.setStyle(None)
-
-
-def set_default_theme(theme):
+def set_theme(theme):
     if theme == "default":
-        set_theme_default()
+        QApplication.setPalette(QApplication.style().standardPalette())
+        QApplication.setStyle(None)
     elif theme == "light":
-        set_theme_light()
+        QApplication.setPalette(QApplication.style().standardPalette())
+        QApplication.setStyle("Fusion")
     elif theme == "dark":
-        set_theme_dark()
+        QApplication.setPalette(dark_palette)
+        QApplication.setStyle("Fusion")
     elif theme == "arc":
-        set_theme_arc()
+        QApplication.setPalette(arc_palette)
+        QApplication.setStyle("Fusion")
