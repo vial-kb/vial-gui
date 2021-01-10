@@ -23,7 +23,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        themes.set_default_theme("dark")
+        themes.set_default_theme("arc")
 
         self.current_device = None
         self.devices = []
