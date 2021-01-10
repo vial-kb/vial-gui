@@ -1,7 +1,8 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 from PyQt5.QtCore import pyqtSignal, Qt
-from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLabel, QVBoxLayout, QPushButton
+from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLabel, QVBoxLayout, QPushButton, QApplication
+from PyQt5.QtGui import QPalette
 
 from clickable_label import ClickableLabel
 from keyboard_widget import KeyboardWidget, EncoderWidget
@@ -110,7 +111,7 @@ class KeyboardContainer(QWidget):
             widget.setMaskText(mask_text)
             widget.setToolTip(tooltip)
             if self.code_is_overriden(code):
-                widget.setColor(Qt.blue)
+                widget.setColor(QApplication.palette().color(QPalette.Link))
             else:
                 widget.setColor(None)
         self.container.update()

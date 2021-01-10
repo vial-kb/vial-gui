@@ -1,7 +1,8 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtWidgets import QTabWidget, QWidget, QPushButton, QScrollArea
+from PyQt5.QtWidgets import QTabWidget, QWidget, QPushButton, QScrollArea, QApplication
+from PyQt5.QtGui import QPalette
 
 from constants import KEYCODE_BTN_WIDTH, KEYCODE_BTN_HEIGHT
 from flowlayout import FlowLayout
@@ -93,7 +94,8 @@ class TabbedKeycodes(QTabWidget):
             qmk_id = widget.keycode.qmk_id
             if qmk_id in self.keymap_override:
                 label = self.keymap_override[qmk_id]
-                widget.setStyleSheet("QPushButton {color: blue;}")
+                highlight_color = QApplication.palette().color(QPalette.Link).getRgb()
+                widget.setStyleSheet("QPushButton {color: rgb"+str(highlight_color)+";}")
             else:
                 label = widget.keycode.label
                 widget.setStyleSheet("QPushButton {}")

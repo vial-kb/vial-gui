@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QSettings
 from PyQt5.QtWidgets import QWidget, QComboBox, QToolButton, QHBoxLayout, QVBoxLayout, QMainWindow, QAction, qApp, \
     QFileDialog, QDialog, QTabWidget, QActionGroup
 
@@ -23,7 +23,8 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        themes.set_default_theme("arc")
+        self.settings = QSettings("Vial", "Vial")
+        themes.set_default_theme(self.settings.value("theme"))
 
         self.current_device = None
         self.devices = []
@@ -115,6 +116,20 @@ class MainWindow(QMainWindow):
         self.security_menu.addAction(keyboard_lock_act)
         self.security_menu.addSeparator()
         self.security_menu.addAction(keyboard_reset_act)
+
+        theme_set_light = QAction(tr("MenuTheme", "Light"), self)
+        theme_set_light.triggered.connect(lambda: self.set_theme("light"))
+
+        theme_set_dark = QAction(tr("MenuTheme", "Dark"), self)
+        theme_set_dark.triggered.connect(lambda: self.set_theme("dark"))
+
+        theme_set_arc = QAction(tr("MenuTheme", "Arc"), self)
+        theme_set_arc.triggered.connect(lambda: self.set_theme("arc"))
+
+        self.theme_menu = self.menuBar().addMenu(tr("Menu", "Theme"))
+        self.theme_menu.addAction(theme_set_light)
+        self.theme_menu.addAction(theme_set_dark)
+        self.theme_menu.addAction(theme_set_arc)
 
     def on_layout_load(self):
         dialog = QFileDialog()
@@ -218,3 +233,14 @@ class MainWindow(QMainWindow):
 
     def change_keyboard_layout(self, index):
         self.keymap_editor.set_keymap_override(KEYMAPS[index][1])
+
+    def set_theme(self, theme):
+        if theme == "dark":
+            themes.set_theme_dark()
+            self.settings.setValue("theme", "dark")
+        elif theme == "light":
+            themes.set_theme_light()
+            self.settings.setValue("theme", "light")
+        elif theme == "arc":
+            themes.set_theme_arc()
+            self.settings.setValue("theme", "arc")
