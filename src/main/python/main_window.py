@@ -88,7 +88,7 @@ class MainWindow(QMainWindow):
         sideload_json_act = QAction(tr("MenuFile", "Sideload VIA JSON..."), self)
         sideload_json_act.triggered.connect(self.on_sideload_json)
 
-        download_via_stack_act = QAction(tr("MenuFile", "Download VIA definitions..."), self)
+        download_via_stack_act = QAction(tr("MenuFile", "Download VIA definitions"), self)
         download_via_stack_act.triggered.connect(self.load_via_stack_json)
 
         exit_act = QAction(tr("MenuFile", "Exit"), self)
