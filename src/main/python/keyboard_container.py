@@ -1,7 +1,8 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 from PyQt5.QtCore import pyqtSignal, Qt
-from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLabel, QVBoxLayout
+from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLabel, QVBoxLayout, QPushButton, QApplication
+from PyQt5.QtGui import QPalette
 
 from clickable_label import ClickableLabel
 from keyboard_widget import KeyboardWidget, EncoderWidget
@@ -36,7 +37,7 @@ class KeyboardContainer(QWidget):
         layout.setAlignment(self.container, Qt.AlignHCenter)
         self.setLayout(layout)
 
-        self.layer_labels = []
+        self.layer_buttons = []
         self.keyboard = None
         self.current_layer = 0
 
@@ -46,18 +47,19 @@ class KeyboardContainer(QWidget):
 
     def rebuild_layers(self):
         # delete old layer labels
-        for label in self.layer_labels:
+        for label in self.layer_buttons:
             label.hide()
             label.deleteLater()
-        self.layer_labels = []
+        self.layer_buttons = []
 
         # create new layer labels
         for x in range(self.keyboard.layers):
-            label = ClickableLabel(str(x))
-            label.setAlignment(Qt.AlignCenter)
-            label.clicked.connect(lambda idx=x: self.switch_layer(idx))
-            self.layout_layers.addWidget(label)
-            self.layer_labels.append(label)
+            btn = QPushButton(str(x))
+            btn.setFixedSize(25, 25)
+            btn.setCheckable(True)
+            btn.clicked.connect(lambda state, idx=x: self.switch_layer(idx))
+            self.layout_layers.addWidget(btn)
+            self.layer_buttons.append(btn)
 
     def rebuild(self, keyboard):
         self.keyboard = keyboard
@@ -86,9 +88,11 @@ class KeyboardContainer(QWidget):
 
         self.container.update_layout()
 
-        for label in self.layer_labels:
-            label.setStyleSheet(LAYER_BTN_STYLE)
-        self.layer_labels[self.current_layer].setStyleSheet(ACTIVE_LAYER_BTN_STYLE)
+        for btn in self.layer_buttons:
+            btn.setEnabled(True)
+            btn.setChecked(False)
+        self.layer_buttons[self.current_layer].setEnabled(False)
+        self.layer_buttons[self.current_layer].setChecked(True)
 
         for widget in self.container.widgets:
             if widget.desc.row is not None:
@@ -107,7 +111,7 @@ class KeyboardContainer(QWidget):
             widget.setMaskText(mask_text)
             widget.setToolTip(tooltip)
             if self.code_is_overriden(code):
-                widget.setColor(Qt.blue)
+                widget.setColor(QApplication.palette().color(QPalette.Link))
             else:
                 widget.setColor(None)
         self.container.update()
