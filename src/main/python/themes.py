@@ -55,6 +55,5 @@ def set_theme(theme):
     elif theme == "arc":
         QApplication.setPalette(arc_palette)
         QApplication.setStyle("Fusion")
-    else:
-        QApplication.setPalette(QApplication.style().standardPalette())
-        QApplication.setStyle(None)
+    # For default/system theme, do nothing
+    # User will have to restart the application for it to be applied
