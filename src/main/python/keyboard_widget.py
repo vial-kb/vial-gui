@@ -22,8 +22,10 @@ class KeyWidget:
         self.rotation_y = (KEY_HEIGHT + KEY_SPACING) * desc.rotation_y
         self.rotation_angle = desc.rotation_angle
 
-        self.x = shift_x + (KEY_WIDTH + KEY_SPACING) * desc.x
-        self.y = shift_y + (KEY_HEIGHT + KEY_SPACING) * desc.y
+        self.shift_x = shift_x
+        self.shift_y = shift_y
+        self.x = (KEY_WIDTH + KEY_SPACING) * desc.x
+        self.y = (KEY_HEIGHT + KEY_SPACING) * desc.y
         self.w = (KEY_WIDTH + KEY_SPACING) * desc.width - KEY_SPACING
         self.h = (KEY_HEIGHT + KEY_SPACING) * desc.height - KEY_SPACING
 
@@ -59,7 +61,7 @@ class KeyWidget:
         bbox = []
         for p in points:
             t = QTransform()
-            t.translate(KEYBOARD_WIDGET_PADDING, KEYBOARD_WIDGET_PADDING)
+            t.translate(self.shift_x, self.shift_y)
             t.translate(self.rotation_x, self.rotation_y)
             t.rotate(self.rotation_angle)
             t.translate(-self.rotation_x, -self.rotation_y)
@@ -161,13 +163,14 @@ class KeyboardWidget(QWidget):
         for key, cls in keys:
             if key.layout_index == -1:
                 obj = cls(key)
-                top_x = min(top_x, obj.x)
-                top_y = min(top_y, obj.y)
+                p = obj.polygon.boundingRect().topLeft()
+                top_x = min(top_x, p.x())
+                top_y = min(top_y, p.y())
 
         # obtain common widgets, that is, ones which are always displayed and require no extra transforms
         for key, cls in keys:
             if key.layout_index == -1:
-                self.common_widgets.append(cls(key, -top_x, -top_y))
+                self.common_widgets.append(cls(key, -top_x + KEYBOARD_WIDGET_PADDING, -top_y + KEYBOARD_WIDGET_PADDING))
 
         # top-left position for specific layout
         layout_x = defaultdict(lambda: defaultdict(lambda: 1e6))
@@ -178,8 +181,9 @@ class KeyboardWidget(QWidget):
             if key.layout_index != -1:
                 obj = cls(key)
                 idx, opt = key.layout_index, key.layout_option
-                layout_x[idx][opt] = min(layout_x[idx][opt], obj.x)
-                layout_y[idx][opt] = min(layout_y[idx][opt], obj.y)
+                p = obj.polygon.boundingRect().topLeft()
+                layout_x[idx][opt] = min(layout_x[idx][opt], p.x())
+                layout_y[idx][opt] = min(layout_y[idx][opt], p.y())
 
         # obtain widgets for all layout options now that we know how to shift them
         for key, cls in keys:
@@ -187,7 +191,7 @@ class KeyboardWidget(QWidget):
                 idx, opt = key.layout_index, key.layout_option
                 shift_x = layout_x[idx][opt] - layout_x[idx][0]
                 shift_y = layout_y[idx][opt] - layout_y[idx][0]
-                obj = cls(key, -shift_x - top_x, -shift_y - top_y)
+                obj = cls(key, -shift_x - top_x + KEYBOARD_WIDGET_PADDING, -shift_y - top_y + KEYBOARD_WIDGET_PADDING)
                 self.widgets_for_layout[idx][opt].append(obj)
 
     def update_layout(self):
@@ -221,9 +225,6 @@ class KeyboardWidget(QWidget):
         qp.begin(self)
         qp.setRenderHint(QPainter.Antialiasing)
 
-        # add a little padding
-        qp.translate(KEYBOARD_WIDGET_PADDING, KEYBOARD_WIDGET_PADDING)
-
         # for regular keycaps
         regular_pen = qp.pen()
         regular_pen.setColor(QApplication.palette().color(QPalette.ButtonText))
@@ -247,6 +248,8 @@ class KeyboardWidget(QWidget):
 
         for idx, key in enumerate(self.widgets):
             qp.save()
+
+            qp.translate(key.shift_x, key.shift_y)
             qp.scale(self.scale, self.scale)
             qp.translate(key.rotation_x, key.rotation_y)
             qp.rotate(key.rotation_angle)
