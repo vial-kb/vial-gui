@@ -29,9 +29,11 @@ class VialDevice:
 
 class VialKeyboard(VialDevice):
 
-    def __init__(self, dev, sideload=False):
+    def __init__(self, dev, sideload=False, via_stack=False):
         super().__init__(dev)
+        self.via_id = str(dev["vendor_id"] * 65536 + dev["product_id"])
         self.sideload = sideload
+        self.via_stack = via_stack
         self.keyboard = None
 
     def open(self, override_json=None):
@@ -43,6 +45,8 @@ class VialKeyboard(VialDevice):
         s = "{} {}".format(self.desc["manufacturer_string"], self.desc["product_string"])
         if self.sideload:
             s += " [sideload]"
+        elif self.via_stack:
+            s += " [VIA]"
         return s
 
     def get_uid(self):
