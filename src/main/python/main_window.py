@@ -239,15 +239,5 @@ class MainWindow(QMainWindow):
         self.keymap_editor.set_keymap_override(KEYMAPS[index][1])
 
     def set_theme(self, theme):
-        if theme == "default":
-            themes.set_theme("default")
-            self.settings.setValue("theme", "default")
-        elif theme == "light":
-            themes.set_theme("light")
-            self.settings.setValue("theme", "light")
-        elif theme == "dark":
-            themes.set_theme("dark")
-            self.settings.setValue("theme", "dark")
-        elif theme == "arc":
-            themes.set_theme("arc")
-            self.settings.setValue("theme", "arc")
+        themes.set_theme(theme)
+        self.settings.setValue("theme", theme)
