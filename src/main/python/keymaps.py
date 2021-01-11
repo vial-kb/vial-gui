@@ -1,10 +1,11 @@
 from keycodes import Keycode
-from keymap import french, german, russian
+from keymap import french, german, hungarian, russian
 
 KEYMAPS = [
     ("QWERTY", dict()),
     ("French (AZERTY)", french.keymap),
     ("German (QWERTZ)", german.keymap),
+    ("Hungarian (QWERTZ)", hungarian.keymap),
     ("Russian (ЙЦУКЕН)", russian.keymap),
 ]
 
