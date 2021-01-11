@@ -1,10 +1,11 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QStandardPaths
 from PyQt5.QtWidgets import QWidget, QComboBox, QToolButton, QHBoxLayout, QVBoxLayout, QMainWindow, QAction, qApp, \
     QFileDialog, QDialog, QTabWidget, QActionGroup
 
 import json
+import os
 from urllib.request import urlopen
 
 from firmware_flasher import FirmwareFlasher
@@ -24,7 +25,8 @@ class MainWindow(QMainWindow):
 
         self.current_device = None
         self.devices = []
-        self.via_stack_json = None
+        # create empty VIA definitions. Easier than setting it to none and handling a bunch of exceptions
+        self.via_stack_json = {"definitions": {}}
         self.sideload_json = None
         self.sideload_vid = self.sideload_pid = -1
 
@@ -61,8 +63,15 @@ class MainWindow(QMainWindow):
 
         self.init_menu()
 
-        # load the entire VIA stack
-        self.load_via_stack_json()
+        # cache for via definition files
+        self.cache_path = QStandardPaths.writableLocation(QStandardPaths.CacheLocation)
+        if not os.path.exists(self.cache_path):
+            os.makedirs(self.cache_path)
+        # check if the via defitions already exist
+        if os.path.isfile(self.cache_path+"/via_keyboards.json"):
+            with open(self.cache_path+"/via_keyboards.json") as vf:
+                self.via_stack_json = json.load(vf)
+                vf.close()
 
         # make sure initial state is valid
         self.on_click_refresh()
@@ -79,6 +88,9 @@ class MainWindow(QMainWindow):
         sideload_json_act = QAction(tr("MenuFile", "Sideload VIA JSON..."), self)
         sideload_json_act.triggered.connect(self.on_sideload_json)
 
+        download_via_stack_act = QAction(tr("MenuFile", "Download VIA definitions..."), self)
+        download_via_stack_act.triggered.connect(self.load_via_stack_json)
+
         exit_act = QAction(tr("MenuFile", "Exit"), self)
         exit_act.setShortcut("Ctrl+Q")
         exit_act.triggered.connect(qApp.exit)
@@ -88,6 +100,7 @@ class MainWindow(QMainWindow):
         file_menu.addAction(layout_save_act)
         file_menu.addSeparator()
         file_menu.addAction(sideload_json_act)
+        file_menu.addAction(download_via_stack_act)
         file_menu.addSeparator()
         file_menu.addAction(exit_act)
 
@@ -189,6 +202,10 @@ class MainWindow(QMainWindow):
     def load_via_stack_json(self):
         data = urlopen("https://github.com/kb-elmo/vial-gui/raw/add-via-stack/src/util/via_keyboard_stack.json")
         self.via_stack_json = json.load(data)
+        # write to cache
+        with open(self.cache_path+"/via_keyboards.json", "w") as cf:
+            cf.write(json.dumps(self.via_stack_json, indent=2))
+            cf.close()
 
     def on_sideload_json(self):
         dialog = QFileDialog()
