@@ -259,7 +259,7 @@ class MacroRecorder(BasicEditor):
     def update_tab_titles(self):
         macros = self.keyboard.macro.split(b"\x00")
         for x, w in enumerate(self.macro_tab_w[:self.keyboard.macro_count]):
-            title = "Macro {}".format(x)
+            title = "M{}".format(x)
             if macros[x] != self.macro_tabs[x].serialize():
                 title += "*"
             self.tabs.setTabText(x, title)
