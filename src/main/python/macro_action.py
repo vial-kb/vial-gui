@@ -5,11 +5,12 @@ from PyQt5.QtCore import QObject, pyqtSignal, Qt
 from PyQt5.QtWidgets import QLineEdit, QToolButton, QComboBox, QWidget, QSizePolicy
 
 from flowlayout import FlowLayout
-from keycodes import KEYCODES_BASIC
+from keycodes import KEYCODES_BASIC, KEYCODES_ISO, KEYCODES_MEDIA
 from util import tr
 
 
-KC_A = KEYCODES_BASIC[0]
+MACRO_SEQUENCE_KEYCODES = KEYCODES_BASIC + KEYCODES_ISO + KEYCODES_MEDIA
+KC_A = MACRO_SEQUENCE_KEYCODES[0]
 
 SS_TAP_CODE = 1
 SS_DOWN_CODE = 2
@@ -83,9 +84,9 @@ class ActionSequence(BasicAction):
             w.setStyleSheet("QComboBox { combobox-popup: 0; }")
             w.addItem(tr("MacroEditor", "Remove"))
             w.insertSeparator(1)
-            for k in KEYCODES_BASIC:
+            for k in MACRO_SEQUENCE_KEYCODES:
                 w.addItem(k.label.replace("\n", ""))
-            w.setCurrentIndex(2 + KEYCODES_BASIC.index(item))
+            w.setCurrentIndex(2 + MACRO_SEQUENCE_KEYCODES.index(item))
             w.currentIndexChanged.connect(self.on_change)
             self.layout.addWidget(w)
             self.widgets.append(w)
@@ -120,7 +121,7 @@ class ActionSequence(BasicAction):
                 self.recreate_sequence()
                 break
             else:
-                self.sequence[x] = KEYCODES_BASIC[self.widgets[x].currentIndex() - 2]
+                self.sequence[x] = MACRO_SEQUENCE_KEYCODES[self.widgets[x].currentIndex() - 2]
         self.changed.emit()
 
     def serialize_prefix(self):
