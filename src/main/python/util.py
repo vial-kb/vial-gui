@@ -53,7 +53,7 @@ def is_rawhid(dev):
 
 
 def find_vial_devices(via_stack_json, sideload_vid=None, sideload_pid=None):
-    from vial_device import VialBootloader, VialKeyboard
+    from vial_device import VialBootloader, VialKeyboard, VialDummyKeyboard
 
     filtered = []
     for dev in hid.enumerate():
@@ -65,6 +65,9 @@ def find_vial_devices(via_stack_json, sideload_vid=None, sideload_pid=None):
             filtered.append(VialBootloader(dev))
         elif str(dev["vendor_id"] * 65536 + dev["product_id"]) in via_stack_json["definitions"] and is_rawhid(dev):
             filtered.append(VialKeyboard(dev, via_stack=True))
+
+    if sideload_vid == sideload_pid == 0:
+        filtered.append(VialDummyKeyboard())
 
     return filtered
 

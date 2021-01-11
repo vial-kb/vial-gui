@@ -51,7 +51,7 @@ class Keyboard:
         self.layout = dict()
         self.encoder_layout = dict()
         self.rows = self.cols = self.layers = 0
-        self.layouts = None
+        self.layout_labels = None
         self.layout_options = -1
         self.keys = []
         self.encoders = []
@@ -112,7 +112,7 @@ class Keyboard:
             vial = payload["vial"]
             self.vibl = vial.get("vibl", False)
 
-        self.layouts = payload.get("layouts")
+        self.layout_labels = payload["layouts"].get("labels")
 
         self.rows = payload["matrix"]["rows"]
         self.cols = payload["matrix"]["cols"]
@@ -175,7 +175,7 @@ class Keyboard:
                 self.encoder_layout[(layer, idx, 0)] = struct.unpack(">H", data[0:2])[0]
                 self.encoder_layout[(layer, idx, 1)] = struct.unpack(">H", data[2:4])[0]
 
-        if self.layouts:
+        if self.layout_labels:
             data = self.usb_send(self.dev, struct.pack("BB", CMD_VIA_GET_KEYBOARD_VALUE, VIA_LAYOUT_OPTIONS),
                                  retries=20)
             self.layout_options = struct.unpack(">I", data[2:6])[0]
@@ -356,3 +356,71 @@ class Keyboard:
             return
 
         self.usb_send(self.dev, struct.pack("BB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_LOCK), retries=20)
+
+
+class DummyKeyboard(Keyboard):
+
+    def reload_layers(self):
+        self.layers = 4
+
+    def reload_keymap(self):
+        for layer in range(self.layers):
+            for row, col in self.rowcol.keys():
+                self.layout[(layer, row, col)] = 0
+
+        for layer in range(self.layers):
+            for idx in self.encoderpos:
+                self.encoder_layout[(layer, idx, 0)] = 0
+                self.encoder_layout[(layer, idx, 1)] = 0
+
+        if self.layout_labels:
+            self.layout_options = 0
+
+    def reload_macros(self):
+        self.macro_count = 16
+        self.macro_memory = 900
+
+        self.macro = b"\x00" * self.macro_count
+
+    def set_key(self, layer, row, col, code):
+        if code < 0:
+            return
+        self.layout[(layer, row, col)] = code
+
+    def set_encoder(self, layer, index, direction, code):
+        if code < 0:
+            return
+        self.encoder_layout[(layer, index, direction)] = code
+
+    def set_layout_options(self, options):
+        if self.layout_options != -1 and self.layout_options != options:
+            self.layout_options = options
+
+    def set_macro(self, data):
+        if len(data) > self.macro_memory:
+            raise RuntimeError("the macro is too big: got {} max {}".format(len(data), self.macro_memory))
+        self.macro = data
+
+    def reset(self):
+        pass
+
+    def get_uid(self):
+        return b"\x00" * 8
+
+    def get_unlock_status(self):
+        return 1
+
+    def get_unlock_in_progress(self):
+        return 0
+
+    def get_unlock_keys(self):
+        return []
+
+    def unlock_start(self):
+        return
+
+    def unlock_poll(self):
+        return b""
+
+    def lock(self):
+        return

@@ -96,6 +96,9 @@ class MainWindow(QMainWindow):
         download_via_stack_act = QAction(tr("MenuFile", "Download VIA definitions"), self)
         download_via_stack_act.triggered.connect(self.load_via_stack_json)
 
+        load_dummy_act = QAction(tr("MenuFile", "Load dummy JSON..."), self)
+        load_dummy_act.triggered.connect(self.on_load_dummy)
+
         exit_act = QAction(tr("MenuFile", "Exit"), self)
         exit_act.setShortcut("Ctrl+Q")
         exit_act.triggered.connect(qApp.exit)
@@ -106,6 +109,7 @@ class MainWindow(QMainWindow):
         file_menu.addSeparator()
         file_menu.addAction(sideload_json_act)
         file_menu.addAction(download_via_stack_act)
+        file_menu.addAction(load_dummy_act)
         file_menu.addSeparator()
         file_menu.addAction(exit_act)
 
@@ -241,6 +245,18 @@ class MainWindow(QMainWindow):
             self.sideload_json = json.loads(data)
             self.sideload_vid = int(self.sideload_json["vendorId"], 16)
             self.sideload_pid = int(self.sideload_json["productId"], 16)
+            self.on_click_refresh()
+
+    def on_load_dummy(self):
+        dialog = QFileDialog()
+        dialog.setDefaultSuffix("json")
+        dialog.setAcceptMode(QFileDialog.AcceptOpen)
+        dialog.setNameFilters(["VIA layout JSON (*.json)"])
+        if dialog.exec_() == QDialog.Accepted:
+            with open(dialog.selectedFiles()[0], "rb") as inf:
+                data = inf.read()
+            self.sideload_json = json.loads(data)
+            self.sideload_vid = self.sideload_pid = 0
             self.on_click_refresh()
 
     def lock_ui(self):

@@ -112,7 +112,7 @@ class LayoutEditor(BasicEditor):
             choice.delete()
         self.choices = []
 
-        for item in device.keyboard.layouts["labels"]:
+        for item in device.keyboard.layout_labels:
             if isinstance(item, str):
                 choice = BooleanChoice(self.on_changed, self.container, item)
             else:
@@ -124,7 +124,7 @@ class LayoutEditor(BasicEditor):
         self.blockSignals(False)
 
     def valid(self):
-        return isinstance(self.device, VialKeyboard) and "labels" in self.device.keyboard.layouts
+        return isinstance(self.device, VialKeyboard) and self.device.keyboard.layout_labels
 
     def pack(self):
         if not self.choices:

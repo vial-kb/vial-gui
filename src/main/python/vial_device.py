@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 from hidproxy import hid
-from keyboard_comm import Keyboard
+from keyboard_comm import Keyboard, DummyKeyboard
 from util import MSG_LEN, pad_for_vibl
 
 
@@ -74,3 +74,22 @@ class VialBootloader(VialDevice):
         data = self.recv(8, timeout_ms=500)
         super().close()
         return data
+
+
+class VialDummyKeyboard(VialKeyboard):
+
+    def __init__(self):
+        self.sideload = True
+
+    def open(self, override_json=None):
+        self.keyboard = DummyKeyboard(None, usb_send=self.raise_usb_send)
+        self.keyboard.reload(override_json)
+
+    def title(self):
+        return "[Dummy Keyboard]"
+
+    def raise_usb_send(self, *args, **kwargs):
+        raise RuntimeError("usb_send - should not be called!")
+
+    def close(self):
+        pass
