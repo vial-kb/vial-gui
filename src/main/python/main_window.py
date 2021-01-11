@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import QWidget, QComboBox, QToolButton, QHBoxLayout, QVBoxL
     QFileDialog, QDialog, QTabWidget, QActionGroup
 
 import json
+from urllib.request import urlopen
 
 from firmware_flasher import FirmwareFlasher
 from keymap_editor import KeymapEditor
@@ -23,6 +24,7 @@ class MainWindow(QMainWindow):
 
         self.current_device = None
         self.devices = []
+        self.via_stack_json = None
         self.sideload_json = None
         self.sideload_vid = self.sideload_pid = -1
 
@@ -58,6 +60,9 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(w)
 
         self.init_menu()
+
+        # load the entire VIA stack
+        self.load_via_stack_json()
 
         # make sure initial state is valid
         self.on_click_refresh()
@@ -133,7 +138,7 @@ class MainWindow(QMainWindow):
                 outf.write(self.keymap_editor.save_layout())
 
     def on_click_refresh(self):
-        self.devices = find_vial_devices(self.sideload_vid, self.sideload_pid)
+        self.devices = find_vial_devices(self.via_stack_json, self.sideload_vid, self.sideload_pid)
         self.combobox_devices.clear()
 
         for dev in self.devices:
@@ -148,7 +153,12 @@ class MainWindow(QMainWindow):
             self.current_device = self.devices[idx]
 
         if self.current_device is not None:
-            self.current_device.open(self.sideload_json if self.current_device.sideload else None)
+            if self.current_device.sideload:
+                self.current_device.open(self.sideload_json)
+            elif self.current_device.via_stack:
+                self.current_device.open(self.via_stack_json["definitions"][self.current_device.via_id])
+            else:
+                self.current_device.open(None)
 
         self.rebuild()
 
@@ -175,6 +185,10 @@ class MainWindow(QMainWindow):
             w = QWidget()
             w.setLayout(container)
             self.tabs.addTab(w, tr("MainWindow", lbl))
+
+    def load_via_stack_json(self):
+        data = urlopen("https://github.com/kb-elmo/vial-gui/raw/add-via-stack/src/util/via_keyboard_stack.json")
+        self.via_stack_json = json.load(data)
 
     def on_sideload_json(self):
         dialog = QFileDialog()

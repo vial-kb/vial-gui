@@ -52,13 +52,15 @@ def is_rawhid(dev):
     return dev["interface_number"] == 1
 
 
-def find_vial_devices(sideload_vid=None, sideload_pid=None):
+def find_vial_devices(via_stack_json, sideload_vid=None, sideload_pid=None):
     from vial_device import VialBootloader, VialKeyboard
 
     filtered = []
     for dev in hid.enumerate():
         if dev["vendor_id"] == sideload_vid and dev["product_id"] == sideload_pid and is_rawhid(dev):
             filtered.append(VialKeyboard(dev, sideload=True))
+        elif str(dev["vendor_id"] * 65536 + dev["product_id"]) in via_stack_json["definitions"] and is_rawhid(dev):
+            filtered.append(VialKeyboard(dev, via_stack=True))
         elif VIAL_SERIAL_NUMBER_MAGIC in dev["serial_number"] and is_rawhid(dev):
             filtered.append(VialKeyboard(dev))
         elif VIBL_SERIAL_NUMBER_MAGIC in dev["serial_number"]:
