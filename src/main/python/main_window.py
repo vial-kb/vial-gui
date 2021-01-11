@@ -68,8 +68,8 @@ class MainWindow(QMainWindow):
         if not os.path.exists(self.cache_path):
             os.makedirs(self.cache_path)
         # check if the via defitions already exist
-        if os.path.isfile(self.cache_path+"/via_keyboards.json"):
-            with open(self.cache_path+"/via_keyboards.json") as vf:
+        if os.path.isfile(os.path.join(self.cache_path, "via_keyboards.json")):
+            with open(os.path.join(self.cache_path, "via_keyboards.json")) as vf:
                 self.via_stack_json = json.load(vf)
                 vf.close()
 
@@ -203,7 +203,7 @@ class MainWindow(QMainWindow):
         data = urlopen("https://github.com/kb-elmo/vial-gui/raw/add-via-stack/src/util/via_keyboard_stack.json")
         self.via_stack_json = json.load(data)
         # write to cache
-        with open(self.cache_path+"/via_keyboards.json", "w") as cf:
+        with open(os.path.join(self.cache_path, "via_keyboards.json"), "w") as cf:
             cf.write(json.dumps(self.via_stack_json, indent=2))
             cf.close()
 
