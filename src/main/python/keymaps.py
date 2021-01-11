@@ -1,12 +1,13 @@
 from keycodes import Keycode
-from keymap import french, german, russian, norwegian
+from keymap import french, german, hungarian, norwegian, russian
 
 KEYMAPS = [
     ("QWERTY", dict()),
     ("French (AZERTY)", french.keymap),
     ("German (QWERTZ)", german.keymap),
-    ("Russian (ЙЦУКЕН)", russian.keymap),
+    ("Hungarian (QWERTZ)", hungarian.keymap),
     ("Norwegian (QWERTY)", norwegian.keymap),
+    ("Russian (ЙЦУКЕН)", russian.keymap)
 ]
 
 # make sure that qmk IDs we used are all correct
