@@ -237,7 +237,7 @@ class KeyboardWidget(QWidget):
 
         # for currently selected keycap
         active_pen = qp.pen()
-        active_pen.setColor(QApplication.palette().color(QPalette.Highlight))
+        active_pen.setColor(QApplication.palette().color(QPalette.HighlightedText))
 
         active_brush = QBrush()
         active_brush.setColor(QApplication.palette().color(QPalette.Highlight))
