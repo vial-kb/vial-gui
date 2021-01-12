@@ -4,12 +4,12 @@ from PyQt5.QtGui import QPainter, QColor, QPainterPath, QTransform, QBrush, QPol
 from PyQt5.QtWidgets import QWidget, QToolTip, QApplication
 from PyQt5.QtCore import Qt, QSize, QRect, QPointF, pyqtSignal, QEvent, QRectF
 
-from constants import KEY_WIDTH, KEY_SPACING, KEY_HEIGHT, KEYBOARD_WIDGET_PADDING, KEYBOARD_WIDGET_MASK_PADDING
+from constants import KEY_SIZE_RATIO, KEY_SPACING_RATIO, KEYBOARD_WIDGET_PADDING, KEYBOARD_WIDGET_MASK_PADDING
 
 
 class KeyWidget:
 
-    def __init__(self, desc, shift_x=0, shift_y=0):
+    def __init__(self, desc, scale, shift_x=0, shift_y=0):
         self.active = False
         self.masked = False
         self.desc = desc
@@ -18,25 +18,28 @@ class KeyWidget:
         self.tooltip = ""
         self.color = None
 
-        self.rotation_x = (KEY_WIDTH + KEY_SPACING) * desc.rotation_x
-        self.rotation_y = (KEY_HEIGHT + KEY_SPACING) * desc.rotation_y
+        size = int(round(scale * (KEY_SIZE_RATIO + KEY_SPACING_RATIO)))
+        spacing = int(round(scale * KEY_SPACING_RATIO))
+
+        self.rotation_x = size * desc.rotation_x
+        self.rotation_y = size * desc.rotation_y
         self.rotation_angle = desc.rotation_angle
 
         self.shift_x = shift_x
         self.shift_y = shift_y
-        self.x = (KEY_WIDTH + KEY_SPACING) * desc.x
-        self.y = (KEY_HEIGHT + KEY_SPACING) * desc.y
-        self.w = (KEY_WIDTH + KEY_SPACING) * desc.width - KEY_SPACING
-        self.h = (KEY_HEIGHT + KEY_SPACING) * desc.height - KEY_SPACING
+        self.x = size * desc.x
+        self.y = size * desc.y
+        self.w = size * desc.width - spacing
+        self.h = size * desc.height - spacing
 
         self.rect = QRect(self.x, self.y, self.w, self.h)
 
         self.has2 = desc.width2 != desc.width or desc.height2 != desc.height or desc.x2 != 0 or desc.y2 != 0
 
-        self.x2 = self.x + (KEY_WIDTH + KEY_SPACING) * desc.x2
-        self.y2 = self.y + (KEY_WIDTH + KEY_SPACING) * desc.y2
-        self.w2 = (KEY_WIDTH + KEY_SPACING) * desc.width2 - KEY_SPACING
-        self.h2 = (KEY_HEIGHT + KEY_SPACING) * desc.height2 - KEY_SPACING
+        self.x2 = self.x + size * desc.x2
+        self.y2 = self.y + size * desc.y2
+        self.w2 = size * desc.width2 - spacing
+        self.h2 = size * desc.height2 - spacing
 
         self.bbox = self.calculate_bbox(QRectF(self.x, self.y, self.w, self.h))
         self.polygon = QPolygonF(self.bbox + [self.bbox[0]])
@@ -158,11 +161,12 @@ class KeyboardWidget(QWidget):
 
     def add_keys(self, keys):
         top_x = top_y = 1e6
+        scale_factor = self.fontMetrics().height()
 
         # find the global top-left position, all the keys will be shifted to the left/up by that position
         for key, cls in keys:
             if key.layout_index == -1:
-                obj = cls(key)
+                obj = cls(key, scale_factor)
                 p = obj.polygon.boundingRect().topLeft()
                 top_x = min(top_x, p.x())
                 top_y = min(top_y, p.y())
@@ -170,7 +174,7 @@ class KeyboardWidget(QWidget):
         # obtain common widgets, that is, ones which are always displayed and require no extra transforms
         for key, cls in keys:
             if key.layout_index == -1:
-                self.common_widgets.append(cls(key, -top_x + KEYBOARD_WIDGET_PADDING, -top_y + KEYBOARD_WIDGET_PADDING))
+                self.common_widgets.append(cls(key, scale_factor, -top_x + KEYBOARD_WIDGET_PADDING, -top_y + KEYBOARD_WIDGET_PADDING))
 
         # top-left position for specific layout
         layout_x = defaultdict(lambda: defaultdict(lambda: 1e6))
@@ -179,7 +183,7 @@ class KeyboardWidget(QWidget):
         # determine top-left position for every layout option
         for key, cls in keys:
             if key.layout_index != -1:
-                obj = cls(key)
+                obj = cls(key, scale_factor)
                 idx, opt = key.layout_index, key.layout_option
                 p = obj.polygon.boundingRect().topLeft()
                 layout_x[idx][opt] = min(layout_x[idx][opt], p.x())
@@ -191,7 +195,7 @@ class KeyboardWidget(QWidget):
                 idx, opt = key.layout_index, key.layout_option
                 shift_x = layout_x[idx][opt] - layout_x[idx][0]
                 shift_y = layout_y[idx][opt] - layout_y[idx][0]
-                obj = cls(key, -shift_x - top_x + KEYBOARD_WIDGET_PADDING, -shift_y - top_y + KEYBOARD_WIDGET_PADDING)
+                obj = cls(key, scale_factor, -shift_x - top_x + KEYBOARD_WIDGET_PADDING, -shift_y - top_y + KEYBOARD_WIDGET_PADDING)
                 self.widgets_for_layout[idx][opt].append(obj)
 
     def update_layout(self):
