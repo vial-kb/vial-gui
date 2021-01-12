@@ -2,7 +2,7 @@
 
 from PyQt5.QtCore import Qt, QSettings, QStandardPaths
 from PyQt5.QtWidgets import QWidget, QComboBox, QToolButton, QHBoxLayout, QVBoxLayout, QMainWindow, QAction, qApp, \
-    QFileDialog, QDialog, QTabWidget, QActionGroup
+    QFileDialog, QDialog, QTabWidget, QActionGroup, QMessageBox
 
 import json
 import os
@@ -140,13 +140,18 @@ class MainWindow(QMainWindow):
         self.security_menu.addAction(keyboard_reset_act)
 
         self.theme_menu = self.menuBar().addMenu(tr("Menu", "Theme"))
-        theme_set_default = QAction(tr("MenuTheme", "System"), self)
-        theme_set_default.triggered.connect(lambda: self.set_theme("default"))
-        self.theme_menu.addAction(theme_set_default)
-        for name, _ in themes.themes:
+        theme_group = QActionGroup(self)
+        selected_theme = self.settings.value("theme")
+        for name, _ in [("System", None)] + themes.themes:
             act = QAction(tr("MenuTheme", name), self)
             act.triggered.connect(lambda x,name=name: self.set_theme(name))
+            act.setCheckable(True)
+            act.setChecked(selected_theme == name)
+            theme_group.addAction(act)
             self.theme_menu.addAction(act)
+        # check "System" if nothing else is selected
+        if theme_group.checkedAction() is None:
+            theme_group.actions()[0].setChecked(True)
 
     def on_layout_load(self):
         dialog = QFileDialog()
@@ -279,3 +284,6 @@ class MainWindow(QMainWindow):
     def set_theme(self, theme):
         themes.set_theme(theme)
         self.settings.setValue("theme", theme)
+        msg = QMessageBox()
+        msg.setText(tr("MainWindow", "In order to fully apply the theme you should restart the application."))
+        msg.exec_()
