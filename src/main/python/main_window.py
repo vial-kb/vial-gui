@@ -149,13 +149,23 @@ class MainWindow(QMainWindow):
         theme_set_dark.triggered.connect(lambda: self.set_theme("dark"))
 
         theme_set_arc = QAction(tr("MenuTheme", "Arc"), self)
-        theme_set_arc.triggered.connect(lambda: self.set_theme("arc"))
+        theme_set_arc.triggered.connect(lambda: self.set_theme("arc")) 
+
+        theme_set_nord = QAction(tr("MenuTheme", "Nord"), self)
+        theme_set_nord.triggered.connect(lambda: self.set_theme("nord"))
+
+        theme_set_olivial = QAction(tr("MenuTheme", "Olivial"), self)
+        theme_set_olivial.triggered.connect(lambda: self.set_theme("olivial"))
+
 
         self.theme_menu = self.menuBar().addMenu(tr("Menu", "Theme"))
         self.theme_menu.addAction(theme_set_default)
         self.theme_menu.addAction(theme_set_light)
         self.theme_menu.addAction(theme_set_dark)
         self.theme_menu.addAction(theme_set_arc)
+        self.theme_menu.addAction(theme_set_nord)
+        self.theme_menu.addAction(theme_set_olivial)
+
 
     def on_layout_load(self):
         dialog = QFileDialog()
