@@ -1,106 +1,125 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
-from PyQt5.QtCore import Qt, QSettings
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtGui import QPalette, QColor
 
-dark_palette = QPalette()
-dark_palette.setColor(QPalette.Window, QColor(53, 53, 53))
-dark_palette.setColor(QPalette.WindowText, Qt.white)
-dark_palette.setColor(QPalette.Base, QColor(35, 35, 35))
-dark_palette.setColor(QPalette.AlternateBase, QColor(53, 53, 53))
-dark_palette.setColor(QPalette.ToolTipBase, QColor(25, 25, 25))
-dark_palette.setColor(QPalette.ToolTipText, Qt.white)
-dark_palette.setColor(QPalette.Text, Qt.white)
-dark_palette.setColor(QPalette.Button, QColor(53, 53, 53))
-dark_palette.setColor(QPalette.ButtonText, Qt.white)
-dark_palette.setColor(QPalette.BrightText, Qt.red)
-dark_palette.setColor(QPalette.Link, QColor(247, 169, 72))
-dark_palette.setColor(QPalette.Highlight, QColor(186, 186, 186))
-dark_palette.setColor(QPalette.HighlightedText, QColor(35, 35, 35))
-dark_palette.setColor(QPalette.Active, QPalette.Button, QColor(53, 53, 53))
-dark_palette.setColor(QPalette.Disabled, QPalette.ButtonText, Qt.darkGray)
-dark_palette.setColor(QPalette.Disabled, QPalette.WindowText, Qt.darkGray)
-dark_palette.setColor(QPalette.Disabled, QPalette.Text, Qt.darkGray)
-dark_palette.setColor(QPalette.Disabled, QPalette.Light, QColor(53, 53, 53))
+themes = [
+    ("Light", {
+        QPalette.Window: "#ffefebe7",
+        QPalette.WindowText: "#ff000000",
+        QPalette.Base: "#ffffffff",
+        QPalette.AlternateBase: "#fff7f5f3",
+        QPalette.ToolTipBase: "#ffffffdc",
+        QPalette.ToolTipText: "#ff000000",
+        QPalette.Text: "#ff000000",
+        QPalette.Button: "#ffefebe7",
+        QPalette.ButtonText: "#ff000000",
+        QPalette.BrightText: "#ffffffff",
+        QPalette.Link: "#ff0000ff",
+        QPalette.Highlight: "#ff308cc6",
+        QPalette.HighlightedText: "#ffffffff",
+        (QPalette.Active, QPalette.Button): "#ffefebe7",
+        (QPalette.Disabled, QPalette.ButtonText): "#ffbebebe",
+        (QPalette.Disabled, QPalette.WindowText): "#ffbebebe",
+        (QPalette.Disabled, QPalette.Text): "#ffbebebe",
+        (QPalette.Disabled, QPalette.Light): "#ffffffff",
+    }),
+    ("Dark", {
+        QPalette.Window: "#353535",
+        QPalette.WindowText: "#ffffff",
+        QPalette.Base: "#232323",
+        QPalette.AlternateBase: "#353535",
+        QPalette.ToolTipBase: "#191919",
+        QPalette.ToolTipText: "#ffffff",
+        QPalette.Text: "#ffffff",
+        QPalette.Button: "#353535",
+        QPalette.ButtonText: "#ffffff",
+        QPalette.BrightText: "#ff0000",
+        QPalette.Link: "#f7a948",
+        QPalette.Highlight: "#bababa",
+        QPalette.HighlightedText: "#232323",
+        (QPalette.Active, QPalette.Button): "#353535",
+        (QPalette.Disabled, QPalette.ButtonText): "#808080",
+        (QPalette.Disabled, QPalette.WindowText): "#808080",
+        (QPalette.Disabled, QPalette.Text): "#808080",
+        (QPalette.Disabled, QPalette.Light): "#353535",
+    }),
+    ("Arc", {
+        QPalette.Window: "#353945",
+        QPalette.WindowText: "#d3dae3",
+        QPalette.Base: "#353945",
+        QPalette.AlternateBase: "#404552",
+        QPalette.ToolTipBase: "#4B5162",
+        QPalette.ToolTipText: "#d3dae3",
+        QPalette.Text: "#d3dae3",
+        QPalette.Button: "#353945",
+        QPalette.ButtonText: "#d3dae3",
+        QPalette.BrightText: "#5294e2",
+        QPalette.Link: "#89b1e0",
+        QPalette.Highlight: "#5294e2",
+        QPalette.HighlightedText: "#d3dae3",
+        (QPalette.Active, QPalette.Button): "#353945",
+        (QPalette.Disabled, QPalette.ButtonText): "#d3dae3",
+        (QPalette.Disabled, QPalette.WindowText): "#d3dae3",
+        (QPalette.Disabled, QPalette.Text): "#d3dae3",
+        (QPalette.Disabled, QPalette.Light): "#404552",
+    }),
+    ("Nord", {
+        QPalette.Window: "#2e3440",
+        QPalette.WindowText: "#eceff4",
+        QPalette.Base: "#2e3440",
+        QPalette.AlternateBase: "#434c5e",
+        QPalette.ToolTipBase: "#4c566a",
+        QPalette.ToolTipText: "#eceff4",
+        QPalette.Text: "#eceff4",
+        QPalette.Button: "#2e3440",
+        QPalette.ButtonText: "#eceff4",
+        QPalette.BrightText: "#88c0d0",
+        QPalette.Link: "#88c0d0",
+        QPalette.Highlight: "#88c0d0",
+        QPalette.HighlightedText: "#eceff4",
+        (QPalette.Active, QPalette.Button): "#2e3440",
+        (QPalette.Disabled, QPalette.ButtonText): "#eceff4",
+        (QPalette.Disabled, QPalette.WindowText): "#eceff4",
+        (QPalette.Disabled, QPalette.Text): "#eceff4",
+        (QPalette.Disabled, QPalette.Light): "#88c0d0",
+    }),
+    ("Olivia", {
+        QPalette.Window: "#181818",
+        QPalette.WindowText: "#d9d9d9",
+        QPalette.Base: "#181818",
+        QPalette.AlternateBase: "#2c2c2c",
+        QPalette.ToolTipBase: "#363636 ",
+        QPalette.ToolTipText: "#d9d9d9",
+        QPalette.Text: "#d9d9d9",
+        QPalette.Button: "#181818",
+        QPalette.ButtonText: "#d9d9d9",
+        QPalette.BrightText: "#fabcad",
+        QPalette.Link: "#fabcad",
+        QPalette.Highlight: "#fabcad",
+        QPalette.HighlightedText: "#2c2c2c",
+        (QPalette.Active, QPalette.Button): "#181818",
+        (QPalette.Disabled, QPalette.ButtonText): "#d9d9d9",
+        (QPalette.Disabled, QPalette.WindowText): "#d9d9d9",
+        (QPalette.Disabled, QPalette.Text): "#d9d9d9",
+        (QPalette.Disabled, QPalette.Light): "#fabcad",
+    }),
+]
 
-arc_palette = QPalette()
-arc_palette.setColor(QPalette.Window, QColor("#353945"))
-arc_palette.setColor(QPalette.WindowText, QColor("#d3dae3"))
-arc_palette.setColor(QPalette.Base, QColor("#353945"))
-arc_palette.setColor(QPalette.AlternateBase, QColor("#404552"))
-arc_palette.setColor(QPalette.ToolTipBase, QColor("#4B5162"))
-arc_palette.setColor(QPalette.ToolTipText, QColor("#d3dae3"))
-arc_palette.setColor(QPalette.Text, QColor("#d3dae3"))
-arc_palette.setColor(QPalette.Button, QColor("#353945"))
-arc_palette.setColor(QPalette.ButtonText, QColor("#d3dae3"))
-arc_palette.setColor(QPalette.BrightText, QColor("#5294e2"))
-arc_palette.setColor(QPalette.Link, QColor("#89b1e0"))
-arc_palette.setColor(QPalette.Highlight, QColor("#5294e2"))
-arc_palette.setColor(QPalette.HighlightedText, QColor("#d3dae3"))
-arc_palette.setColor(QPalette.Active, QPalette.Button, QColor("#353945"))
-arc_palette.setColor(QPalette.Disabled, QPalette.ButtonText, QColor("#d3dae3"))
-arc_palette.setColor(QPalette.Disabled, QPalette.WindowText, QColor("#d3dae3"))
-arc_palette.setColor(QPalette.Disabled, QPalette.Text, QColor("#d3dae3"))
-arc_palette.setColor(QPalette.Disabled, QPalette.Light, QColor("#404552"))
+palettes = dict()
 
+for name, colors in themes:
+    palette = QPalette()
+    for role, color in colors.items():
+        if not hasattr(type(role), '__iter__'):
+            role = [role]
+        palette.setColor(*role, QColor(color))
+    palettes[name] = palette
 
-nord_palette = QPalette()
-nord_palette.setColor(QPalette.Window, QColor("#2e3440"))
-nord_palette.setColor(QPalette.WindowText, QColor("#eceff4"))
-nord_palette.setColor(QPalette.Base, QColor("#2e3440"))
-nord_palette.setColor(QPalette.AlternateBase, QColor("#434c5e"))
-nord_palette.setColor(QPalette.ToolTipBase, QColor("#4c566a"))
-nord_palette.setColor(QPalette.ToolTipText, QColor("#eceff4"))
-nord_palette.setColor(QPalette.Text, QColor("#eceff4"))
-nord_palette.setColor(QPalette.Button, QColor("#2e3440"))
-nord_palette.setColor(QPalette.ButtonText, QColor("#eceff4"))
-nord_palette.setColor(QPalette.BrightText, QColor("#88c0d0"))
-nord_palette.setColor(QPalette.Link, QColor("#88c0d0"))
-nord_palette.setColor(QPalette.Highlight, QColor("#88c0d0"))
-nord_palette.setColor(QPalette.HighlightedText, QColor("#eceff4"))
-nord_palette.setColor(QPalette.Active, QPalette.Button, QColor("#2e3440"))
-nord_palette.setColor(QPalette.Disabled, QPalette.ButtonText, QColor("#eceff4"))
-nord_palette.setColor(QPalette.Disabled, QPalette.WindowText, QColor("#eceff4"))
-nord_palette.setColor(QPalette.Disabled, QPalette.Text, QColor("#eceff4"))
-nord_palette.setColor(QPalette.Disabled, QPalette.Light, QColor("#88c0d0"))
-
-
-olivia_palette = QPalette()
-olivia_palette.setColor(QPalette.Window, QColor("#181818"))
-olivia_palette.setColor(QPalette.WindowText, QColor("#d9d9d9"))
-olivia_palette.setColor(QPalette.Base, QColor("#181818"))
-olivia_palette.setColor(QPalette.AlternateBase, QColor("#2c2c2c"))
-olivia_palette.setColor(QPalette.ToolTipBase, QColor("#363636 "))
-olivia_palette.setColor(QPalette.ToolTipText, QColor("#d9d9d9"))
-olivia_palette.setColor(QPalette.Text, QColor("#d9d9d9"))
-olivia_palette.setColor(QPalette.Button, QColor("#181818"))
-olivia_palette.setColor(QPalette.ButtonText, QColor("#d9d9d9"))
-olivia_palette.setColor(QPalette.BrightText, QColor("#fabcad"))
-olivia_palette.setColor(QPalette.Link, QColor("#fabcad"))
-olivia_palette.setColor(QPalette.Highlight, QColor("#fabcad"))
-olivia_palette.setColor(QPalette.HighlightedText, QColor("#2c2c2c"))
-olivia_palette.setColor(QPalette.Active, QPalette.Button, QColor("#181818"))
-olivia_palette.setColor(QPalette.Disabled, QPalette.ButtonText, QColor("#d9d9d9"))
-olivia_palette.setColor(QPalette.Disabled, QPalette.WindowText, QColor("#d9d9d9"))
-olivia_palette.setColor(QPalette.Disabled, QPalette.Text, QColor("#d9d9d9"))
-olivia_palette.setColor(QPalette.Disabled, QPalette.Light, QColor("#fabcad"))
 
 def set_theme(theme):
-    if theme == "light":
-        QApplication.setPalette(QApplication.style().standardPalette())
-        QApplication.setStyle("Fusion")
-    elif theme == "dark":
-        QApplication.setPalette(dark_palette)
-        QApplication.setStyle("Fusion")
-    elif theme == "arc":
-        QApplication.setPalette(arc_palette)
-        QApplication.setStyle("Fusion")
-    elif theme == "nord":
-        QApplication.setPalette(nord_palette)
-        QApplication.setStyle("Fusion")
-    elif theme == "olivia":
-        QApplication.setPalette(olivia_palette)
+    if theme in palettes:
+        QApplication.setPalette(palettes[theme])
         QApplication.setStyle("Fusion")
     # For default/system theme, do nothing
     # User will have to restart the application for it to be applied

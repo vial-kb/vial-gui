@@ -139,33 +139,14 @@ class MainWindow(QMainWindow):
         self.security_menu.addSeparator()
         self.security_menu.addAction(keyboard_reset_act)
 
+        self.theme_menu = self.menuBar().addMenu(tr("Menu", "Theme"))
         theme_set_default = QAction(tr("MenuTheme", "System"), self)
         theme_set_default.triggered.connect(lambda: self.set_theme("default"))
-
-        theme_set_light = QAction(tr("MenuTheme", "Light"), self)
-        theme_set_light.triggered.connect(lambda: self.set_theme("light"))
-
-        theme_set_dark = QAction(tr("MenuTheme", "Dark"), self)
-        theme_set_dark.triggered.connect(lambda: self.set_theme("dark"))
-
-        theme_set_arc = QAction(tr("MenuTheme", "Arc"), self)
-        theme_set_arc.triggered.connect(lambda: self.set_theme("arc")) 
-
-        theme_set_nord = QAction(tr("MenuTheme", "Nord"), self)
-        theme_set_nord.triggered.connect(lambda: self.set_theme("nord"))
-
-        theme_set_olivia = QAction(tr("MenuTheme", "Olivia"), self)
-        theme_set_olivia.triggered.connect(lambda: self.set_theme("olivia"))
-
-
-        self.theme_menu = self.menuBar().addMenu(tr("Menu", "Theme"))
         self.theme_menu.addAction(theme_set_default)
-        self.theme_menu.addAction(theme_set_light)
-        self.theme_menu.addAction(theme_set_dark)
-        self.theme_menu.addAction(theme_set_arc)
-        self.theme_menu.addAction(theme_set_nord)
-        self.theme_menu.addAction(theme_set_olivia)
-
+        for name, _ in themes.themes:
+            act = QAction(tr("MenuTheme", name), self)
+            act.triggered.connect(lambda x,name=name: self.set_theme(name))
+            self.theme_menu.addAction(act)
 
     def on_layout_load(self):
         dialog = QFileDialog()
