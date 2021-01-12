@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
-from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtCore import Qt, QSize, pyqtSignal
 from PyQt5.QtWidgets import QTabWidget, QWidget, QPushButton, QScrollArea, QApplication
 from PyQt5.QtGui import QPalette
 
-from constants import KEYCODE_BTN_WIDTH, KEYCODE_BTN_HEIGHT
+from constants import KEYCODE_BTN_RATIO
 from flowlayout import FlowLayout
 from keycodes import keycode_tooltip, KEYCODES_BASIC, KEYCODES_ISO, KEYCODES_MACRO, KEYCODES_LAYERS, KEYCODES_QUANTUM, \
     KEYCODES_BACKLIGHT, KEYCODES_MEDIA, KEYCODES_SPECIAL
@@ -65,8 +65,7 @@ class TabbedKeycodes(QTabWidget):
         buttons = []
 
         for keycode in keycodes:
-            btn = QPushButton()
-            btn.setFixedSize(KEYCODE_BTN_WIDTH, KEYCODE_BTN_HEIGHT)
+            btn = KeycodeButton()
             btn.setToolTip(keycode_tooltip(keycode.code))
             btn.clicked.connect(lambda st, k=keycode: self.keycode_changed.emit(k.code))
             btn.keycode = keycode
@@ -100,3 +99,10 @@ class TabbedKeycodes(QTabWidget):
                 label = widget.keycode.label
                 widget.setStyleSheet("QPushButton {}")
             widget.setText(label.replace("&", "&&"))
+
+
+class KeycodeButton(QPushButton):
+
+    def sizeHint(self):
+        size = KEYCODE_BTN_RATIO * self.fontMetrics().height()
+        return QSize(size, size)
