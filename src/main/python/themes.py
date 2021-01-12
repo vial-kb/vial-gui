@@ -66,25 +66,25 @@ nord_palette.setColor(QPalette.Disabled, QPalette.Text, QColor("#eceff4"))
 nord_palette.setColor(QPalette.Disabled, QPalette.Light, QColor("#88c0d0"))
 
 
-olivial_palette = QPalette()
-olivial_palette.setColor(QPalette.Window, QColor("#181818"))
-olivial_palette.setColor(QPalette.WindowText, QColor("#d9d9d9"))
-olivial_palette.setColor(QPalette.Base, QColor("#181818"))
-olivial_palette.setColor(QPalette.AlternateBase, QColor("#2c2c2c"))
-olivial_palette.setColor(QPalette.ToolTipBase, QColor("#363636 "))
-olivial_palette.setColor(QPalette.ToolTipText, QColor("#d9d9d9"))
-olivial_palette.setColor(QPalette.Text, QColor("#d9d9d9"))
-olivial_palette.setColor(QPalette.Button, QColor("#181818"))
-olivial_palette.setColor(QPalette.ButtonText, QColor("#d9d9d9"))
-olivial_palette.setColor(QPalette.BrightText, QColor("#fabcad"))
-olivial_palette.setColor(QPalette.Link, QColor("#fabcad"))
-olivial_palette.setColor(QPalette.Highlight, QColor("#fabcad"))
-olivial_palette.setColor(QPalette.HighlightedText, QColor("#2c2c2c"))
-olivial_palette.setColor(QPalette.Active, QPalette.Button, QColor("#181818"))
-olivial_palette.setColor(QPalette.Disabled, QPalette.ButtonText, QColor("#d9d9d9"))
-olivial_palette.setColor(QPalette.Disabled, QPalette.WindowText, QColor("#d9d9d9"))
-olivial_palette.setColor(QPalette.Disabled, QPalette.Text, QColor("#d9d9d9"))
-olivial_palette.setColor(QPalette.Disabled, QPalette.Light, QColor("#fabcad"))
+olivia_palette = QPalette()
+olivia_palette.setColor(QPalette.Window, QColor("#181818"))
+olivia_palette.setColor(QPalette.WindowText, QColor("#d9d9d9"))
+olivia_palette.setColor(QPalette.Base, QColor("#181818"))
+olivia_palette.setColor(QPalette.AlternateBase, QColor("#2c2c2c"))
+olivia_palette.setColor(QPalette.ToolTipBase, QColor("#363636 "))
+olivia_palette.setColor(QPalette.ToolTipText, QColor("#d9d9d9"))
+olivia_palette.setColor(QPalette.Text, QColor("#d9d9d9"))
+olivia_palette.setColor(QPalette.Button, QColor("#181818"))
+olivia_palette.setColor(QPalette.ButtonText, QColor("#d9d9d9"))
+olivia_palette.setColor(QPalette.BrightText, QColor("#fabcad"))
+olivia_palette.setColor(QPalette.Link, QColor("#fabcad"))
+olivia_palette.setColor(QPalette.Highlight, QColor("#fabcad"))
+olivia_palette.setColor(QPalette.HighlightedText, QColor("#2c2c2c"))
+olivia_palette.setColor(QPalette.Active, QPalette.Button, QColor("#181818"))
+olivia_palette.setColor(QPalette.Disabled, QPalette.ButtonText, QColor("#d9d9d9"))
+olivia_palette.setColor(QPalette.Disabled, QPalette.WindowText, QColor("#d9d9d9"))
+olivia_palette.setColor(QPalette.Disabled, QPalette.Text, QColor("#d9d9d9"))
+olivia_palette.setColor(QPalette.Disabled, QPalette.Light, QColor("#fabcad"))
 
 def set_theme(theme):
     if theme == "light":
@@ -99,8 +99,8 @@ def set_theme(theme):
     elif theme == "nord":
         QApplication.setPalette(nord_palette)
         QApplication.setStyle("Fusion")
-    elif theme == "olivial":
-        QApplication.setPalette(olivial_palette)
+    elif theme == "olivia":
+        QApplication.setPalette(olivia_palette)
         QApplication.setStyle("Fusion")
     # For default/system theme, do nothing
     # User will have to restart the application for it to be applied

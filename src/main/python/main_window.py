@@ -154,8 +154,8 @@ class MainWindow(QMainWindow):
         theme_set_nord = QAction(tr("MenuTheme", "Nord"), self)
         theme_set_nord.triggered.connect(lambda: self.set_theme("nord"))
 
-        theme_set_olivial = QAction(tr("MenuTheme", "Olivial"), self)
-        theme_set_olivial.triggered.connect(lambda: self.set_theme("olivial"))
+        theme_set_olivia = QAction(tr("MenuTheme", "Olivia"), self)
+        theme_set_olivia.triggered.connect(lambda: self.set_theme("olivia"))
 
 
         self.theme_menu = self.menuBar().addMenu(tr("Menu", "Theme"))
@@ -164,7 +164,7 @@ class MainWindow(QMainWindow):
         self.theme_menu.addAction(theme_set_dark)
         self.theme_menu.addAction(theme_set_arc)
         self.theme_menu.addAction(theme_set_nord)
-        self.theme_menu.addAction(theme_set_olivial)
+        self.theme_menu.addAction(theme_set_olivia)
 
 
     def on_layout_load(self):
