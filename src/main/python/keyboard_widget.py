@@ -237,10 +237,10 @@ class KeyboardWidget(QWidget):
 
         # for currently selected keycap
         active_pen = qp.pen()
-        active_pen.setColor(QApplication.palette().color(QPalette.Button))
+        active_pen.setColor(QApplication.palette().color(QPalette.HighlightedText))
 
         active_brush = QBrush()
-        active_brush.setColor(QApplication.palette().color(QPalette.ButtonText))
+        active_brush.setColor(QApplication.palette().color(QPalette.Highlight))
         active_brush.setStyle(Qt.SolidPattern)
 
         mask_font = qp.font()
