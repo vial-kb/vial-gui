@@ -17,6 +17,7 @@ class KeyWidget:
         self.mask_text = ""
         self.tooltip = ""
         self.color = None
+        self.scale = 0
 
         self.rotation_angle = desc.rotation_angle
 
@@ -25,39 +26,41 @@ class KeyWidget:
         self.update_position(scale, shift_x, shift_y)
 
     def update_position(self, scale, shift_x=0, shift_y=0):
-        size = scale * (KEY_SIZE_RATIO + KEY_SPACING_RATIO)
-        spacing = scale * KEY_SPACING_RATIO
+        if self.scale != scale or self.shift_x != shift_x or self.shift_y != shift_y:
+            self.scale = scale
+            size = self.scale * (KEY_SIZE_RATIO + KEY_SPACING_RATIO)
+            spacing = self.scale * KEY_SPACING_RATIO
 
-        self.rotation_x = size * self.desc.rotation_x
-        self.rotation_y = size * self.desc.rotation_y
+            self.rotation_x = size * self.desc.rotation_x
+            self.rotation_y = size * self.desc.rotation_y
 
-        self.shift_x = shift_x
-        self.shift_y = shift_y
-        self.x = size * self.desc.x
-        self.y = size * self.desc.y
-        self.w = size * self.desc.width - spacing
-        self.h = size * self.desc.height - spacing
+            self.shift_x = shift_x
+            self.shift_y = shift_y
+            self.x = size * self.desc.x
+            self.y = size * self.desc.y
+            self.w = size * self.desc.width - spacing
+            self.h = size * self.desc.height - spacing
 
-        self.rect = QRect(self.x, self.y, self.w, self.h)
+            self.rect = QRect(self.x, self.y, self.w, self.h)
 
-        self.x2 = self.x + size * self.desc.x2
-        self.y2 = self.y + size * self.desc.y2
-        self.w2 = size * self.desc.width2 - spacing
-        self.h2 = size * self.desc.height2 - spacing
+            self.x2 = self.x + size * self.desc.x2
+            self.y2 = self.y + size * self.desc.y2
+            self.w2 = size * self.desc.width2 - spacing
+            self.h2 = size * self.desc.height2 - spacing
 
-        self.bbox = self.calculate_bbox(QRectF(self.x, self.y, self.w, self.h))
-        self.polygon = QPolygonF(self.bbox + [self.bbox[0]])
-        self.draw_path = self.calculate_draw_path()
-        self.draw_path2 = self.calculate_draw_path2()
+            self.bbox = self.calculate_bbox(QRectF(self.x, self.y, self.w, self.h))
+            self.polygon = QPolygonF(self.bbox + [self.bbox[0]])
+            self.draw_path = self.calculate_draw_path()
+            self.draw_path2 = self.calculate_draw_path2()
 
-        # calculate areas where the inner keycode will be located
-        # nonmask = outer (e.g. Rsft_T)
-        # mask = inner (e.g. KC_A)
-        self.nonmask_rect = QRectF(self.x, self.y, self.w, self.h / 2)
-        self.mask_rect = QRectF(self.x + KEYBOARD_WIDGET_MASK_PADDING, self.y + self.h / 2,
-                                self.w - 2 * KEYBOARD_WIDGET_MASK_PADDING, self.h / 2 - KEYBOARD_WIDGET_MASK_PADDING)
-        self.mask_bbox = self.calculate_bbox(self.mask_rect)
-        self.mask_polygon = QPolygonF(self.mask_bbox + [self.mask_bbox[0]])
+            # calculate areas where the inner keycode will be located
+            # nonmask = outer (e.g. Rsft_T)
+            # mask = inner (e.g. KC_A)
+            self.nonmask_rect = QRectF(self.x, self.y, self.w, self.h / 2)
+            self.mask_rect = QRectF(self.x + KEYBOARD_WIDGET_MASK_PADDING, self.y + self.h / 2,
+                                    self.w - 2 * KEYBOARD_WIDGET_MASK_PADDING, self.h / 2 - KEYBOARD_WIDGET_MASK_PADDING)
+            self.mask_bbox = self.calculate_bbox(self.mask_rect)
+            self.mask_polygon = QPolygonF(self.mask_bbox + [self.mask_bbox[0]])
 
     def calculate_bbox(self, rect):
         x1 = rect.topLeft().x()
