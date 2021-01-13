@@ -265,8 +265,8 @@ class KeyboardWidget(QWidget):
         for idx, key in enumerate(self.widgets):
             qp.save()
 
-            qp.translate(key.shift_x, key.shift_y)
             qp.scale(self.scale, self.scale)
+            qp.translate(key.shift_x, key.shift_y)
             qp.translate(key.rotation_x, key.rotation_y)
             qp.rotate(key.rotation_angle)
             qp.translate(-key.rotation_x, -key.rotation_y)
