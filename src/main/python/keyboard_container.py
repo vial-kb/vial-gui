@@ -9,6 +9,7 @@ from keyboard_widget import KeyboardWidget, EncoderWidget
 from keycodes import keycode_label, keycode_tooltip, keycode_is_mask, find_keycode
 from constants import LAYER_BTN_STYLE, ACTIVE_LAYER_BTN_STYLE
 from keymaps import KEYMAPS
+from square_button import SquareButton
 from util import tr
 
 
@@ -54,8 +55,8 @@ class KeyboardContainer(QWidget):
 
         # create new layer labels
         for x in range(self.keyboard.layers):
-            btn = QPushButton(str(x))
-            btn.setFixedSize(25, 25)
+            btn = SquareButton(str(x))
+            btn.setRelSize(1.667)
             btn.setCheckable(True)
             btn.clicked.connect(lambda state, idx=x: self.switch_layer(idx))
             self.layout_layers.addWidget(btn)

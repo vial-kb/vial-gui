@@ -9,6 +9,7 @@ from flowlayout import FlowLayout
 from keycodes import keycode_tooltip, KEYCODES_BASIC, KEYCODES_ISO, KEYCODES_MACRO, KEYCODES_LAYERS, KEYCODES_QUANTUM, \
     KEYCODES_BACKLIGHT, KEYCODES_MEDIA, KEYCODES_SPECIAL
 from keymaps import KEYMAPS
+from square_button import SquareButton
 from util import tr
 
 
@@ -65,7 +66,8 @@ class TabbedKeycodes(QTabWidget):
         buttons = []
 
         for keycode in keycodes:
-            btn = KeycodeButton()
+            btn = SquareButton()
+            btn.setRelSize(KEYCODE_BTN_RATIO)
             btn.setToolTip(keycode_tooltip(keycode.code))
             btn.clicked.connect(lambda st, k=keycode: self.keycode_changed.emit(k.code))
             btn.keycode = keycode
@@ -99,10 +101,3 @@ class TabbedKeycodes(QTabWidget):
                 label = widget.keycode.label
                 widget.setStyleSheet("QPushButton {}")
             widget.setText(label.replace("&", "&&"))
-
-
-class KeycodeButton(QPushButton):
-
-    def sizeHint(self):
-        size = KEYCODE_BTN_RATIO * self.fontMetrics().height()
-        return QSize(size, size)
