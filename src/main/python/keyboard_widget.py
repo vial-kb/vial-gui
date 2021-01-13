@@ -18,28 +18,32 @@ class KeyWidget:
         self.tooltip = ""
         self.color = None
 
-        size = int(round(scale * (KEY_SIZE_RATIO + KEY_SPACING_RATIO)))
-        spacing = int(round(scale * KEY_SPACING_RATIO))
-
-        self.rotation_x = size * desc.rotation_x
-        self.rotation_y = size * desc.rotation_y
         self.rotation_angle = desc.rotation_angle
-
-        self.shift_x = shift_x
-        self.shift_y = shift_y
-        self.x = size * desc.x
-        self.y = size * desc.y
-        self.w = size * desc.width - spacing
-        self.h = size * desc.height - spacing
-
-        self.rect = QRect(self.x, self.y, self.w, self.h)
 
         self.has2 = desc.width2 != desc.width or desc.height2 != desc.height or desc.x2 != 0 or desc.y2 != 0
 
-        self.x2 = self.x + size * desc.x2
-        self.y2 = self.y + size * desc.y2
-        self.w2 = size * desc.width2 - spacing
-        self.h2 = size * desc.height2 - spacing
+        self.update_position(scale, shift_x, shift_y)
+
+    def update_position(self, scale, shift_x=0, shift_y=0):
+        size = scale * (KEY_SIZE_RATIO + KEY_SPACING_RATIO)
+        spacing = scale * KEY_SPACING_RATIO
+
+        self.rotation_x = size * self.desc.rotation_x
+        self.rotation_y = size * self.desc.rotation_y
+
+        self.shift_x = shift_x
+        self.shift_y = shift_y
+        self.x = size * self.desc.x
+        self.y = size * self.desc.y
+        self.w = size * self.desc.width - spacing
+        self.h = size * self.desc.height - spacing
+
+        self.rect = QRect(self.x, self.y, self.w, self.h)
+
+        self.x2 = self.x + size * self.desc.x2
+        self.y2 = self.y + size * self.desc.y2
+        self.w2 = size * self.desc.width2 - spacing
+        self.h2 = size * self.desc.height2 - spacing
 
         self.bbox = self.calculate_bbox(QRectF(self.x, self.y, self.w, self.h))
         self.polygon = QPolygonF(self.bbox + [self.bbox[0]])
@@ -143,7 +147,7 @@ class KeyboardWidget(QWidget):
         self.common_widgets = []
 
         # layout-specific widgets
-        self.widgets_for_layout = defaultdict(lambda: defaultdict(list))
+        self.widgets_for_layout = []
 
         # widgets in current layout
         self.widgets = []
@@ -154,60 +158,64 @@ class KeyboardWidget(QWidget):
 
     def set_keys(self, keys, encoders):
         self.common_widgets = []
-        self.widgets_for_layout = defaultdict(lambda: defaultdict(list))
+        self.widgets_for_layout = []
 
         self.add_keys([(x, KeyWidget) for x in keys] + [(x, EncoderWidget) for x in encoders])
         self.update_layout()
 
     def add_keys(self, keys):
+        scale_factor = self.fontMetrics().height()
+
+        for key, cls in keys:
+            if key.layout_index == -1:
+                self.common_widgets.append(cls(key, scale_factor))
+            else:
+                self.widgets_for_layout.append(cls(key, scale_factor))
+
+    def place_widgets(self):
         top_x = top_y = 1e6
         scale_factor = self.fontMetrics().height()
 
-        # find the global top-left position, all the keys will be shifted to the left/up by that position
-        for key, cls in keys:
-            if key.layout_index == -1:
-                obj = cls(key, scale_factor)
-                p = obj.polygon.boundingRect().topLeft()
-                top_x = min(top_x, p.x())
-                top_y = min(top_y, p.y())
+        self.widgets = []
 
-        # obtain common widgets, that is, ones which are always displayed and require no extra transforms
-        for key, cls in keys:
-            if key.layout_index == -1:
-                self.common_widgets.append(cls(key, scale_factor, -top_x + KEYBOARD_WIDGET_PADDING, -top_y + KEYBOARD_WIDGET_PADDING))
+        # find the global top-left position, all the keys will be shifted to the left/up by that position
+        for widget in self.common_widgets:
+            widget.update_position(scale_factor)
+            p = widget.polygon.boundingRect().topLeft()
+            top_x = min(top_x, p.x())
+            top_y = min(top_y, p.y())
+
+        # place common widgets, that is, ones which are always displayed and require no extra transforms
+        for widget in self.common_widgets:
+            widget.update_position(scale_factor, -top_x + KEYBOARD_WIDGET_PADDING, -top_y + KEYBOARD_WIDGET_PADDING)
+            self.widgets.append(widget)
 
         # top-left position for specific layout
         layout_x = defaultdict(lambda: defaultdict(lambda: 1e6))
         layout_y = defaultdict(lambda: defaultdict(lambda: 1e6))
 
         # determine top-left position for every layout option
-        for key, cls in keys:
-            if key.layout_index != -1:
-                obj = cls(key, scale_factor)
-                idx, opt = key.layout_index, key.layout_option
-                p = obj.polygon.boundingRect().topLeft()
-                layout_x[idx][opt] = min(layout_x[idx][opt], p.x())
-                layout_y[idx][opt] = min(layout_y[idx][opt], p.y())
+        for widget in self.widgets_for_layout:
+            widget.update_position(scale_factor)
+            idx, opt = widget.desc.layout_index, widget.desc.layout_option
+            p = widget.polygon.boundingRect().topLeft()
+            layout_x[idx][opt] = min(layout_x[idx][opt], p.x())
+            layout_y[idx][opt] = min(layout_y[idx][opt], p.y())
 
         # obtain widgets for all layout options now that we know how to shift them
-        for key, cls in keys:
-            if key.layout_index != -1:
-                idx, opt = key.layout_index, key.layout_option
+        for widget in self.widgets_for_layout:
+            idx, opt = widget.desc.layout_index, widget.desc.layout_option
+            if opt == self.layout_editor.get_choice(idx):
                 shift_x = layout_x[idx][opt] - layout_x[idx][0]
                 shift_y = layout_y[idx][opt] - layout_y[idx][0]
-                obj = cls(key, scale_factor, -shift_x - top_x + KEYBOARD_WIDGET_PADDING, -shift_y - top_y + KEYBOARD_WIDGET_PADDING)
-                self.widgets_for_layout[idx][opt].append(obj)
+                widget.update_position(scale_factor, -shift_x - top_x + KEYBOARD_WIDGET_PADDING, -shift_y - top_y + KEYBOARD_WIDGET_PADDING)
+                self.widgets.append(widget)
 
     def update_layout(self):
         """ Updates self.widgets for the currently active layout """
 
         # determine widgets for current layout
-        self.widgets = []
-        self.widgets += self.common_widgets
-        for idx in self.widgets_for_layout.keys():
-            option = self.layout_editor.get_choice(idx)
-            self.widgets += self.widgets_for_layout[idx][option]
-
+        self.place_widgets()
         self.widgets = list(filter(lambda w: not w.desc.decal, self.widgets))
 
         self.widgets.sort(key=lambda w: (w.y, w.x))
@@ -223,6 +231,7 @@ class KeyboardWidget(QWidget):
         self.height = max_h + 2 * KEYBOARD_WIDGET_PADDING
 
         self.update()
+        self.updateGeometry()
 
     def paintEvent(self, event):
         qp = QPainter()
@@ -318,6 +327,9 @@ class KeyboardWidget(QWidget):
             self.clicked.emit()
         self.update()
 
+    def resizeEvent(self, ev):
+        self.update_layout()
+
     def select_next(self):
         """ Selects next key based on their order in the keymap """
 
@@ -344,6 +356,8 @@ class KeyboardWidget(QWidget):
                 QToolTip.showText(ev.globalPos(), key.tooltip)
             else:
                 QToolTip.hideText()
+        if ev.type() == QEvent.LayoutRequest:
+            self.update_layout()
         return super().event(ev)
 
     def set_enabled(self, val):
