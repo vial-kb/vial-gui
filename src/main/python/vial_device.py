@@ -10,6 +10,7 @@ class VialDevice:
         self.desc = dev
         self.dev = None
         self.sideload = False
+        self.via_stack = False
 
     def open(self, override_json=None):
         # TODO: error handling here
