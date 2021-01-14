@@ -163,7 +163,7 @@ KEYCODES_SHIFTED = [
     K(0x221, "KC_DLR", "$"),
     K(0x222, "KC_PERC", "%"),
     K(0x223, "KC_CIRC", "^"),
-    K(0x224, "KC_AMPR", "&&"),
+    K(0x224, "KC_AMPR", "&"),
     K(0x225, "KC_ASTR", "*"),
     K(0x226, "KC_LPRN", "("),
     K(0x227, "KC_RPRN", ")"),
