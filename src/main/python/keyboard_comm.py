@@ -163,6 +163,9 @@ class Keyboard:
 
         for layer in range(self.layers):
             for row, col in self.rowcol.keys():
+                if row >= self.rows or col >= self.cols:
+                    raise RuntimeError("malformed vial.json, key references {},{} but matrix declares rows={} cols={}"
+                                       .format(row, col, self.rows, self.cols))
                 # determine where this (layer, row, col) will be located in keymap array
                 offset = layer * self.rows * self.cols * 2 + row * self.cols * 2 + col * 2
                 keycode = struct.unpack(">H", keymap[offset:offset+2])[0]
