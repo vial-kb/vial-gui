@@ -2,7 +2,7 @@
 
 from PyQt5.QtCore import Qt, QSettings, QStandardPaths
 from PyQt5.QtWidgets import QWidget, QComboBox, QToolButton, QHBoxLayout, QVBoxLayout, QMainWindow, QAction, qApp, \
-    QFileDialog, QDialog, QTabWidget, QActionGroup, QMessageBox
+    QFileDialog, QDialog, QTabWidget, QActionGroup, QMessageBox, QLabel
 
 import json
 import os
@@ -59,9 +59,17 @@ class MainWindow(QMainWindow):
         self.tabs = QTabWidget()
         self.refresh_tabs()
 
+        self.lbl_no_devices = QLabel(tr("MainWindow", 'No devices detected. Connect a Vial-compatible device and press '
+                                                      '"Refresh"\n'
+                                                      'or select "File" → "Download VIA definitions" in order to enable'
+                                                      ' support for VIA keyboards.'))
+        self.lbl_no_devices.setAlignment(Qt.AlignCenter)
+
         layout = QVBoxLayout()
         layout.addLayout(layout_combobox)
         layout.addWidget(self.tabs)
+        layout.addWidget(self.lbl_no_devices)
+        layout.setAlignment(self.lbl_no_devices, Qt.AlignHCenter)
         w = QWidget()
         w.setLayout(layout)
         self.setCentralWidget(w)
@@ -179,6 +187,13 @@ class MainWindow(QMainWindow):
 
         for dev in self.devices:
             self.combobox_devices.addItem(dev.title())
+
+        if self.devices:
+            self.lbl_no_devices.hide()
+            self.tabs.show()
+        else:
+            self.lbl_no_devices.show()
+            self.tabs.hide()
 
     def on_device_selected(self):
         if self.current_device is not None:
