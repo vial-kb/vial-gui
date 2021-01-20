@@ -62,15 +62,10 @@ class MacroLine(QObject):
 
     def delete(self):
         self.action.delete()
-        self.btn_remove.setParent(None)
         self.btn_remove.deleteLater()
-        self.select_type.setParent(None)
         self.select_type.deleteLater()
-        self.arrows.setParent(None)
         self.arrows.deleteLater()
-        self.btn_up.setParent(None)
         self.btn_up.deleteLater()
-        self.btn_down.setParent(None)
         self.btn_down.deleteLater()
 
     def on_change_type(self):

@@ -41,7 +41,6 @@ class ActionText(BasicAction):
         self.container.removeWidget(self.text)
 
     def delete(self):
-        self.text.setParent(None)
         self.text.deleteLater()
 
     def serialize(self):
@@ -100,11 +99,8 @@ class ActionSequence(BasicAction):
 
     def delete(self):
         for w in self.widgets:
-            w.setParent(None)
             w.deleteLater()
-        self.btn_plus.setParent(None)
         self.btn_plus.deleteLater()
-        self.layout_container.setParent(None)
         self.layout_container.deleteLater()
 
     def on_add(self):
