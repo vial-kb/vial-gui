@@ -6,7 +6,7 @@ KEYMAPS = [
     ("French (AZERTY)", french.keymap),
     ("German (QWERTZ)", german.keymap),
     ("Hungarian (QWERTZ)", hungarian.keymap),
-    ("LatinAmerican (QWERTY)", latam.keymap),
+    ("Latin American (QWERTY)", latam.keymap),
     ("Norwegian (QWERTY)", norwegian.keymap),
     ("Russian (ЙЦУКЕН)", russian.keymap),
     ("Spanish (QWERTY)", spanish.keymap),
