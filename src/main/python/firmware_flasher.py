@@ -17,9 +17,6 @@ from util import tr, chunks, find_vial_devices, pad_for_vibl
 from vial_device import VialBootloader, VialKeyboard
 
 
-BL_SUPPORTED_VERSION = 0
-
-
 def send_retries(dev, data, retries=200):
     """ Sends usb packet up to 'retries' times, returns True if success, False if failed """
 
@@ -61,7 +58,7 @@ def cmd_flash(device, firmware, enable_insecure, log_cb, progress_cb, complete_c
     send_retries(device, pad_for_vibl(b"VC\x00"))
     ver = device.recv(8)[0]
     log_cb("* Bootloader version: {}".format(ver))
-    if ver != BL_SUPPORTED_VERSION:
+    if ver not in [0, 1]:
         return error_cb("Error: Unsupported bootloader version")
 
     send_retries(device, pad_for_vibl(b"VC\x01"))
