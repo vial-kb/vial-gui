@@ -289,3 +289,4 @@ class FirmwareFlasher(BasicEditor):
         self.btn_select_file.setEnabled(True)
         self.btn_flash.setEnabled(True)
         self.main.unlock_ui()
+        self.main.on_click_refresh()
