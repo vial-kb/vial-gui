@@ -135,7 +135,8 @@ class AnyKeycodeDialog(QDialog):
     def prepare_names(self):
         for kc in KEYCODES_SPECIAL + KEYCODES_BASIC + KEYCODES_SHIFTED + KEYCODES_ISO + KEYCODES_BACKLIGHT + \
                   KEYCODES_MEDIA + KEYCODES_USER:
-            self.names[kc.qmk_id] = kc.code
+            for qmk_id in kc.alias:
+                self.names[qmk_id] = kc.code
         self.names.update({
             "MOD_LCTL": MOD_LCTL,
             "MOD_LSFT": MOD_LSFT,
