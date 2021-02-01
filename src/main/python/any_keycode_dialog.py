@@ -1,8 +1,9 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
+import ast
 
+import simpleeval
+import operator
 from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QVBoxLayout, QLineEdit, QLabel
-
-from simpleeval import simple_eval
 
 from keycodes import KEYCODES_SPECIAL, KEYCODES_BASIC, KEYCODES_SHIFTED, KEYCODES_ISO, KEYCODES_BACKLIGHT, \
     KEYCODES_MEDIA, KEYCODES_USER, QK_LCTL, QK_LSFT, QK_LALT, QK_LGUI, QK_RCTL, QK_RSFT, QK_RALT, QK_RGUI, QK_LAYER_TAP
@@ -119,6 +120,12 @@ class AnyKeycodeDialog(QDialog):
         self.layout.addWidget(self.buttons)
         self.setLayout(self.layout)
 
+        self.ops = simpleeval.DEFAULT_OPERATORS.copy()
+        self.ops.update({
+            ast.BitOr: operator.or_,
+            ast.BitXor: operator.xor,
+            ast.BitAnd: operator.and_,
+        })
         self.names = dict()
         self.prepare_names()
 
@@ -144,7 +151,7 @@ class AnyKeycodeDialog(QDialog):
         text = self.txt_entry.text()
         value = err = None
         try:
-            value = simple_eval(text, names=self.names, functions=functions)
+            value = simpleeval.simple_eval(text, names=self.names, functions=functions, operators=self.ops)
         except Exception as e:
             err = str(e)
 
