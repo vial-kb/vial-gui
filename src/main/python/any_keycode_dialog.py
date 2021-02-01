@@ -161,4 +161,4 @@ class AnyKeycodeDialog(QDialog):
             self.value = -1
             self.lbl_computed.setText(tr("AnyKeycodeDialog", "Invalid input"))
 
-        self.buttons.button(QDialogButtonBox.Ok).setEnabled(self.value != -1)
+        self.buttons.button(QDialogButtonBox.Ok).setEnabled(0 <= self.value < 2 ** 16)
