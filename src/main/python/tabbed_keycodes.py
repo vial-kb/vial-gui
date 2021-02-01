@@ -4,6 +4,7 @@ from PyQt5.QtCore import Qt, QSize, pyqtSignal
 from PyQt5.QtWidgets import QTabWidget, QWidget, QPushButton, QScrollArea, QApplication
 from PyQt5.QtGui import QPalette
 
+from any_keycode_dialog import AnyKeycodeDialog
 from constants import KEYCODE_BTN_RATIO
 from flowlayout import FlowLayout
 from keycodes import keycode_tooltip, KEYCODES_BASIC, KEYCODES_ISO, KEYCODES_MACRO, KEYCODES_LAYERS, KEYCODES_QUANTUM, \
@@ -48,6 +49,13 @@ class TabbedKeycodes(QTabWidget):
                 self.layout_layers = layout
             elif tab == self.tab_macro:
                 self.layout_macro = layout
+            elif tab == self.tab_basic:
+                # create the "Any" keycode button
+                btn = SquareButton()
+                btn.setText("Any")
+                btn.setRelSize(KEYCODE_BTN_RATIO)
+                btn.clicked.connect(self.on_any_keycode)
+                layout.addWidget(btn)
 
             self.widgets += self.create_buttons(layout, keycodes)
 
@@ -103,3 +111,8 @@ class TabbedKeycodes(QTabWidget):
                 label = widget.keycode.label
                 widget.setStyleSheet("QPushButton {}")
             widget.setText(label.replace("&", "&&"))
+
+    def on_any_keycode(self):
+        dlg = AnyKeycodeDialog()
+        if dlg.exec_() and dlg.value >= 0:
+            self.keycode_changed.emit(dlg.value)
