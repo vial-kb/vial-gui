@@ -227,8 +227,11 @@ def LT(layer):
     return QK_LAYER_TAP | (((layer) & 0xF) << 8)
 
 
+RESET_KEYCODE = 0x5C00
+
+
 KEYCODES_QUANTUM = [
-    K(0x5C00, "RESET", "Reset", "Reboot to bootloader"),
+    K(RESET_KEYCODE, "RESET", "Reset", "Reboot to bootloader"),
     K(QK_ONE_SHOT_MOD | MOD_LSFT, "OSM(MOD_LSFT)", "OSM\nLSft", "Enable Left Shift for one keypress"),
     K(QK_ONE_SHOT_MOD | MOD_LCTL, "OSM(MOD_LCTL)", "OSM\nLCtl", "Enable Left Control for one keypress"),
     K(QK_ONE_SHOT_MOD | MOD_LALT, "OSM(MOD_LALT)", "OSM\nLAlt", "Enable Left Alt for one keypress"),

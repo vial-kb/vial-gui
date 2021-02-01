@@ -5,6 +5,7 @@ import json
 import lzma
 from collections import OrderedDict
 
+from keycodes import RESET_KEYCODE
 from kle_serial import Serial as KleSerial
 from unlocker import Unlocker
 from util import MSG_LEN, hid_send, chunks
@@ -208,6 +209,9 @@ class Keyboard:
 
         key = (layer, row, col)
         if self.layout[key] != code:
+            if code == RESET_KEYCODE:
+                Unlocker.get().perform_unlock(self)
+
             self.usb_send(self.dev, struct.pack(">BBBBH", CMD_VIA_SET_KEYCODE, layer, row, col, code), retries=20)
             self.layout[key] = code
 
@@ -217,6 +221,9 @@ class Keyboard:
 
         key = (layer, index, direction)
         if self.encoder_layout[key] != code:
+            if code == RESET_KEYCODE:
+                Unlocker.get().perform_unlock(self)
+
             self.usb_send(self.dev, struct.pack(">BBBBBH", CMD_VIA_VIAL_PREFIX, CMD_VIAL_SET_ENCODER,
                                                 layer, index, direction, code), retries=20)
             self.encoder_layout[key] = code
