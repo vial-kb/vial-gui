@@ -135,6 +135,7 @@ class EncoderWidget(KeyWidget):
 class KeyboardWidget(QWidget):
 
     clicked = pyqtSignal()
+    anykey = pyqtSignal()
 
     def __init__(self, layout_editor):
         super().__init__()
@@ -359,8 +360,10 @@ class KeyboardWidget(QWidget):
                 QToolTip.showText(ev.globalPos(), key.tooltip)
             else:
                 QToolTip.hideText()
-        if ev.type() == QEvent.LayoutRequest:
+        elif ev.type() == QEvent.LayoutRequest:
             self.update_layout()
+        elif ev.type() == QEvent.MouseButtonDblClick and self.active_key:
+            self.anykey.emit()
         return super().event(ev)
 
     def set_enabled(self, val):

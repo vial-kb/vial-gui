@@ -1,10 +1,9 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
-from PyQt5.QtCore import Qt, QSize, pyqtSignal
-from PyQt5.QtWidgets import QTabWidget, QWidget, QPushButton, QScrollArea, QApplication
+from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtWidgets import QTabWidget, QWidget, QScrollArea, QApplication
 from PyQt5.QtGui import QPalette
 
-from any_keycode_dialog import AnyKeycodeDialog
 from constants import KEYCODE_BTN_RATIO
 from flowlayout import FlowLayout
 from keycodes import keycode_tooltip, KEYCODES_BASIC, KEYCODES_ISO, KEYCODES_MACRO, KEYCODES_LAYERS, KEYCODES_QUANTUM, \
@@ -17,6 +16,7 @@ from util import tr
 class TabbedKeycodes(QTabWidget):
 
     keycode_changed = pyqtSignal(int)
+    anykey = pyqtSignal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -54,7 +54,7 @@ class TabbedKeycodes(QTabWidget):
                 btn = SquareButton()
                 btn.setText("Any")
                 btn.setRelSize(KEYCODE_BTN_RATIO)
-                btn.clicked.connect(self.on_any_keycode)
+                btn.clicked.connect(lambda: self.anykey.emit())
                 layout.addWidget(btn)
 
             self.widgets += self.create_buttons(layout, keycodes)
@@ -111,8 +111,3 @@ class TabbedKeycodes(QTabWidget):
                 label = widget.keycode.label
                 widget.setStyleSheet("QPushButton {}")
             widget.setText(label.replace("&", "&&"))
-
-    def on_any_keycode(self):
-        dlg = AnyKeycodeDialog()
-        if dlg.exec_() and dlg.value >= 0:
-            self.keycode_changed.emit(dlg.value)

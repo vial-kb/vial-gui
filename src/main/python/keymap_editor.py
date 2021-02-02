@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
-
+from any_keycode_dialog import AnyKeycodeDialog
 from basic_editor import BasicEditor
 from keyboard_container import KeyboardContainer
 from keycodes import recreate_keyboard_keycodes
@@ -13,9 +13,11 @@ class KeymapEditor(BasicEditor):
         super().__init__()
 
         self.keyboard_container = KeyboardContainer(layout_editor)
+        self.keyboard_container.container.anykey.connect(self.on_any_keycode)
 
         self.tabbed_keycodes = TabbedKeycodes()
         self.tabbed_keycodes.keycode_changed.connect(self.on_keycode_changed)
+        self.tabbed_keycodes.anykey.connect(self.on_any_keycode)
 
         self.addWidget(self.keyboard_container)
         self.addWidget(self.tabbed_keycodes)
@@ -45,3 +47,8 @@ class KeymapEditor(BasicEditor):
     def set_keymap_override(self, override):
         self.keyboard_container.set_keymap_override(override)
         self.tabbed_keycodes.set_keymap_override(override)
+
+    def on_any_keycode(self):
+        dlg = AnyKeycodeDialog()
+        if dlg.exec_() and dlg.value >= 0:
+            self.on_keycode_changed(dlg.value)
