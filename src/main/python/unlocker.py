@@ -34,7 +34,7 @@ class Unlocker(QWidget):
         layout.addWidget(self.progress)
 
         self.setLayout(layout)
-        self.setWindowFlag(Qt.Dialog)
+        self.setWindowFlags(Qt.Dialog | Qt.WindowTitleHint | Qt.CustomizeWindowHint)
 
         Unlocker.obj = self
 
