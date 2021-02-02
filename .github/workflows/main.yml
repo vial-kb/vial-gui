@@ -81,6 +81,12 @@ jobs:
         . .\venv\Scripts\activate.ps1
         pip install -r requirements.txt
 
+    - name: Install NSIS
+      run: |
+        Invoke-WebRequest "https://sourceforge.net/projects/nsis/files/NSIS%203/3.06.1/nsis-3.06.1-setup.exe/download" -UserAgent "wget" -OutFile nsis-3.06.1-setup.exe
+        if ((Get-FileHash nsis-3.06.1-setup.exe -Algorithm sha256).Hash -ne "f60488a676308079bfdf6845dc7114cfd4bbff47b66be4db827b89bb8d7fdc52") { Write-Error 'SHA256 mismatch' }
+        Start-Process -FilePath "nsis-3.06.1-setup.exe" -ArgumentList "/S", "/D=C:\Program Files (x86)\NSIS" -NoNewWindow -Wait
+
     - name: Build
       run: |
         . .\venv\Scripts\activate.ps1
@@ -91,3 +97,14 @@ jobs:
       with:
         name: vial-win
         path: vial-win.zip
+
+    - name: Create installer
+      run: |
+        $env:Path += ";C:\Program Files (x86)\NSIS"
+        . .\venv\Scripts\activate.ps1
+        fbs installer
+
+    - uses: actions/upload-artifact@v1
+      with:
+        name: vial-win-installer
+        path: target\VialSetup.exe
