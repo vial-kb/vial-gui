@@ -1,18 +1,19 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 import time
 
-from PyQt5.QtCore import QCoreApplication, Qt
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QProgressBar
+from PyQt5.QtCore import QCoreApplication, Qt, QTimer
+from PyQt5.QtWidgets import QVBoxLayout, QLabel, QProgressBar, QDialog, QDialogButtonBox
 
 from keyboard_widget import KeyboardWidget
 from util import tr
 
 
-class Unlocker(QWidget):
+class Unlocker(QDialog):
 
-    def __init__(self, layout_editor):
+    def __init__(self, layout_editor, keyboard):
         super().__init__()
-        self.keyboard = None
+
+        self.keyboard = keyboard
 
         layout = QVBoxLayout()
 
@@ -36,19 +37,18 @@ class Unlocker(QWidget):
         self.setLayout(layout)
         self.setWindowFlags(Qt.Dialog | Qt.WindowTitleHint | Qt.CustomizeWindowHint)
 
-        Unlocker.obj = self
+        self.update_reference()
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.unlock_poller)
+        self.perform_unlock()
 
-    @classmethod
-    def get(cls):
-        return cls.obj
-
-    def update_reference(self, keyboard):
+    def update_reference(self):
         """ Updates keycap reference image """
 
-        self.keyboard_reference.set_keys(keyboard.keys, keyboard.encoders)
+        self.keyboard_reference.set_keys(self.keyboard.keys, self.keyboard.encoders)
 
         # use "active" background to indicate keys to hold
-        lock_keys = keyboard.get_unlock_keys()
+        lock_keys = self.keyboard.get_unlock_keys()
         for w in self.keyboard_reference.widgets:
             if (w.desc.row, w.desc.col) in lock_keys:
                 w.setActive(True)
@@ -57,37 +57,32 @@ class Unlocker(QWidget):
         self.keyboard_reference.update()
         self.keyboard_reference.updateGeometry()
 
-    def perform_unlock(self, keyboard):
-        # if it's already unlocked, don't need to do anything
-        unlock = keyboard.get_unlock_status()
-        if unlock == 1:
-            return
+    def unlock_poller(self):
+        data = self.keyboard.unlock_poll()
+        unlocked = data[0]
+        unlock_counter = data[2]
 
-        self.update_reference(keyboard)
+        self.progress.setMaximum(max(self.progress.maximum(), unlock_counter))
+        self.progress.setValue(self.progress.maximum() - unlock_counter)
 
+        if unlocked == 1:
+            self.accept()
+
+    def perform_unlock(self):
         self.progress.setMaximum(1)
         self.progress.setValue(0)
 
-        self.show()
-        self.keyboard = keyboard
         self.keyboard.unlock_start()
+        self.timer.start(200)
 
-        while True:
-            data = self.keyboard.unlock_poll()
-            unlocked = data[0]
-            unlock_counter = data[2]
+    @classmethod
+    def unlock(cls, keyboard):
+        if keyboard.get_unlock_status() == 1:
+            return True
 
-            self.progress.setMaximum(max(self.progress.maximum(), unlock_counter))
-            self.progress.setValue(self.progress.maximum() - unlock_counter)
+        dlg = cls(cls.global_layout_editor, keyboard)
+        return bool(dlg.exec_())
 
-            if unlocked == 1:
-                break
-
-            QCoreApplication.processEvents()
-            time.sleep(0.2)
-
-        # ok all done, the keyboard is now set to insecure state
-        self.hide()
-
-    def closeEvent(self, ev):
-        ev.ignore()
+    def keyPressEvent(self, ev):
+        """ Ignore all key presses, e.g. Esc should not close the window """
+        pass

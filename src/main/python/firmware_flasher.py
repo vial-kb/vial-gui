@@ -206,7 +206,7 @@ class FirmwareFlasher(BasicEditor):
             # keep track of which keyboard we should restore saved layout to
             self.uid_restore = self.device.keyboard.get_uid()
 
-            Unlocker.get().perform_unlock(self.device.keyboard)
+            Unlocker.unlock(self.device.keyboard)
 
             self.log("Restarting in bootloader mode...")
             self.device.keyboard.reset()
