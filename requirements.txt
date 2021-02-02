@@ -7,5 +7,5 @@ macholib==1.14
 pefile==2019.4.18
 PyInstaller==3.4
 PyQt5==5.9.2
-simpleeval==0.9.10
+https://github.com/danthedeckie/simpleeval/archive/41c99b8e224a7a0ae0ac59c773598fe79a4470db.zip
 sip==4.19.8
