@@ -54,7 +54,7 @@ class MainWindow(QMainWindow):
 
         self.editors = [(self.keymap_editor, "Keymap"), (self.layout_editor, "Layout"), (self.macro_recorder, "Macros"),
                         (self.firmware_flasher, "Firmware updater")]
-        self.unlocker = Unlocker(self.layout_editor)
+        Unlocker.global_layout_editor = self.layout_editor
 
         self.tabs = QTabWidget()
         self.refresh_tabs()
@@ -221,7 +221,7 @@ class MainWindow(QMainWindow):
 
         # if unlock process was interrupted, we must finish it first
         if isinstance(self.current_device, VialKeyboard) and self.current_device.keyboard.get_unlock_in_progress():
-            Unlocker.get().perform_unlock(self.current_device.keyboard)
+            Unlocker.unlock(self.current_device.keyboard)
             self.current_device.keyboard.reload()
 
         for e in [self.layout_editor, self.keymap_editor, self.firmware_flasher, self.macro_recorder]:
@@ -282,7 +282,7 @@ class MainWindow(QMainWindow):
 
     def unlock_keyboard(self):
         if isinstance(self.current_device, VialKeyboard):
-            self.unlocker.perform_unlock(self.current_device.keyboard)
+            Unlocker.unlock(self.current_device.keyboard)
 
     def lock_keyboard(self):
         if isinstance(self.current_device, VialKeyboard):
@@ -290,7 +290,7 @@ class MainWindow(QMainWindow):
 
     def reboot_to_bootloader(self):
         if isinstance(self.current_device, VialKeyboard):
-            self.unlocker.perform_unlock(self.current_device.keyboard)
+            Unlocker.unlock(self.current_device.keyboard)
             self.current_device.keyboard.reset()
 
     def change_keyboard_layout(self, index):
