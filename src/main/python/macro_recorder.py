@@ -330,6 +330,6 @@ class MacroRecorder(BasicEditor):
         self.deserialize(self.keyboard.macro)
 
     def on_save(self):
-        Unlocker.get().perform_unlock(self.device.keyboard)
+        Unlocker.unlock(self.device.keyboard)
         self.keyboard.set_macro(self.serialize())
         self.on_change()
