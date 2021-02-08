@@ -38,7 +38,7 @@ CHUNK = 64
 
 
 def cmd_flash(device, firmware, enable_insecure, log_cb, progress_cb, complete_cb, error_cb):
-    if firmware[0:8] != b"VIALFW00":
+    if firmware[0:8] not in [b"VIALFW00", b"VIALFW01"]:
         return error_cb("Error: Invalid signature")
 
     fw_uid = firmware[8:16]
