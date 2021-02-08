@@ -58,6 +58,7 @@ class Keyboard:
         self.encoders = []
         self.macro_count = 0
         self.macro_memory = 0
+        self.uid = 0
         self.macro = b""
         self.vibl = False
 
@@ -71,6 +72,7 @@ class Keyboard:
         self.layout = dict()
         self.encoder_layout = dict()
 
+        self.uid = struct.unpack(">Q", self.get_uid())[0]
         self.reload_layout(sideload_json)
         self.reload_layers()
         self.reload_keymap()
@@ -247,9 +249,7 @@ class Keyboard:
     def save_layout(self):
         """ Serializes current layout to a binary """
 
-        # TODO: increase version before release
-        # TODO: store keyboard UID here as well
-        data = {"version": 0}
+        data = {"version": 1, "uid": self.uid}
 
         layout = []
         for l in range(self.layers):

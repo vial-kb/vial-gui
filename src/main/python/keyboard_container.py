@@ -1,7 +1,8 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
+import json
 
 from PyQt5.QtCore import pyqtSignal, Qt
-from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLabel, QVBoxLayout, QPushButton, QApplication
+from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLabel, QVBoxLayout, QPushButton, QApplication, QMessageBox
 from PyQt5.QtGui import QPalette
 
 from clickable_label import ClickableLabel
@@ -167,6 +168,12 @@ class KeyboardContainer(QWidget):
         return self.keyboard.save_layout()
 
     def restore_layout(self, data):
+        if json.loads(data.decode("utf-8")).get("uid") != self.keyboard.uid:
+            ret = QMessageBox.question(self, "", tr("KeyboardContainer", "Saved keymap belongs to a different keyboard,"
+                                                                         " are you sure you want to continue?"),
+                                       QMessageBox.Yes | QMessageBox.No)
+            if ret != QMessageBox.Yes:
+                return
         self.keyboard.restore_layout(data)
         self.refresh_layer_display()
 
