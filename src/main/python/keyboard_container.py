@@ -168,7 +168,7 @@ class KeyboardContainer(QWidget):
         return self.keyboard.save_layout()
 
     def restore_layout(self, data):
-        if json.loads(data.decode("utf-8")).get("uid") != self.keyboard.uid:
+        if json.loads(data.decode("utf-8")).get("uid") != self.keyboard.keyboard_id:
             ret = QMessageBox.question(self, "", tr("KeyboardContainer", "Saved keymap belongs to a different keyboard,"
                                                                          " are you sure you want to continue?"),
                                        QMessageBox.Yes | QMessageBox.No)
