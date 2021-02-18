@@ -303,7 +303,7 @@ KEYCODES_QUANTUM = [
     K(QK_LGUI|QK_LSFT, "SGUI(kc)", "SGUI\n(kc)", "LGUI + LSFT", masked=True),
     K(QK_LCTL|QK_LALT, "LCA(kc)", "LCA\n(kc)", "LCTL + LALT", masked=True),
 
-    K(0x5C16, "KC_GESC", "Esc\n~", "Esc normally, but ~ when Shift or GUI is pressed"),
+    K(0x5C16, "KC_GESC", "~\nEsc", "Esc normally, but ~ when Shift or GUI is pressed"),
     K(0x5CD7, "KC_LSPO", "LS\n(", "Left Shift when held, ( when tapped"),
     K(0x5CD8, "KC_RSPC", "RS\n)", "Right Shift when held, ) when tapped"),
     K(0x5CF3, "KC_LCPO", "LC\n(", "Left Control when held, ( when tapped"),
