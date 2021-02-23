@@ -38,7 +38,7 @@ CHUNK = 64
 
 
 def cmd_flash(device, firmware, enable_insecure, log_cb, progress_cb, complete_cb, error_cb):
-    if firmware[0:8] != b"VIALFW00":
+    if firmware[0:8] not in [b"VIALFW00", b"VIALFW01"]:
         return error_cb("Error: Invalid signature")
 
     fw_uid = firmware[8:16]
@@ -205,6 +205,11 @@ class FirmwareFlasher(BasicEditor):
 
             # keep track of which keyboard we should restore saved layout to
             self.uid_restore = self.device.keyboard.get_uid()
+            firmware_uid = firmware[8:16]
+            if self.uid_restore != firmware_uid:
+                self.log("Error: Firmware UID does not match keyboard UID. Check that you have the correct file")
+                self.unlock_ui(False)
+                return
 
             Unlocker.unlock(self.device.keyboard)
 
@@ -272,7 +277,7 @@ class FirmwareFlasher(BasicEditor):
 
     def _on_error(self, msg):
         self.log(msg)
-        self.unlock_ui()
+        self.unlock_ui(False)
 
     def log(self, line):
         self.txt_logger.appendPlainText("[{}] {}".format(datetime.datetime.now(), line))
@@ -282,8 +287,9 @@ class FirmwareFlasher(BasicEditor):
         self.btn_flash.setEnabled(False)
         self.main.lock_ui()
 
-    def unlock_ui(self):
+    def unlock_ui(self, force_refresh=True):
         self.btn_select_file.setEnabled(True)
         self.btn_flash.setEnabled(True)
         self.main.unlock_ui()
-        self.main.on_click_refresh()
+        if force_refresh:
+            self.main.on_click_refresh()

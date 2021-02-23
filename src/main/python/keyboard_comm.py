@@ -247,9 +247,7 @@ class Keyboard:
     def save_layout(self):
         """ Serializes current layout to a binary """
 
-        # TODO: increase version before release
-        # TODO: store keyboard UID here as well
-        data = {"version": 0}
+        data = {"version": 1, "uid": self.keyboard_id}
 
         layout = []
         for l in range(self.layers):
