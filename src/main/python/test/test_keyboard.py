@@ -99,8 +99,6 @@ class TestKeyboard(unittest.TestCase):
         dev.expect_keymap(keymap)
         if encoders is not None:
             dev.expect_encoders(encoders)
-        # layout options
-        dev.expect("0202", "020200000000")
         # macro count
         dev.expect("0C", "0C00")
         # macro buffer size
