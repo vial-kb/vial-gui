@@ -18,7 +18,7 @@ keymap = {
     "KC_SCOLON": "Ñ",
     "KC_QUOTE": "¨\n´ {",
     "KC_NONUS_BSLASH": ">\n<",
-    "KC_BSLASH": "Ç\nç }",
+    "KC_BSLASH": "Ç\n     }",
     "KC_COMMA": ";\n,",
     "KC_DOT": ".\n:",
     "KC_SLASH": "_\n-"
