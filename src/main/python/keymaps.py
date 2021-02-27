@@ -1,5 +1,5 @@
 from keycodes import Keycode
-from keymap import french, german, hungarian, latam, norwegian, russian, spanish, swedish, danish
+from keymap import danish, french, german, hungarian, latam, norwegian, russian, spanish, swedish
 
 KEYMAPS = [
     ("QWERTY", dict()),
