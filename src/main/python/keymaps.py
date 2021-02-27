@@ -3,6 +3,7 @@ from keymap import french, german, hungarian, latam, norwegian, russian, spanish
 
 KEYMAPS = [
     ("QWERTY", dict()),
+    ("Danish (QWERTY)", danish.keymap),
     ("French (AZERTY)", french.keymap),
     ("German (QWERTZ)", german.keymap),
     ("Hungarian (QWERTZ)", hungarian.keymap),
@@ -10,8 +11,7 @@ KEYMAPS = [
     ("Norwegian (QWERTY)", norwegian.keymap),
     ("Russian (ЙЦУКЕН)", russian.keymap),
     ("Spanish (QWERTY)", spanish.keymap),
-    ("Swedish (QWERTY)", swedish.keymap),
-    ("Danish (QWERTY)", danish.keymap)
+    ("Swedish (QWERTY)", swedish.keymap)
 ]
 
 # make sure that qmk IDs we used are all correct
