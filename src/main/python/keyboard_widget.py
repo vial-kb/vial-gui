@@ -56,9 +56,9 @@ class KeyWidget:
             # calculate areas where the inner keycode will be located
             # nonmask = outer (e.g. Rsft_T)
             # mask = inner (e.g. KC_A)
-            self.nonmask_rect = QRectF(self.x, self.y, self.w, self.h / 2)
-            self.mask_rect = QRectF(self.x + KEYBOARD_WIDGET_MASK_PADDING, self.y + self.h / 2,
-                                    self.w - 2 * KEYBOARD_WIDGET_MASK_PADDING, self.h / 2 - KEYBOARD_WIDGET_MASK_PADDING)
+            self.nonmask_rect = QRectF(self.x, self.y, self.w, self.h * (1 - 0.65))
+            self.mask_rect = QRectF(self.x + KEYBOARD_WIDGET_MASK_PADDING, self.y + self.h * (1 - 0.65),
+                                    self.w - 2 * KEYBOARD_WIDGET_MASK_PADDING, self.h * 0.65 - KEYBOARD_WIDGET_MASK_PADDING)
             self.mask_bbox = self.calculate_bbox(self.mask_rect)
             self.mask_polygon = QPolygonF(self.mask_bbox + [self.mask_bbox[0]])
 
