@@ -12,9 +12,12 @@ from util import tr
 MACRO_SEQUENCE_KEYCODES = KEYCODES_BASIC + KEYCODES_ISO + KEYCODES_MEDIA
 KC_A = MACRO_SEQUENCE_KEYCODES[0]
 
+SS_QMK_PREFIX = 1
+
 SS_TAP_CODE = 1
 SS_DOWN_CODE = 2
 SS_UP_CODE = 3
+SS_DELAY_CODE = 4
 
 
 class BasicAction(QObject):
@@ -43,7 +46,7 @@ class ActionText(BasicAction):
     def delete(self):
         self.text.deleteLater()
 
-    def serialize(self):
+    def serialize(self, vial_protocol):
         return self.text.text().encode("utf-8")
 
     def on_change(self):
@@ -123,8 +126,11 @@ class ActionSequence(BasicAction):
     def serialize_prefix(self):
         raise NotImplementedError
 
-    def serialize(self):
-        out = b""
+    def serialize(self, vial_protocol):
+        if vial_protocol >= 2:
+            out = b"\x01"
+        else:
+            out = b""
         for k in self.sequence:
             out += self.serialize_prefix()
             out += struct.pack("B", k.code)
@@ -147,3 +153,30 @@ class ActionTap(ActionSequence):
 
     def serialize_prefix(self):
         return b"\x01"
+
+
+class ActionDelay(BasicAction):
+
+    def __init__(self, container, delay=0):
+        super().__init__(container)
+        self.text = QLineEdit()
+        self.text.setText(str(delay))
+        self.text.textChanged.connect(self.on_change)
+
+    def insert(self, row):
+        self.container.addWidget(self.text, row, 2)
+
+    def remove(self):
+        self.container.removeWidget(self.text)
+
+    def delete(self):
+        self.text.deleteLater()
+
+    def on_change(self):
+        self.changed.emit()
+
+    def serialize(self, vial_protocol):
+        if vial_protocol < 2:
+            raise RuntimeError("ActionDelay can only be used with vial_protocol>=2")
+        delay = int(self.text.text())
+        return struct.pack("BBBB", SS_QMK_PREFIX, SS_DELAY_CODE, (delay % 255) + 1, (delay // 255) + 1)

@@ -10,6 +10,7 @@ from kle_serial import Serial as KleSerial
 from unlocker import Unlocker
 from util import MSG_LEN, hid_send, chunks
 
+CMD_VIA_GET_PROTOCOL_VERSION = 0x01
 CMD_VIA_GET_KEYBOARD_VALUE = 0x02
 CMD_VIA_SET_KEYBOARD_VALUE = 0x03
 CMD_VIA_GET_KEYCODE = 0x04
@@ -61,7 +62,7 @@ class Keyboard:
         self.macro = b""
         self.vibl = False
 
-        self.vial_protocol = self.keyboard_id = -1
+        self.via_protocol = self.vial_protocol = self.keyboard_id = -1
 
     def reload(self, sideload_json=None):
         """ Load information about the keyboard: number of layers, physical key layout """
@@ -83,6 +84,9 @@ class Keyboard:
 
     def reload_layout(self, sideload_json=None):
         """ Requests layout data from the current device """
+
+        data = self.usb_send(self.dev, struct.pack("B", CMD_VIA_GET_PROTOCOL_VERSION), retries=20)
+        self.via_protocol = struct.unpack(">H", data[1:3])[0]
 
         if sideload_json is not None:
             payload = sideload_json
@@ -276,6 +280,8 @@ class Keyboard:
         # TODO: macros should be serialized in a portable format instead of base64 string
         # i.e. use a custom structure (as keycodes numbers can change, etc)
         data["macro"] = base64.b64encode(self.macro).decode("utf-8")
+        data["vial_protocol"] = self.vial_protocol
+        data["via_protocol"] = self.via_protocol
 
         return json.dumps(data).encode("utf-8")
 
@@ -299,13 +305,15 @@ class Keyboard:
 
         self.set_layout_options(data["layout_options"])
 
-        # we need to unlock the keyboard before we can restore the macros, lock it afterwards
-        # only do that if it's different from current macros
-        macro = base64.b64decode(data["macro"])
-        if macro != self.macro:
-            Unlocker.unlock(self)
-            self.set_macro(macro)
-            self.lock()
+        json_vial_protocol = data.get("vial_protocol", 1)
+        if json_vial_protocol == self.vial_protocol:
+            # we need to unlock the keyboard before we can restore the macros, lock it afterwards
+            # only do that if it's different from current macros
+            macro = base64.b64decode(data["macro"])
+            if macro != self.macro:
+                Unlocker.unlock(self)
+                self.set_macro(macro)
+                self.lock()
 
     def reset(self):
         self.usb_send(self.dev, struct.pack("B", 0xB))

@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import QPushButton, QGridLayout, QHBoxLayout, QToolButton, 
 
 from basic_editor import BasicEditor
 from keycodes import Keycode
-from macro_action import ActionText, ActionTap, ActionDown, ActionUp, SS_TAP_CODE, SS_DOWN_CODE, SS_UP_CODE
+from macro_action import ActionText, ActionTap, ActionDown, ActionUp, ActionDelay, SS_TAP_CODE, SS_DOWN_CODE, SS_UP_CODE, SS_DELAY_CODE
 from macro_key import KeyString, KeyDown, KeyUp, KeyTap
 from macro_line import MacroLine
 from macro_optimizer import macro_optimize
@@ -22,8 +22,10 @@ class MacroTab(QVBoxLayout):
     record = pyqtSignal(object, bool)
     record_stop = pyqtSignal()
 
-    def __init__(self, enable_recorder):
+    def __init__(self, parent, enable_recorder):
         super().__init__()
+
+        self.parent = parent
 
         self.lines = []
 
@@ -121,10 +123,10 @@ class MacroTab(QVBoxLayout):
     def serialize(self):
         out = b""
         for line in self.lines:
-            out += line.serialize()
+            out += line.serialize(self.parent.keyboard.vial_protocol)
         return out
 
-    def deserialize(self, data):
+    def deserialize_v1(self, data):
         self.clear()
 
         sequence = []
@@ -159,6 +161,63 @@ class MacroTab(QVBoxLayout):
                         keycodes.append(keycode)
                 cls = {SS_TAP_CODE: ActionTap, SS_DOWN_CODE: ActionDown, SS_UP_CODE: ActionUp}[s[0]]
                 self.add_action(cls(self.container, keycodes))
+
+    def deserialize_v2(self, data):
+        self.clear()
+
+        sequence = []
+        data = bytearray(data)
+        while len(data) > 0:
+            if data[0] == SS_QMK_PREFIX:
+                if data[1] in [SS_TAP_CODE, SS_DOWN_CODE, SS_UP_CODE]:
+                    # append to previous *_CODE if it's the same type, otherwise create a new entry
+                    if len(sequence) > 0 and isinstance(sequence[-1], list) and sequence[-1][0] == data[1]:
+                        sequence[-1][1].append(data[2])
+                    else:
+                        sequence.append([data[1], [data[2]]])
+
+                    for x in range(3):
+                        data.pop(0)
+                elif data[1] == SS_DELAY_CODE:
+                    # decode the delay
+                    delay = (data[2] - 1) + (data[3] - 1) * 255
+                    sequence.append([SS_DELAY_CODE, delay])
+
+                    for x in range(4):
+                        data.pop(0)
+            else:
+                # append to previous string if it is a string, otherwise create a new entry
+                ch = chr(data[0])
+                if len(sequence) > 0 and isinstance(sequence[-1], str):
+                    sequence[-1] += ch
+                else:
+                    sequence.append(ch)
+                data.pop(0)
+        for s in sequence:
+            if isinstance(s, str):
+                self.add_action(ActionText(self.container, s))
+            else:
+                args = None
+                if s[0] in [SS_TAP_CODE, SS_DOWN_CODE, SS_UP_CODE]:
+                    # map integer values to qmk keycodes
+                    args = []
+                    for code in s[1]:
+                        keycode = Keycode.find_outer_keycode(code)
+                        if keycode:
+                            args.append(keycode)
+                elif s[0] == SS_DELAY_CODE:
+                    args = s[1]
+
+                if args is not None:
+                    cls = {SS_TAP_CODE: ActionTap, SS_DOWN_CODE: ActionDown, SS_UP_CODE: ActionUp,
+                           SS_DELAY_CODE: ActionDelay}[s[0]]
+                    self.add_action(cls(self.container, args))
+
+    def deserialize(self, data):
+        if self.parent.keyboard.vial_protocol >= 2:
+            return self.deserialize_v2(data)
+        else:
+            return self.deserialize_v1(data)
 
     def on_change(self):
         self.changed.emit()
@@ -211,7 +270,7 @@ class MacroRecorder(BasicEditor):
 
         self.tabs = QTabWidget()
         for x in range(32):
-            tab = MacroTab(self.recorder is not None)
+            tab = MacroTab(self, self.recorder is not None)
             tab.changed.connect(self.on_change)
             tab.record.connect(self.on_record)
             tab.record_stop.connect(self.on_tab_stop)
