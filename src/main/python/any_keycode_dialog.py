@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QVBoxLayout, QLineEdit, Q
 
 from keycodes import KEYCODES_SPECIAL, KEYCODES_BASIC, KEYCODES_SHIFTED, KEYCODES_ISO, KEYCODES_BACKLIGHT, \
     KEYCODES_MEDIA, KEYCODES_USER, QK_LCTL, QK_LSFT, QK_LALT, QK_LGUI, QK_RCTL, QK_RSFT, QK_RALT, QK_RGUI, QK_LAYER_TAP, \
-    MOD_MEH, MOD_HYPR
+    MOD_MEH, MOD_HYPR, Keycode
 from util import tr
 
 
@@ -138,8 +138,8 @@ class AnyKeycode:
 
 class AnyKeycodeDialog(QDialog):
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, initial):
+        super().__init__()
 
         self.setWindowTitle(tr("AnyKeycodeDialog", "Enter an arbitrary keycode"))
 
@@ -157,15 +157,15 @@ class AnyKeycodeDialog(QDialog):
         self.layout.addWidget(self.buttons)
         self.setLayout(self.layout)
 
-        self.any = AnyKeycode()
-        self.value = -1
+        self.value = initial
+        self.txt_entry.setText(Keycode.serialize(initial))
         self.on_change()
 
     def on_change(self):
         text = self.txt_entry.text()
         value = err = None
         try:
-            value = self.any.decode(text)
+            value = Keycode.deserialize(text)
         except Exception as e:
             err = str(e)
 

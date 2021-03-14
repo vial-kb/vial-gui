@@ -118,7 +118,10 @@ class KeymapEditor(BasicEditor):
         self.tabbed_keycodes.set_keymap_override(override)
 
     def on_any_keycode(self):
-        dlg = AnyKeycodeDialog()
+        if self.container.active_key is None:
+            return
+        current_code = self.code_for_widget(self.container.active_key)
+        dlg = AnyKeycodeDialog(current_code)
         if dlg.exec_() and dlg.value >= 0:
             self.on_keycode_changed(dlg.value)
 
@@ -133,6 +136,13 @@ class KeymapEditor(BasicEditor):
             return self.keymap_override[Keycode.find_outer_keycode(code).qmk_id]
         return Keycode.label(code)
 
+    def code_for_widget(self, widget):
+        if widget.desc.row is not None:
+            return self.keyboard.layout[(self.current_layer, widget.desc.row, widget.desc.col)]
+        else:
+            return self.keyboard.encoder_layout[(self.current_layer, widget.desc.encoder_idx,
+                                                 widget.desc.encoder_dir)]
+
     def refresh_layer_display(self):
         """ Refresh text on key widgets to display data corresponding to current layer """
 
@@ -143,11 +153,7 @@ class KeymapEditor(BasicEditor):
             btn.setChecked(idx == self.current_layer)
 
         for widget in self.container.widgets:
-            if widget.desc.row is not None:
-                code = self.keyboard.layout[(self.current_layer, widget.desc.row, widget.desc.col)]
-            else:
-                code = self.keyboard.encoder_layout[(self.current_layer, widget.desc.encoder_idx,
-                                                     widget.desc.encoder_dir)]
+            code = self.code_for_widget(widget)
             text = self.get_label(code)
             tooltip = Keycode.tooltip(code)
             mask = Keycode.is_mask(code)
