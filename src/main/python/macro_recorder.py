@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import QPushButton, QGridLayout, QHBoxLayout, QToolButton, 
     QTabWidget, QWidget, QLabel, QMenu, QScrollArea, QFrame
 
 from basic_editor import BasicEditor
-from keycodes import find_keycode
+from keycodes import Keycode
 from macro_action import ActionText, ActionTap, ActionDown, ActionUp, SS_TAP_CODE, SS_DOWN_CODE, SS_UP_CODE
 from macro_key import KeyString, KeyDown, KeyUp, KeyTap
 from macro_line import MacroLine
@@ -154,7 +154,7 @@ class MacroTab(QVBoxLayout):
                 # map integer values to qmk keycodes
                 keycodes = []
                 for code in s[1]:
-                    keycode = find_keycode(code)
+                    keycode = Keycode.find_outer_keycode(code)
                     if keycode:
                         keycodes.append(keycode)
                 cls = {SS_TAP_CODE: ActionTap, SS_DOWN_CODE: ActionDown, SS_UP_CODE: ActionUp}[s[0]]
@@ -164,7 +164,7 @@ class MacroTab(QVBoxLayout):
         self.changed.emit()
 
     def on_tap_enter(self):
-        self.add_action(ActionTap(self.container, [find_keycode(0x28)]))
+        self.add_action(ActionTap(self.container, [Keycode.find_by_qmk_id("KC_ENTER")]))
 
     def pre_record(self):
         self.btn_record.hide()

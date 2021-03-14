@@ -8,7 +8,7 @@ from PyQt5.QtCore import Qt
 from any_keycode_dialog import AnyKeycodeDialog
 from basic_editor import BasicEditor
 from keyboard_widget import KeyboardWidget, EncoderWidget
-from keycodes import recreate_keyboard_keycodes, find_keycode, keycode_label, keycode_tooltip, keycode_is_mask
+from keycodes import recreate_keyboard_keycodes, Keycode
 from keymaps import KEYMAPS
 from square_button import SquareButton
 from tabbed_keycodes import TabbedKeycodes
@@ -124,14 +124,14 @@ class KeymapEditor(BasicEditor):
 
     def code_is_overriden(self, code):
         """ Check whether a country-specific keymap overrides a code """
-        key = find_keycode(code)
+        key = Keycode.find_outer_keycode(code)
         return key is not None and key.qmk_id in self.keymap_override
 
     def get_label(self, code):
         """ Get label for a specific keycode """
         if self.code_is_overriden(code):
-            return self.keymap_override[find_keycode(code).qmk_id]
-        return keycode_label(code)
+            return self.keymap_override[Keycode.find_outer_keycode(code).qmk_id]
+        return Keycode.label(code)
 
     def refresh_layer_display(self):
         """ Refresh text on key widgets to display data corresponding to current layer """
@@ -149,8 +149,8 @@ class KeymapEditor(BasicEditor):
                 code = self.keyboard.encoder_layout[(self.current_layer, widget.desc.encoder_idx,
                                                      widget.desc.encoder_dir)]
             text = self.get_label(code)
-            tooltip = keycode_tooltip(code)
-            mask = keycode_is_mask(code)
+            tooltip = Keycode.tooltip(code)
+            mask = Keycode.is_mask(code)
             mask_text = self.get_label(code & 0xFF)
             if mask:
                 text = text.split("\n")[0]

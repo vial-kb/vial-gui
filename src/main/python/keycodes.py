@@ -35,12 +35,59 @@ class Keycode:
             self.masked_keycodes.add(code)
 
     @classmethod
+    def find_outer_keycode(cls, code):
+        """
+        Finds outer keycode, i.e. if it is masked like 0x5Fxx, just return the 0x5F00 portion
+        """
+        if cls.is_mask(code):
+            code = code & 0xFF00
+        for keycode in KEYCODES:
+            if keycode.code == code:
+                return keycode
+        return None
+
+    @classmethod
     def find_by_recorder_alias(cls, alias):
         return cls.recorder_alias_to_keycode.get(alias)
 
     @classmethod
     def find_by_qmk_id(cls, qmk_id):
         return cls.qmk_id_to_keycode.get(qmk_id)
+
+    @classmethod
+    def is_mask(cls, code):
+        return (code & 0xFF00) in cls.masked_keycodes
+
+    @classmethod
+    def label(cls, code):
+        keycode = cls.find_outer_keycode(code)
+        if keycode is None:
+            return "0x{:X}".format(code)
+        return keycode.label
+
+    @classmethod
+    def tooltip(cls, code):
+        keycode = cls.find_outer_keycode(code)
+        if keycode is None:
+            return None
+        tooltip = keycode.qmk_id
+        if keycode.tooltip:
+            tooltip = "{}: {}".format(tooltip, keycode.tooltip)
+        return tooltip
+
+    @classmethod
+    def serialize(cls, qmk_id):
+        # TODO
+        pass
+
+    @classmethod
+    def deserialize(cls, val):
+        if isinstance(val, int):
+            return val
+        if "(" not in val and val in cls.qmk_id_to_keycode:
+            return cls.qmk_id_to_keycode[val].code
+        # TODO: process macro-like keycodes with () etc
+        return 0
 
 
 K = Keycode
@@ -444,37 +491,6 @@ KEYCODES_MACRO = []
 KEYCODES = []
 
 K = None
-
-
-def find_keycode(code):
-    if keycode_is_mask(code):
-        code = code & 0xFF00
-
-    for keycode in KEYCODES:
-        if keycode.code == code:
-            return keycode
-    return None
-
-
-def keycode_label(code):
-    keycode = find_keycode(code)
-    if keycode is None:
-        return "0x{:X}".format(code)
-    return keycode.label
-
-
-def keycode_tooltip(code):
-    keycode = find_keycode(code)
-    if keycode is None:
-        return None
-    tooltip = keycode.qmk_id
-    if keycode.tooltip:
-        tooltip = "{}: {}".format(tooltip, keycode.tooltip)
-    return tooltip
-
-
-def keycode_is_mask(code):
-    return (code & 0xFF00) in Keycode.masked_keycodes
 
 
 def recreate_keycodes():

@@ -1,13 +1,13 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 import unittest
 
-from keycodes import find_keycode
+from keycodes import Keycode
 from macro_key import KeyDown, KeyTap, KeyUp, KeyString
 from macro_optimizer import remove_repeats, replace_with_tap, replace_with_string
 
-KC_A = find_keycode(0x04)
-KC_B = find_keycode(0x05)
-KC_C = find_keycode(0x06)
+KC_A = Keycode.find_by_qmk_id("KC_A")
+KC_B = Keycode.find_by_qmk_id("KC_B")
+KC_C = Keycode.find_by_qmk_id("KC_C")
 
 
 class TestMacro(unittest.TestCase):
