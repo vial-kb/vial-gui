@@ -35,16 +35,20 @@ class Keycode:
             self.masked_keycodes.add(code)
 
     @classmethod
+    def find(cls, code):
+        for keycode in KEYCODES:
+            if keycode.code == code:
+                return keycode
+        return None
+
+    @classmethod
     def find_outer_keycode(cls, code):
         """
         Finds outer keycode, i.e. if it is masked like 0x5Fxx, just return the 0x5F00 portion
         """
         if cls.is_mask(code):
             code = code & 0xFF00
-        for keycode in KEYCODES:
-            if keycode.code == code:
-                return keycode
-        return None
+        return cls.find(code)
 
     @classmethod
     def find_by_recorder_alias(cls, alias):
@@ -76,17 +80,31 @@ class Keycode:
         return tooltip
 
     @classmethod
-    def serialize(cls, qmk_id):
-        # TODO
-        pass
+    def serialize(cls, code):
+        if not cls.is_mask(code):
+            kc = cls.find(code)
+            if kc is not None:
+                return kc.qmk_id
+        elif cls.is_mask(code):
+            outer = cls.find_outer_keycode(code)
+            inner = cls.find(code & 0xFF)
+            if outer is not None and inner is not None:
+                return outer.qmk_id.replace("(kc)", "({})".format(inner.qmk_id))
+        return code
 
     @classmethod
     def deserialize(cls, val):
+        from any_keycode_dialog import AnyKeycode
+
         if isinstance(val, int):
             return val
         if "(" not in val and val in cls.qmk_id_to_keycode:
             return cls.qmk_id_to_keycode[val].code
-        # TODO: process macro-like keycodes with () etc
+        anykc = AnyKeycode()
+        try:
+            return anykc.decode(val)
+        except Exception:
+            pass
         return 0
 
 

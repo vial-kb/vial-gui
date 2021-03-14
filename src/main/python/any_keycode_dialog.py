@@ -6,7 +6,8 @@ import operator
 from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QVBoxLayout, QLineEdit, QLabel
 
 from keycodes import KEYCODES_SPECIAL, KEYCODES_BASIC, KEYCODES_SHIFTED, KEYCODES_ISO, KEYCODES_BACKLIGHT, \
-    KEYCODES_MEDIA, KEYCODES_USER, QK_LCTL, QK_LSFT, QK_LALT, QK_LGUI, QK_RCTL, QK_RSFT, QK_RALT, QK_RGUI, QK_LAYER_TAP
+    KEYCODES_MEDIA, KEYCODES_USER, QK_LCTL, QK_LSFT, QK_LALT, QK_LGUI, QK_RCTL, QK_RSFT, QK_RALT, QK_RGUI, QK_LAYER_TAP, \
+    MOD_MEH, MOD_HYPR
 from util import tr
 
 
@@ -39,6 +40,7 @@ def RCTL(kc): return (QK_RCTL | (kc))
 def RSFT(kc): return (QK_RSFT | (kc))
 def RALT(kc): return (QK_RALT | (kc))
 def RGUI(kc): return (QK_RGUI | (kc))
+def C_S(kc): return (QK_LCTL | QK_LSFT | (kc))
 def HYPR(kc): return (QK_LCTL | QK_LSFT | QK_LALT | QK_LGUI | (kc))
 def MEH(kc): return (QK_LCTL | QK_LSFT | QK_LALT | (kc))
 def LCAG(kc): return (QK_LCTL | QK_LALT | QK_LGUI | (kc))
@@ -85,6 +87,7 @@ functions = {
     "LCTL": LCTL, "LSFT": LSFT, "LALT": LALT, "LGUI": LGUI, "LOPT": LALT, "LCMD": LGUI, "LWIN": LGUI,
     "RCTL": RCTL, "RSFT": RSFT, "RALT": RALT, "RGUI": RGUI, "ALGR": RALT, "ROPT": RALT, "RCMD": RGUI, "RWIN": RGUI,
     "HYPR": HYPR, "MEH": MEH, "LCAG": LCAG, "SGUI": SGUI, "SCMD": SGUI, "SWIN": SGUI,
+    "C_S": C_S,
     "LCA": LCA, "LSA": LSA, "RSA": RSA, "RCS": RCS, "SAGR": RSA,
     "C": LCTL, "S": LSFT, "A": LALT, "G": LGUI,
     "LT": LT, "TO": TO, "MO": MO, "DF": DF, "TG": TG, "OSL": OSL, "LM": LM, "OSM": OSM, "TT": TT, "MT": MT,
@@ -97,6 +100,40 @@ functions = {
     "LCAG_T": LCAG_T, "RCAG_T": RCAG_T, "HYPR_T": HYPR_T, "SGUI_T": SGUI_T, "SCMD_T": SGUI_T, "SWIN_T": SGUI_T,
     "LCA_T": LCA_T, "LSA_T": LSA_T, "RSA_T": RSA_T, "RCS_T": RCS_T, "SAGR_T": RSA_T, "ALL_T": HYPR_T,
 }
+
+
+class AnyKeycode:
+
+    def __init__(self):
+        self.ops = simpleeval.DEFAULT_OPERATORS.copy()
+        self.ops.update({
+            ast.BitOr: operator.or_,
+            ast.BitXor: operator.xor,
+            ast.BitAnd: operator.and_,
+        })
+        self.names = dict()
+        self.prepare_names()
+
+    def prepare_names(self):
+        for kc in KEYCODES_SPECIAL + KEYCODES_BASIC + KEYCODES_SHIFTED + KEYCODES_ISO + KEYCODES_BACKLIGHT + \
+                  KEYCODES_MEDIA + KEYCODES_USER:
+            for qmk_id in kc.alias:
+                self.names[qmk_id] = kc.code
+        self.names.update({
+            "MOD_LCTL": MOD_LCTL,
+            "MOD_LSFT": MOD_LSFT,
+            "MOD_LALT": MOD_LALT,
+            "MOD_LGUI": MOD_LGUI,
+            "MOD_RCTL": MOD_RCTL,
+            "MOD_RSFT": MOD_RSFT,
+            "MOD_RALT": MOD_RALT,
+            "MOD_RGUI": MOD_RGUI,
+            "MOD_MEH": MOD_MEH,
+            "MOD_HYPR": MOD_HYPR,
+        })
+
+    def decode(self, s):
+        return simpleeval.simple_eval(s, names=self.names, functions=functions, operators=self.ops)
 
 
 class AnyKeycodeDialog(QDialog):
@@ -120,39 +157,15 @@ class AnyKeycodeDialog(QDialog):
         self.layout.addWidget(self.buttons)
         self.setLayout(self.layout)
 
-        self.ops = simpleeval.DEFAULT_OPERATORS.copy()
-        self.ops.update({
-            ast.BitOr: operator.or_,
-            ast.BitXor: operator.xor,
-            ast.BitAnd: operator.and_,
-        })
-        self.names = dict()
-        self.prepare_names()
-
+        self.any = AnyKeycode()
         self.value = -1
         self.on_change()
-
-    def prepare_names(self):
-        for kc in KEYCODES_SPECIAL + KEYCODES_BASIC + KEYCODES_SHIFTED + KEYCODES_ISO + KEYCODES_BACKLIGHT + \
-                  KEYCODES_MEDIA + KEYCODES_USER:
-            for qmk_id in kc.alias:
-                self.names[qmk_id] = kc.code
-        self.names.update({
-            "MOD_LCTL": MOD_LCTL,
-            "MOD_LSFT": MOD_LSFT,
-            "MOD_LALT": MOD_LALT,
-            "MOD_LGUI": MOD_LGUI,
-            "MOD_RCTL": MOD_RCTL,
-            "MOD_RSFT": MOD_RSFT,
-            "MOD_RALT": MOD_RALT,
-            "MOD_RGUI": MOD_RGUI,
-        })
 
     def on_change(self):
         text = self.txt_entry.text()
         value = err = None
         try:
-            value = simpleeval.simple_eval(text, names=self.names, functions=functions, operators=self.ops)
+            value = self.any.decode(text)
         except Exception as e:
             err = str(e)
 
