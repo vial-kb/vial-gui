@@ -94,7 +94,7 @@ class Keycode:
 
     @classmethod
     def deserialize(cls, val):
-        from any_keycode_dialog import AnyKeycode
+        from any_keycode import AnyKeycode
 
         if isinstance(val, int):
             return val
