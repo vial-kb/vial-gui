@@ -5,7 +5,7 @@ import json
 import lzma
 from collections import OrderedDict
 
-from keycodes import RESET_KEYCODE
+from keycodes import RESET_KEYCODE, Keycode
 from kle_serial import Serial as KleSerial
 from unlocker import Unlocker
 from util import MSG_LEN, hid_send, chunks
@@ -258,7 +258,7 @@ class Keyboard:
                 layer.append(row)
                 for c in range(self.cols):
                     val = self.layout.get((l, r, c), -1)
-                    row.append(val)
+                    row.append(Keycode.serialize(val))
 
         encoder_layout = []
         for l in range(self.layers):
@@ -266,12 +266,15 @@ class Keyboard:
             for e in range(self.encoder_count):
                 cw = (l, e, 0)
                 ccw = (l, e, 1)
-                layer.append([self.encoder_layout.get(cw, -1), self.encoder_layout.get(ccw, -1)])
+                layer.append([Keycode.serialize(self.encoder_layout.get(cw, -1)),
+                              Keycode.serialize(self.encoder_layout.get(ccw, -1))])
             encoder_layout.append(layer)
 
         data["layout"] = layout
         data["encoder_layout"] = encoder_layout
         data["layout_options"] = self.layout_options
+        # TODO: macros should be serialized in a portable format instead of base64 string
+        # i.e. use a custom structure (as keycodes numbers can change, etc)
         data["macro"] = base64.b64encode(self.macro).decode("utf-8")
 
         return json.dumps(data).encode("utf-8")
@@ -284,15 +287,15 @@ class Keyboard:
         # restore keymap
         for l, layer in enumerate(data["layout"]):
             for r, row in enumerate(layer):
-                for c, col in enumerate(row):
+                for c, code in enumerate(row):
                     if (l, r, c) in self.layout:
-                        self.set_key(l, r, c, col)
+                        self.set_key(l, r, c, Keycode.deserialize(code))
 
         # restore encoders
         for l, layer in enumerate(data["encoder_layout"]):
             for e, encoder in enumerate(layer):
-                self.set_encoder(l, e, 0, encoder[0])
-                self.set_encoder(l, e, 1, encoder[1])
+                self.set_encoder(l, e, 0, Keycode.deserialize(encoder[0]))
+                self.set_encoder(l, e, 1, Keycode.deserialize(encoder[1]))
 
         self.set_layout_options(data["layout_options"])
 
