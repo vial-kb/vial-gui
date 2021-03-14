@@ -93,7 +93,7 @@ class Keycode:
         return code
 
     @classmethod
-    def deserialize(cls, val):
+    def deserialize(cls, val, reraise=False):
         from any_keycode import AnyKeycode
 
         if isinstance(val, int):
@@ -104,7 +104,8 @@ class Keycode:
         try:
             return anykc.decode(val)
         except Exception:
-            pass
+            if reraise:
+                raise
         return 0
 
 

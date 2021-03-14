@@ -27,14 +27,17 @@ class AnyKeycodeDialog(QDialog):
         self.setLayout(self.layout)
 
         self.value = initial
-        self.txt_entry.setText(Keycode.serialize(initial))
+        ser = Keycode.serialize(initial)
+        if isinstance(ser, int):
+            ser = hex(ser)
+        self.txt_entry.setText(ser)
         self.on_change()
 
     def on_change(self):
         text = self.txt_entry.text()
         value = err = None
         try:
-            value = Keycode.deserialize(text)
+            value = Keycode.deserialize(text, reraise=True)
         except Exception as e:
             err = str(e)
 
