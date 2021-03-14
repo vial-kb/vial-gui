@@ -138,11 +138,9 @@ class KeymapEditor(BasicEditor):
 
         self.container.update_layout()
 
-        for btn in self.layer_buttons:
-            btn.setEnabled(True)
-            btn.setChecked(False)
-        self.layer_buttons[self.current_layer].setEnabled(False)
-        self.layer_buttons[self.current_layer].setChecked(True)
+        for idx, btn in enumerate(self.layer_buttons):
+            btn.setEnabled(idx != self.current_layer)
+            btn.setChecked(idx == self.current_layer)
 
         for widget in self.container.widgets:
             if widget.desc.row is not None:

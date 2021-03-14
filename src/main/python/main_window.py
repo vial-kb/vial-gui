@@ -132,14 +132,19 @@ class MainWindow(QMainWindow):
 
         keyboard_layout_menu = self.menuBar().addMenu(tr("Menu", "Keyboard layout"))
         keymap_group = QActionGroup(self)
+        selected_keymap = self.settings.value("keymap")
         for idx, keymap in enumerate(KEYMAPS):
             act = QAction(tr("KeyboardLayout", keymap[0]), self)
             act.triggered.connect(lambda checked, x=idx: self.change_keyboard_layout(x))
             act.setCheckable(True)
-            if idx == 0:
+            if selected_keymap == keymap[0]:
+                self.change_keyboard_layout(idx)
                 act.setChecked(True)
             keymap_group.addAction(act)
             keyboard_layout_menu.addAction(act)
+        # check "QWERTY" if nothing else is selected
+        if keymap_group.checkedAction() is None:
+            keymap_group.actions()[0].setChecked(True)
 
         self.security_menu = self.menuBar().addMenu(tr("Menu", "Security"))
         self.security_menu.addAction(keyboard_unlock_act)
@@ -294,6 +299,7 @@ class MainWindow(QMainWindow):
             self.current_device.keyboard.reset()
 
     def change_keyboard_layout(self, index):
+        self.settings.setValue("keymap", KEYMAPS[index][0])
         self.keymap_editor.set_keymap_override(KEYMAPS[index][1])
 
     def set_theme(self, theme):
