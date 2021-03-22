@@ -89,7 +89,7 @@ class Keycode:
             outer = cls.find_outer_keycode(code)
             inner = cls.find(code & 0xFF)
             if outer is not None and inner is not None:
-                return outer.qmk_id.replace("(kc)", "({})".format(inner.qmk_id))
+                return outer.qmk_id.replace("kc", inner.qmk_id)
         return code
 
     @classmethod
