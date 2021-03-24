@@ -26,7 +26,7 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         self.settings = QSettings("Vial", "Vial")
-        themes.set_theme(self.settings.value("theme"))
+        themes.set_theme(self.get_theme())
 
         self.current_device = None
         self.devices = []
@@ -154,7 +154,7 @@ class MainWindow(QMainWindow):
 
         self.theme_menu = self.menuBar().addMenu(tr("Menu", "Theme"))
         theme_group = QActionGroup(self)
-        selected_theme = self.settings.value("theme")
+        selected_theme = self.get_theme()
         for name, _ in [("System", None)] + themes.themes:
             act = QAction(tr("MenuTheme", name), self)
             act.triggered.connect(lambda x,name=name: self.set_theme(name))
@@ -301,6 +301,9 @@ class MainWindow(QMainWindow):
     def change_keyboard_layout(self, index):
         self.settings.setValue("keymap", KEYMAPS[index][0])
         self.keymap_editor.set_keymap_override(KEYMAPS[index][1])
+
+    def get_theme(self):
+        return self.settings.value("theme", "Dark")
 
     def set_theme(self, theme):
         themes.set_theme(theme)
