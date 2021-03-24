@@ -7,7 +7,8 @@ from PyQt5.QtWidgets import QPushButton, QGridLayout, QHBoxLayout, QToolButton, 
 
 from basic_editor import BasicEditor
 from keycodes import Keycode
-from macro_action import ActionText, ActionTap, ActionDown, ActionUp, ActionDelay, SS_TAP_CODE, SS_DOWN_CODE, SS_UP_CODE, SS_DELAY_CODE
+from macro_action import ActionText, ActionTap, ActionDown, ActionUp, ActionDelay, SS_TAP_CODE, SS_DOWN_CODE, \
+    SS_UP_CODE, SS_DELAY_CODE, SS_QMK_PREFIX
 from macro_key import KeyString, KeyDown, KeyUp, KeyTap
 from macro_line import MacroLine
 from macro_optimizer import macro_optimize
