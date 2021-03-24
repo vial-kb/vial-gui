@@ -1,7 +1,7 @@
 import struct
 
 from PyQt5.QtCore import QObject, pyqtSignal, Qt
-from PyQt5.QtWidgets import QLineEdit, QToolButton, QComboBox, QWidget, QSizePolicy, QSpinBox
+from PyQt5.QtWidgets import QLineEdit, QToolButton, QComboBox, QWidget, QSizePolicy, QSpinBox, QHBoxLayout
 
 from flowlayout import FlowLayout
 from keycodes import KEYCODES_BASIC, KEYCODES_ISO, KEYCODES_MEDIA
@@ -146,14 +146,22 @@ class ActionDelayUI(BasicActionUI):
         self.value.setValue(self.act.delay)
         self.value.valueChanged.connect(self.on_change)
 
+        self.layout = FlowLayout()
+        self.layout_container = QWidget()
+        self.layout_container.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Maximum)
+        self.layout_container.setLayout(self.layout)
+
+        self.layout.addWidget(self.value)
+
     def insert(self, row):
-        self.container.addWidget(self.value, row, 2)
+        self.container.addWidget(self.layout_container, row, 2)
 
     def remove(self):
-        self.container.removeWidget(self.value)
+        self.container.removeWidget(self.layout_container)
 
     def delete(self):
         self.value.deleteLater()
+        self.layout_container.deleteLater()
 
     def on_change(self):
         self.act.delay = self.value.value()
