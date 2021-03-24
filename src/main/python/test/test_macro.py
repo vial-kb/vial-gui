@@ -83,3 +83,27 @@ class TestMacro(unittest.TestCase):
                                      b"\x01\x02\x04\x01\x04\x02\x02")
         self.assertEqual(macro, [ActionText("Hello"), ActionTap([KC_A, KC_B, KC_C]), ActionText("World"),
                                  ActionDown([KC_C, KC_B, KC_A]), ActionDelay(256)])
+
+    def test_save(self):
+        down = ActionDown([KC_A, KC_B])
+        self.assertEqual(down.save(), ["down", "KC_A", "KC_B"])
+        tap = ActionTap([KC_B, KC_A])
+        self.assertEqual(tap.save(), ["tap", "KC_B", "KC_A"])
+        text = ActionText("Hello world")
+        self.assertEqual(text.save(), ["text", "Hello world"])
+        delay = ActionDelay(123)
+        self.assertEqual(delay.save(), ["delay", 123])
+
+    def test_restore(self):
+        down = ActionDown()
+        down.restore(["down", "KC_A", "KC_B"])
+        self.assertEqual(down, ActionDown([KC_A, KC_B]))
+        tap = ActionTap()
+        tap.restore(["tap", "KC_B", "KC_A"])
+        self.assertEqual(tap, ActionTap([KC_B, KC_A]))
+        text = ActionText()
+        text.restore(["text", "Hello world"])
+        self.assertEqual(text, ActionText("Hello world"))
+        delay = ActionDelay()
+        delay.restore(["delay", 123])
+        self.assertEqual(delay, ActionDelay(123))
