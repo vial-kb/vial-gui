@@ -519,7 +519,7 @@ class Keyboard:
         if len(macros) != self.macro_count:
             raise RuntimeError("expected array with {} macros, got {} macros".format(self.macro_count, len(macros)))
         out = [self.macro_serialize(macro) for macro in macros]
-        return b"\x00".join(out)
+        return b"\x00".join(out) + b"\x00"
 
     def macros_deserialize(self, data):
         """
