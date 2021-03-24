@@ -432,7 +432,12 @@ class Keyboard:
         if len(full_macro) < self.macro_count:
             full_macro += [[] for x in range(self.macro_count - len(full_macro))]
         full_macro = full_macro[:self.macro_count]
-        self.set_macro(self.macros_serialize(full_macro))
+        # TODO: log a warning if macro is cutoff
+        data = self.macros_serialize(full_macro)[0:self.macro_memory]
+        if data != self.macro:
+            Unlocker.unlock(self)
+            self.set_macro(data)
+            self.lock()
 
     def reset(self):
         self.usb_send(self.dev, struct.pack("B", 0xB))
