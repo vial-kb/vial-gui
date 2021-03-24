@@ -2,7 +2,7 @@
 import struct
 
 from PyQt5.QtCore import QObject, pyqtSignal, Qt
-from PyQt5.QtWidgets import QLineEdit, QToolButton, QComboBox, QWidget, QSizePolicy
+from PyQt5.QtWidgets import QLineEdit, QToolButton, QComboBox, QWidget, QSizePolicy, QSpinBox
 
 from flowlayout import FlowLayout
 from keycodes import KEYCODES_BASIC, KEYCODES_ISO, KEYCODES_MEDIA
@@ -159,18 +159,20 @@ class ActionDelay(BasicAction):
 
     def __init__(self, container, delay=0):
         super().__init__(container)
-        self.text = QLineEdit()
-        self.text.setText(str(delay))
-        self.text.textChanged.connect(self.on_change)
+        self.value = QSpinBox()
+        self.value.setMinimum(0)
+        self.value.setMaximum(64000)  # up to 64s
+        self.value.setValue(delay)
+        self.value.valueChanged.connect(self.on_change)
 
     def insert(self, row):
-        self.container.addWidget(self.text, row, 2)
+        self.container.addWidget(self.value, row, 2)
 
     def remove(self):
-        self.container.removeWidget(self.text)
+        self.container.removeWidget(self.value)
 
     def delete(self):
-        self.text.deleteLater()
+        self.value.deleteLater()
 
     def on_change(self):
         self.changed.emit()
@@ -178,5 +180,5 @@ class ActionDelay(BasicAction):
     def serialize(self, vial_protocol):
         if vial_protocol < 2:
             raise RuntimeError("ActionDelay can only be used with vial_protocol>=2")
-        delay = int(self.text.text())
+        delay = self.value.value()
         return struct.pack("BBBB", SS_QMK_PREFIX, SS_DELAY_CODE, (delay % 255) + 1, (delay // 255) + 1)
