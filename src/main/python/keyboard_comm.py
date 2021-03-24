@@ -383,8 +383,11 @@ class Keyboard:
         return json.dumps(data).encode("utf-8")
 
     def save_macro(self):
-        # TODO: decouple macros from GUI, should be able to serialize/deserialize just with keyboard interface
-        return []
+        macros = self.macros_deserialize(self.macro)
+        out = []
+        for macro in macros:
+            out.append([act.save() for act in macro])
+        return out
 
     def restore_layout(self, data):
         """ Restores saved layout """
@@ -407,10 +410,29 @@ class Keyboard:
         self.set_layout_options(data["layout_options"])
         self.restore_macros(data.get("macro"))
 
-    def restore_macro(self, macro):
-        if not isinstance(macro, list):
+    def restore_macros(self, macros):
+        if not isinstance(macros, list):
             return
-        print(macro)
+        tag_to_action = {
+            "down": ActionDown,
+            "up": ActionUp,
+            "tap": ActionTap,
+            "text": ActionText,
+            "delay": ActionDelay,
+        }
+        full_macro = []
+        for macro in macros:
+            actions = []
+            for act in macro:
+                if act[0] in tag_to_action:
+                    obj = tag_to_action[act[0]]()
+                    obj.restore(act)
+                    actions.append(obj)
+            full_macro.append(actions)
+        if len(full_macro) < self.macro_count:
+            full_macro += [[] for x in range(self.macro_count - len(full_macro))]
+        full_macro = full_macro[:self.macro_count]
+        self.set_macro(self.macros_serialize(full_macro))
 
     def reset(self):
         self.usb_send(self.dev, struct.pack("B", 0xB))
