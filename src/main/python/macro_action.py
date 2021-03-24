@@ -24,6 +24,9 @@ class BasicAction:
                 self, self.tag, act[0]
             ))
 
+    def __eq__(self, other):
+        return self.tag == other.tag
+
 
 class ActionText(BasicAction):
 
@@ -42,6 +45,9 @@ class ActionText(BasicAction):
     def restore(self, act):
         super().restore(act)
         self.text = act[1]
+
+    def __eq__(self, other):
+        return super().__eq__(other) and self.text == other.text
 
 
 class ActionSequence(BasicAction):
@@ -76,6 +82,9 @@ class ActionSequence(BasicAction):
         super().restore(act)
         for qmk_id in act[1:]:
             self.sequence.append(Keycode.find_by_qmk_id(qmk_id))
+
+    def __eq__(self, other):
+        return super().__eq__(other) and self.sequence == other.sequence
 
 
 class ActionDown(ActionSequence):
@@ -122,3 +131,6 @@ class ActionDelay(BasicAction):
     def restore(self, act):
         super().restore(act)
         self.delay = act[1]
+
+    def __eq__(self, other):
+        return super().__eq__(other) and self.delay == other.delay
