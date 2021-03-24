@@ -9,7 +9,7 @@ from basic_editor import BasicEditor
 from keycodes import Keycode
 from macro_action import ActionText, ActionTap, ActionDown, ActionUp, ActionDelay, SS_TAP_CODE, SS_DOWN_CODE, \
     SS_UP_CODE, SS_DELAY_CODE, SS_QMK_PREFIX
-from macro_action_ui import ActionTextUI
+from macro_action_ui import ActionTextUI, ActionTapUI
 from macro_key import KeyString, KeyDown, KeyUp, KeyTap
 from macro_line import MacroLine
 from macro_optimizer import macro_optimize
@@ -126,7 +126,7 @@ class MacroTab(QVBoxLayout):
         self.changed.emit()
 
     def on_tap_enter(self):
-        self.add_action(ActionTap(self.container, [Keycode.find_by_qmk_id("KC_ENTER")]))
+        self.add_action(ActionTapUI(self.container, ActionTap([Keycode.find_by_qmk_id("KC_ENTER")])))
 
     def pre_record(self):
         self.btn_record.hide()

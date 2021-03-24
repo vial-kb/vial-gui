@@ -1,22 +1,26 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 import sys
 
-from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtWidgets import QPushButton, QGridLayout, QHBoxLayout, QToolButton, QVBoxLayout, \
-    QTabWidget, QWidget, QLabel, QMenu, QScrollArea, QFrame
+from PyQt5.QtWidgets import QPushButton, QHBoxLayout, QTabWidget, QWidget, QLabel
 
 from basic_editor import BasicEditor
-from keycodes import Keycode
-from macro_action import ActionText, ActionTap, ActionDown, ActionUp, ActionDelay, SS_TAP_CODE, SS_DOWN_CODE, \
-    SS_UP_CODE, SS_DELAY_CODE, SS_QMK_PREFIX
+from macro_action import ActionText, ActionTap, ActionDown, ActionUp, ActionDelay
 from macro_action_ui import ActionTextUI, ActionUpUI, ActionDownUI, ActionTapUI, ActionDelayUI
 from macro_key import KeyString, KeyDown, KeyUp, KeyTap
-from macro_line import MacroLine
 from macro_optimizer import macro_optimize
 from macro_tab import MacroTab
 from unlocker import Unlocker
 from util import tr
 from vial_device import VialKeyboard
+
+
+ui_action = {
+    ActionText: ActionTextUI,
+    ActionUp: ActionUpUI,
+    ActionDown: ActionDownUI,
+    ActionTap: ActionTapUI,
+    ActionDelay: ActionDelayUI,
+}
 
 
 class MacroRecorder(BasicEditor):
@@ -131,14 +135,19 @@ class MacroRecorder(BasicEditor):
         self.recording_tab.post_record()
 
         self.keystrokes = macro_optimize(self.keystrokes)
+        actions = []
         for k in self.keystrokes:
             if isinstance(k, KeyString):
-                self.recording_tab.add_action(ActionText(self.recording_tab.container, k.string))
+                actions.append(ActionText(k.string))
             else:
                 cls = {KeyDown: ActionDown, KeyUp: ActionUp, KeyTap: ActionTap}[type(k)]
-                self.recording_tab.add_action(cls(self.recording_tab.container, [k.keycode]))
+                actions.append(cls([k.keycode]))
+
         # merge: i.e. replace multiple instances of KeyDown with a single multi-key ActionDown, etc
-        self.recording_tab.deserialize(self.recording_tab.serialize())
+        actions = self.keyboard.macro_deserialize(self.keyboard.macro_serialize(actions))
+        self.recording_tab.clear()
+        for act in actions:
+            self.recording_tab.add_action(ui_action[type(act)](self.recording_tab.container, act))
 
     def on_keystroke(self, keystroke):
         self.keystrokes.append(keystroke)
@@ -158,13 +167,6 @@ class MacroRecorder(BasicEditor):
         return self.keyboard.macros_serialize(macros)
 
     def deserialize(self, data):
-        ui_action = {
-            ActionText: ActionTextUI,
-            ActionUp: ActionUpUI,
-            ActionDown: ActionDownUI,
-            ActionTap: ActionTapUI,
-            ActionDelay: ActionDelayUI,
-        }
         macros = self.keyboard.macros_deserialize(data)
         for macro, tab in zip(macros, self.macro_tabs[:self.keyboard.macro_count]):
             tab.clear()
