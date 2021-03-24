@@ -78,6 +78,7 @@ class MacroLine(QObject):
         self.action = self.type_to_cls[self.select_type.currentIndex()](self.container)
         self.action.changed.connect(self.on_change)
         self.action.insert(self.row)
+        self.changed.emit()
 
     def on_remove_clicked(self):
         self.parent.on_remove(self)
