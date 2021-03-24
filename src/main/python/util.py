@@ -47,9 +47,27 @@ def hid_send(dev, msg, retries=1):
     return data
 
 
-def is_rawhid(dev):
-    # TODO: this is only broken on linux, other platforms should be able to check usage_page
-    return dev["interface_number"] == 1
+def is_rawhid(desc):
+    if desc["usage_page"] != 0xFF60 or desc["usage"] != 0x61:
+        return False
+
+    dev = hid.device()
+
+    try:
+        dev.open_path(desc["path"])
+    except OSError:
+        return False
+
+    # probe VIA version and ensure it is supported
+    data = b""
+    try:
+        data = hid_send(dev, b"\x01", retries=3)
+    except RuntimeError:
+        pass
+    dev.close()
+
+    # must have VIA protocol version = 9
+    return data[0:3] == b"\x01\x00\x09"
 
 
 def find_vial_devices(via_stack_json, sideload_vid=None, sideload_pid=None):

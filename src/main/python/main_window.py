@@ -187,8 +187,8 @@ class MainWindow(QMainWindow):
                 outf.write(self.keymap_editor.save_layout())
 
     def on_click_refresh(self):
-        self.devices = find_vial_devices(self.via_stack_json, self.sideload_vid, self.sideload_pid)
         self.combobox_devices.clear()
+        self.devices = find_vial_devices(self.via_stack_json, self.sideload_vid, self.sideload_pid)
 
         for dev in self.devices:
             self.combobox_devices.addItem(dev.title())
