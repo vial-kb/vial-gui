@@ -4,7 +4,7 @@ from PyQt5.QtGui import QPainter, QColor, QPainterPath, QTransform, QBrush, QPol
 from PyQt5.QtWidgets import QWidget, QToolTip, QApplication
 from PyQt5.QtCore import Qt, QSize, QRect, QPointF, pyqtSignal, QEvent, QRectF
 
-from constants import KEY_SIZE_RATIO, KEY_SPACING_RATIO, KEYBOARD_WIDGET_PADDING, KEYBOARD_WIDGET_MASK_PADDING
+from constants import KEY_SIZE_RATIO, KEY_SPACING_RATIO, KEYBOARD_WIDGET_PADDING, KEYBOARD_WIDGET_MASK_PADDING, KEYBOARD_WIDGET_MASK_HEIGHT
 
 
 class KeyWidget:
@@ -48,7 +48,7 @@ class KeyWidget:
             self.w2 = size * self.desc.width2 - spacing
             self.h2 = size * self.desc.height2 - spacing
 
-            self.bbox = self.calculate_bbox(QRectF(self.x, self.y, self.w, self.h))
+            self.bbox = self.calculate_bbox(self.rect)
             self.polygon = QPolygonF(self.bbox + [self.bbox[0]])
             self.draw_path = self.calculate_draw_path()
             self.draw_path2 = self.calculate_draw_path2()
@@ -56,9 +56,12 @@ class KeyWidget:
             # calculate areas where the inner keycode will be located
             # nonmask = outer (e.g. Rsft_T)
             # mask = inner (e.g. KC_A)
-            self.nonmask_rect = QRectF(self.x, self.y, self.w, self.h / 2)
-            self.mask_rect = QRectF(self.x + KEYBOARD_WIDGET_MASK_PADDING, self.y + self.h / 2,
-                                    self.w - 2 * KEYBOARD_WIDGET_MASK_PADDING, self.h / 2 - KEYBOARD_WIDGET_MASK_PADDING)
+            self.nonmask_rect = QRectF(int(self.x), int(self.y), 
+                                       int(self.w), int(self.h * (1 - KEYBOARD_WIDGET_MASK_HEIGHT)))
+            self.mask_rect = QRectF(int(self.x + KEYBOARD_WIDGET_MASK_PADDING), 
+                                    int(self.y) + int(self.h * (1 - KEYBOARD_WIDGET_MASK_HEIGHT)),
+                                    int(self.w - 2 * KEYBOARD_WIDGET_MASK_PADDING), 
+                                    int(self.h * KEYBOARD_WIDGET_MASK_HEIGHT - KEYBOARD_WIDGET_MASK_PADDING))
             self.mask_bbox = self.calculate_bbox(self.mask_rect)
             self.mask_polygon = QPolygonF(self.mask_bbox + [self.mask_bbox[0]])
 
