@@ -19,6 +19,14 @@ VIBL_SERIAL_NUMBER_MAGIC = "vibl:d4f8159c"
 
 MSG_LEN = 32
 
+# these should match what we have in vial-qmk/keyboards/vial_example
+# so that people don't accidentally reuse a sample keyboard UID
+EXAMPLE_KEYBOARDS = [
+    0xD4A36200603E3007,  # vial_stm32f103_vibl
+    0x32F62BC2EEF2237B,  # vial_atmega32u4
+    0x38CEA320F23046A5,  # vial_stm32f072
+]
+
 
 def hid_send(dev, msg, retries=1):
     if len(msg) > MSG_LEN:

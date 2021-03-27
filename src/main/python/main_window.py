@@ -14,7 +14,7 @@ from keymaps import KEYMAPS
 from layout_editor import LayoutEditor
 from macro_recorder import MacroRecorder
 from unlocker import Unlocker
-from util import tr, find_vial_devices
+from util import tr, find_vial_devices, EXAMPLE_KEYBOARDS
 from vial_device import VialKeyboard
 
 import themes
@@ -215,6 +215,11 @@ class MainWindow(QMainWindow):
                 self.current_device.open(self.via_stack_json["definitions"][self.current_device.via_id])
             else:
                 self.current_device.open(None)
+
+            if isinstance(self.current_device, VialKeyboard) \
+                    and self.current_device.keyboard.keyboard_id in EXAMPLE_KEYBOARDS:
+                QMessageBox.warning(self, "", "An example keyboard UID was detected.\n"
+                                              "Please change your keyboard UID to be unique before you ship!")
 
         self.rebuild()
 
