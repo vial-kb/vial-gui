@@ -1,182 +1,26 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 import sys
 
-from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtWidgets import QPushButton, QGridLayout, QHBoxLayout, QToolButton, QVBoxLayout, \
-    QTabWidget, QWidget, QLabel, QMenu, QScrollArea, QFrame
+from PyQt5.QtWidgets import QPushButton, QHBoxLayout, QTabWidget, QWidget, QLabel
 
 from basic_editor import BasicEditor
-from keycodes import Keycode
-from macro_action import ActionText, ActionTap, ActionDown, ActionUp, SS_TAP_CODE, SS_DOWN_CODE, SS_UP_CODE
+from macro_action import ActionText, ActionTap, ActionDown, ActionUp, ActionDelay
+from macro_action_ui import ActionTextUI, ActionUpUI, ActionDownUI, ActionTapUI, ActionDelayUI
 from macro_key import KeyString, KeyDown, KeyUp, KeyTap
-from macro_line import MacroLine
 from macro_optimizer import macro_optimize
+from macro_tab import MacroTab
 from unlocker import Unlocker
 from util import tr
 from vial_device import VialKeyboard
 
 
-class MacroTab(QVBoxLayout):
-
-    changed = pyqtSignal()
-    record = pyqtSignal(object, bool)
-    record_stop = pyqtSignal()
-
-    def __init__(self, enable_recorder):
-        super().__init__()
-
-        self.lines = []
-
-        self.container = QGridLayout()
-
-        menu_record = QMenu()
-        menu_record.addAction(tr("MacroRecorder", "Append to current"))\
-            .triggered.connect(lambda: self.record.emit(self, True))
-        menu_record.addAction(tr("MacroRecorder", "Replace everything"))\
-            .triggered.connect(lambda: self.record.emit(self, False))
-
-        self.btn_record = QPushButton(tr("MacroRecorder", "Record macro"))
-        self.btn_record.setMenu(menu_record)
-        if not enable_recorder:
-            self.btn_record.hide()
-
-        self.btn_record_stop = QPushButton(tr("MacroRecorder", "Stop recording"))
-        self.btn_record_stop.clicked.connect(lambda: self.record_stop.emit())
-        self.btn_record_stop.hide()
-
-        self.btn_add = QToolButton()
-        self.btn_add.setText(tr("MacroRecorder", "Add action"))
-        self.btn_add.setToolButtonStyle(Qt.ToolButtonTextOnly)
-        self.btn_add.clicked.connect(self.on_add)
-
-        self.btn_tap_enter = QToolButton()
-        self.btn_tap_enter.setText(tr("MacroRecorder", "Tap Enter"))
-        self.btn_tap_enter.setToolButtonStyle(Qt.ToolButtonTextOnly)
-        self.btn_tap_enter.clicked.connect(self.on_tap_enter)
-
-        layout_buttons = QHBoxLayout()
-        layout_buttons.addStretch()
-        layout_buttons.addWidget(self.btn_add)
-        layout_buttons.addWidget(self.btn_tap_enter)
-        layout_buttons.addWidget(self.btn_record)
-        layout_buttons.addWidget(self.btn_record_stop)
-
-        vbox = QVBoxLayout()
-        vbox.addLayout(self.container)
-        vbox.addStretch()
-
-        w = QWidget()
-        w.setLayout(vbox)
-        w.setObjectName("w")
-        scroll = QScrollArea()
-        scroll.setFrameShape(QFrame.NoFrame)
-        scroll.setStyleSheet("QScrollArea { background-color:transparent; }")
-        w.setStyleSheet("#w { background-color:transparent; }")
-        scroll.setWidgetResizable(True)
-        scroll.setWidget(w)
-
-        self.addWidget(scroll)
-        self.addLayout(layout_buttons)
-
-    def add_action(self, act):
-        line = MacroLine(self, act)
-        line.changed.connect(self.on_change)
-        self.lines.append(line)
-        line.insert(len(self.lines) - 1)
-        self.changed.emit()
-
-    def on_add(self):
-        self.add_action(ActionText(self.container))
-
-    def on_remove(self, obj):
-        for line in self.lines:
-            if line == obj:
-                line.remove()
-                line.delete()
-        self.lines.remove(obj)
-        for line in self.lines:
-            line.remove()
-        for x, line in enumerate(self.lines):
-            line.insert(x)
-        self.changed.emit()
-
-    def clear(self):
-        for line in self.lines[:]:
-            self.on_remove(line)
-
-    def on_move(self, obj, offset):
-        if offset == 0:
-            return
-        index = self.lines.index(obj)
-        if index + offset < 0 or index + offset >= len(self.lines):
-            return
-        other = self.lines.index(self.lines[index + offset])
-        self.lines[index].remove()
-        self.lines[other].remove()
-        self.lines[index], self.lines[other] = self.lines[other], self.lines[index]
-        self.lines[index].insert(index)
-        self.lines[other].insert(other)
-        self.changed.emit()
-
-    def serialize(self):
-        out = b""
-        for line in self.lines:
-            out += line.serialize()
-        return out
-
-    def deserialize(self, data):
-        self.clear()
-
-        sequence = []
-        data = bytearray(data)
-        while len(data) > 0:
-            if data[0] in [SS_TAP_CODE, SS_DOWN_CODE, SS_UP_CODE]:
-                # append to previous *_CODE if it's the same type, otherwise create a new entry
-                if len(sequence) > 0 and isinstance(sequence[-1], list) and sequence[-1][0] == data[0]:
-                    sequence[-1][1].append(data[1])
-                else:
-                    sequence.append([data[0], [data[1]]])
-
-                data.pop(0)
-                data.pop(0)
-            else:
-                # append to previous string if it is a string, otherwise create a new entry
-                ch = chr(data[0])
-                if len(sequence) > 0 and isinstance(sequence[-1], str):
-                    sequence[-1] += ch
-                else:
-                    sequence.append(ch)
-                data.pop(0)
-        for s in sequence:
-            if isinstance(s, str):
-                self.add_action(ActionText(self.container, s))
-            else:
-                # map integer values to qmk keycodes
-                keycodes = []
-                for code in s[1]:
-                    keycode = Keycode.find_outer_keycode(code)
-                    if keycode:
-                        keycodes.append(keycode)
-                cls = {SS_TAP_CODE: ActionTap, SS_DOWN_CODE: ActionDown, SS_UP_CODE: ActionUp}[s[0]]
-                self.add_action(cls(self.container, keycodes))
-
-    def on_change(self):
-        self.changed.emit()
-
-    def on_tap_enter(self):
-        self.add_action(ActionTap(self.container, [Keycode.find_by_qmk_id("KC_ENTER")]))
-
-    def pre_record(self):
-        self.btn_record.hide()
-        self.btn_add.hide()
-        self.btn_tap_enter.hide()
-        self.btn_record_stop.show()
-
-    def post_record(self):
-        self.btn_record.show()
-        self.btn_add.show()
-        self.btn_tap_enter.show()
-        self.btn_record_stop.hide()
+ui_action = {
+    ActionText: ActionTextUI,
+    ActionUp: ActionUpUI,
+    ActionDown: ActionDownUI,
+    ActionTap: ActionTapUI,
+    ActionDelay: ActionDelayUI,
+}
 
 
 class MacroRecorder(BasicEditor):
@@ -211,7 +55,7 @@ class MacroRecorder(BasicEditor):
 
         self.tabs = QTabWidget()
         for x in range(32):
-            tab = MacroTab(self.recorder is not None)
+            tab = MacroTab(self, self.recorder is not None)
             tab.changed.connect(self.on_change)
             tab.record.connect(self.on_record)
             tab.record_stop.connect(self.on_tab_stop)
@@ -260,7 +104,7 @@ class MacroRecorder(BasicEditor):
         macros = self.keyboard.macro.split(b"\x00")
         for x, w in enumerate(self.macro_tab_w[:self.keyboard.macro_count]):
             title = "M{}".format(x)
-            if macros[x] != self.macro_tabs[x].serialize():
+            if macros[x] != self.keyboard.macro_serialize(self.macro_tabs[x].actions()):
                 title += "*"
             self.tabs.setTabText(x, title)
 
@@ -291,14 +135,19 @@ class MacroRecorder(BasicEditor):
         self.recording_tab.post_record()
 
         self.keystrokes = macro_optimize(self.keystrokes)
+        actions = []
         for k in self.keystrokes:
             if isinstance(k, KeyString):
-                self.recording_tab.add_action(ActionText(self.recording_tab.container, k.string))
+                actions.append(ActionText(k.string))
             else:
                 cls = {KeyDown: ActionDown, KeyUp: ActionUp, KeyTap: ActionTap}[type(k)]
-                self.recording_tab.add_action(cls(self.recording_tab.container, [k.keycode]))
+                actions.append(cls([k.keycode]))
+
         # merge: i.e. replace multiple instances of KeyDown with a single multi-key ActionDown, etc
-        self.recording_tab.deserialize(self.recording_tab.serialize())
+        actions = self.keyboard.macro_deserialize(self.keyboard.macro_serialize(actions))
+        self.recording_tab.clear()
+        for act in actions:
+            self.recording_tab.add_action(ui_action[type(act)](self.recording_tab.container, act))
 
     def on_keystroke(self, keystroke):
         self.keystrokes.append(keystroke)
@@ -311,19 +160,18 @@ class MacroRecorder(BasicEditor):
         self.lbl_memory.setStyleSheet("QLabel { color: red; }" if memory > self.keyboard.macro_memory else "")
         self.update_tab_titles()
 
-    def deserialize(self, data):
-        macros = data.split(b"\x00")
-        for x, tab in enumerate(self.macro_tabs[:self.keyboard.macro_count]):
-            macro = b"\x00"
-            if len(macros) > x:
-                macro = macros[x]
-            tab.deserialize(macro)
-
     def serialize(self):
-        data = b""
-        for tab in self.macro_tabs[:self.keyboard.macro_count]:
-            data += tab.serialize() + b"\x00"
-        return data
+        macros = []
+        for x, t in enumerate(self.macro_tabs[:self.keyboard.macro_count]):
+            macros.append(t.actions())
+        return self.keyboard.macros_serialize(macros)
+
+    def deserialize(self, data):
+        macros = self.keyboard.macros_deserialize(data)
+        for macro, tab in zip(macros, self.macro_tabs[:self.keyboard.macro_count]):
+            tab.clear()
+            for act in macro:
+                tab.add_action(ui_action[type(act)](tab.container, act))
 
     def on_revert(self):
         self.keyboard.reload_macros()

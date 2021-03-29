@@ -7,9 +7,12 @@ from collections import OrderedDict
 
 from keycodes import RESET_KEYCODE, Keycode
 from kle_serial import Serial as KleSerial
+from macro_action import SS_TAP_CODE, SS_DOWN_CODE, SS_UP_CODE, ActionText, ActionTap, ActionDown, ActionUp, \
+    SS_QMK_PREFIX, SS_DELAY_CODE, ActionDelay
 from unlocker import Unlocker
 from util import MSG_LEN, hid_send, chunks
 
+CMD_VIA_GET_PROTOCOL_VERSION = 0x01
 CMD_VIA_GET_KEYBOARD_VALUE = 0x02
 CMD_VIA_SET_KEYBOARD_VALUE = 0x03
 CMD_VIA_GET_KEYCODE = 0x04
@@ -38,6 +41,103 @@ CMD_VIAL_LOCK = 0x08
 BUFFER_FETCH_CHUNK = 28
 
 
+def macro_deserialize_v1(data):
+    """
+    Deserialize a single macro, protocol version 1
+    """
+
+    out = []
+    sequence = []
+    data = bytearray(data)
+    while len(data) > 0:
+        if data[0] in [SS_TAP_CODE, SS_DOWN_CODE, SS_UP_CODE]:
+            # append to previous *_CODE if it's the same type, otherwise create a new entry
+            if len(sequence) > 0 and isinstance(sequence[-1], list) and sequence[-1][0] == data[0]:
+                sequence[-1][1].append(data[1])
+            else:
+                sequence.append([data[0], [data[1]]])
+
+            data.pop(0)
+            data.pop(0)
+        else:
+            # append to previous string if it is a string, otherwise create a new entry
+            ch = chr(data[0])
+            if len(sequence) > 0 and isinstance(sequence[-1], str):
+                sequence[-1] += ch
+            else:
+                sequence.append(ch)
+            data.pop(0)
+    for s in sequence:
+        if isinstance(s, str):
+            out.append(ActionText(s))
+        else:
+            # map integer values to qmk keycodes
+            keycodes = []
+            for code in s[1]:
+                keycode = Keycode.find_outer_keycode(code)
+                if keycode:
+                    keycodes.append(keycode)
+            cls = {SS_TAP_CODE: ActionTap, SS_DOWN_CODE: ActionDown, SS_UP_CODE: ActionUp}[s[0]]
+            out.append(cls(keycodes))
+    return out
+
+
+def macro_deserialize_v2(data):
+    """
+    Deserialize a single macro, protocol version 2
+    """
+
+    out = []
+    sequence = []
+    data = bytearray(data)
+    while len(data) > 0:
+        if data[0] == SS_QMK_PREFIX:
+            if data[1] in [SS_TAP_CODE, SS_DOWN_CODE, SS_UP_CODE]:
+                # append to previous *_CODE if it's the same type, otherwise create a new entry
+                if len(sequence) > 0 and isinstance(sequence[-1], list) and sequence[-1][0] == data[1]:
+                    sequence[-1][1].append(data[2])
+                else:
+                    sequence.append([data[1], [data[2]]])
+
+                for x in range(3):
+                    data.pop(0)
+            elif data[1] == SS_DELAY_CODE:
+                # decode the delay
+                delay = (data[2] - 1) + (data[3] - 1) * 255
+                sequence.append([SS_DELAY_CODE, delay])
+
+                for x in range(4):
+                    data.pop(0)
+        else:
+            # append to previous string if it is a string, otherwise create a new entry
+            ch = chr(data[0])
+            if len(sequence) > 0 and isinstance(sequence[-1], str):
+                sequence[-1] += ch
+            else:
+                sequence.append(ch)
+            data.pop(0)
+    for s in sequence:
+        if isinstance(s, str):
+            out.append(ActionText(s))
+        else:
+            args = None
+            if s[0] in [SS_TAP_CODE, SS_DOWN_CODE, SS_UP_CODE]:
+                # map integer values to qmk keycodes
+                args = []
+                for code in s[1]:
+                    keycode = Keycode.find_outer_keycode(code)
+                    if keycode:
+                        args.append(keycode)
+            elif s[0] == SS_DELAY_CODE:
+                args = s[1]
+
+            if args is not None:
+                cls = {SS_TAP_CODE: ActionTap, SS_DOWN_CODE: ActionDown, SS_UP_CODE: ActionUp,
+                       SS_DELAY_CODE: ActionDelay}[s[0]]
+                out.append(cls(args))
+    return out
+
+
 class Keyboard:
     """ Low-level communication with a vial-enabled keyboard """
 
@@ -61,7 +161,7 @@ class Keyboard:
         self.macro = b""
         self.vibl = False
 
-        self.vial_protocol = self.keyboard_id = -1
+        self.via_protocol = self.vial_protocol = self.keyboard_id = -1
 
     def reload(self, sideload_json=None):
         """ Load information about the keyboard: number of layers, physical key layout """
@@ -83,6 +183,9 @@ class Keyboard:
 
     def reload_layout(self, sideload_json=None):
         """ Requests layout data from the current device """
+
+        data = self.usb_send(self.dev, struct.pack("B", CMD_VIA_GET_PROTOCOL_VERSION), retries=20)
+        self.via_protocol = struct.unpack(">H", data[1:3])[0]
 
         if sideload_json is not None:
             payload = sideload_json
@@ -273,11 +376,18 @@ class Keyboard:
         data["layout"] = layout
         data["encoder_layout"] = encoder_layout
         data["layout_options"] = self.layout_options
-        # TODO: macros should be serialized in a portable format instead of base64 string
-        # i.e. use a custom structure (as keycodes numbers can change, etc)
-        data["macro"] = base64.b64encode(self.macro).decode("utf-8")
+        data["macro"] = self.save_macro()
+        data["vial_protocol"] = self.vial_protocol
+        data["via_protocol"] = self.via_protocol
 
         return json.dumps(data).encode("utf-8")
+
+    def save_macro(self):
+        macros = self.macros_deserialize(self.macro)
+        out = []
+        for macro in macros:
+            out.append([act.save() for act in macro])
+        return out
 
     def restore_layout(self, data):
         """ Restores saved layout """
@@ -298,13 +408,35 @@ class Keyboard:
                 self.set_encoder(l, e, 1, Keycode.deserialize(encoder[1]))
 
         self.set_layout_options(data["layout_options"])
+        self.restore_macros(data.get("macro"))
 
-        # we need to unlock the keyboard before we can restore the macros, lock it afterwards
-        # only do that if it's different from current macros
-        macro = base64.b64decode(data["macro"])
-        if macro != self.macro:
+    def restore_macros(self, macros):
+        if not isinstance(macros, list):
+            return
+        tag_to_action = {
+            "down": ActionDown,
+            "up": ActionUp,
+            "tap": ActionTap,
+            "text": ActionText,
+            "delay": ActionDelay,
+        }
+        full_macro = []
+        for macro in macros:
+            actions = []
+            for act in macro:
+                if act[0] in tag_to_action:
+                    obj = tag_to_action[act[0]]()
+                    obj.restore(act)
+                    actions.append(obj)
+            full_macro.append(actions)
+        if len(full_macro) < self.macro_count:
+            full_macro += [[] for x in range(self.macro_count - len(full_macro))]
+        full_macro = full_macro[:self.macro_count]
+        # TODO: log a warning if macro is cutoff
+        data = self.macros_serialize(full_macro)[0:self.macro_memory]
+        if data != self.macro:
             Unlocker.unlock(self)
-            self.set_macro(macro)
+            self.set_macro(data)
             self.lock()
 
     def reset(self):
@@ -367,6 +499,42 @@ class Keyboard:
             return
 
         self.usb_send(self.dev, struct.pack("BB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_LOCK), retries=20)
+
+    def macro_serialize(self, macro):
+        """
+        Serialize a single macro, a macro is made out of macro actions (BasicAction)
+        """
+        out = b""
+        for action in macro:
+            out += action.serialize(self.vial_protocol)
+        return out
+
+    def macro_deserialize(self, data):
+        """
+        Deserialize a single macro
+        """
+        if self.vial_protocol >= 2:
+            return macro_deserialize_v2(data)
+        return macro_deserialize_v1(data)
+
+    def macros_serialize(self, macros):
+        """
+        Serialize a list of macros, the list must contain all macros (macro_count)
+        """
+        if len(macros) != self.macro_count:
+            raise RuntimeError("expected array with {} macros, got {} macros".format(self.macro_count, len(macros)))
+        out = [self.macro_serialize(macro) for macro in macros]
+        return b"\x00".join(out) + b"\x00"
+
+    def macros_deserialize(self, data):
+        """
+        Deserialize a list of macros
+        """
+        macros = data.split(b"\x00")
+        if len(macros) < self.macro_count:
+            macros += [b""] * (self.macro_count - len(macros))
+        macros = macros[:self.macro_count]
+        return [self.macro_deserialize(x) for x in macros]
 
 
 class DummyKeyboard(Keyboard):

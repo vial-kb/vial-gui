@@ -1,137 +1,95 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 import struct
 
-from PyQt5.QtCore import QObject, pyqtSignal, Qt
-from PyQt5.QtWidgets import QLineEdit, QToolButton, QComboBox, QWidget, QSizePolicy
+from keycodes import Keycode
 
-from flowlayout import FlowLayout
-from keycodes import KEYCODES_BASIC, KEYCODES_ISO, KEYCODES_MEDIA
-from util import tr
-
-
-MACRO_SEQUENCE_KEYCODES = KEYCODES_BASIC + KEYCODES_ISO + KEYCODES_MEDIA
-KC_A = MACRO_SEQUENCE_KEYCODES[0]
+SS_QMK_PREFIX = 1
 
 SS_TAP_CODE = 1
 SS_DOWN_CODE = 2
 SS_UP_CODE = 3
+SS_DELAY_CODE = 4
 
 
-class BasicAction(QObject):
+class BasicAction:
 
-    changed = pyqtSignal()
+    tag = "unknown"
 
-    def __init__(self, container):
-        super().__init__()
-        self.container = container
+    def save(self):
+        return [self.tag]
+
+    def restore(self, act):
+        if self.tag != act[0]:
+            raise RuntimeError("cannot restore {}: expected tag={} got tag={}".format(
+                self, self.tag, act[0]
+            ))
+
+    def __eq__(self, other):
+        return self.tag == other.tag
 
 
 class ActionText(BasicAction):
 
-    def __init__(self, container, text=""):
-        super().__init__(container)
-        self.text = QLineEdit()
-        self.text.setText(text)
-        self.text.textChanged.connect(self.on_change)
+    tag = "text"
 
-    def insert(self, row):
-        self.container.addWidget(self.text, row, 2)
+    def __init__(self, text=""):
+        super().__init__()
+        self.text = text
 
-    def remove(self):
-        self.container.removeWidget(self.text)
+    def serialize(self, vial_protocol):
+        return self.text.encode("utf-8")
 
-    def delete(self):
-        self.text.deleteLater()
+    def save(self):
+        return super().save() + [self.text]
 
-    def serialize(self):
-        return self.text.text().encode("utf-8")
+    def restore(self, act):
+        super().restore(act)
+        self.text = act[1]
 
-    def on_change(self):
-        self.changed.emit()
+    def __eq__(self, other):
+        return super().__eq__(other) and self.text == other.text
 
 
 class ActionSequence(BasicAction):
 
-    def __init__(self, container, sequence=None):
-        super().__init__(container)
+    tag = "unknown-sequence"
+
+    def __init__(self, sequence=None):
+        super().__init__()
         if sequence is None:
             sequence = []
         self.sequence = sequence
 
-        self.btn_plus = QToolButton()
-        self.btn_plus.setText("+")
-        self.btn_plus.setToolButtonStyle(Qt.ToolButtonTextOnly)
-        self.btn_plus.clicked.connect(self.on_add)
-
-        self.layout = FlowLayout()
-        self.layout_container = QWidget()
-        self.layout_container.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Maximum)
-        self.layout_container.setLayout(self.layout)
-        self.widgets = []
-        self.recreate_sequence()
-
-    def recreate_sequence(self):
-        self.layout.removeWidget(self.btn_plus)
-        for w in self.widgets:
-            self.layout.removeWidget(w)
-            w.deleteLater()
-        self.widgets.clear()
-
-        for item in self.sequence:
-            w = QComboBox()
-            w.view().setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-            w.setStyleSheet("QComboBox { combobox-popup: 0; }")
-            w.addItem(tr("MacroEditor", "Remove"))
-            w.insertSeparator(1)
-            for k in MACRO_SEQUENCE_KEYCODES:
-                w.addItem(k.label.replace("\n", ""))
-            w.setCurrentIndex(2 + MACRO_SEQUENCE_KEYCODES.index(item))
-            w.currentIndexChanged.connect(self.on_change)
-            self.layout.addWidget(w)
-            self.widgets.append(w)
-        self.layout.addWidget(self.btn_plus)
-
-    def insert(self, row):
-        self.container.addWidget(self.layout_container, row, 2)
-
-    def remove(self):
-        self.container.removeWidget(self.layout_container)
-
-    def delete(self):
-        for w in self.widgets:
-            w.deleteLater()
-        self.btn_plus.deleteLater()
-        self.layout_container.deleteLater()
-
-    def on_add(self):
-        self.sequence.append(KC_A)
-        self.recreate_sequence()
-        self.changed.emit()
-
-    def on_change(self):
-        for x in range(len(self.sequence)):
-            index = self.widgets[x].currentIndex()
-            if index == 0:
-                # asked to remove this item
-                del self.sequence[x]
-                self.recreate_sequence()
-                break
-            else:
-                self.sequence[x] = MACRO_SEQUENCE_KEYCODES[self.widgets[x].currentIndex() - 2]
-        self.changed.emit()
-
     def serialize_prefix(self):
         raise NotImplementedError
 
-    def serialize(self):
+    def serialize(self, vial_protocol):
         out = b""
         for k in self.sequence:
+            if vial_protocol >= 2:
+                out += struct.pack("B", SS_QMK_PREFIX)
             out += self.serialize_prefix()
             out += struct.pack("B", k.code)
         return out
 
+    def save(self):
+        out = super().save()
+        for k in self.sequence:
+            out.append(k.qmk_id)
+        return out
+
+    def restore(self, act):
+        super().restore(act)
+        for qmk_id in act[1:]:
+            self.sequence.append(Keycode.find_by_qmk_id(qmk_id))
+
+    def __eq__(self, other):
+        return super().__eq__(other) and self.sequence == other.sequence
+
 
 class ActionDown(ActionSequence):
+
+    tag = "down"
 
     def serialize_prefix(self):
         return b"\x02"
@@ -139,11 +97,40 @@ class ActionDown(ActionSequence):
 
 class ActionUp(ActionSequence):
 
+    tag = "up"
+
     def serialize_prefix(self):
         return b"\x03"
 
 
 class ActionTap(ActionSequence):
 
+    tag = "tap"
+
     def serialize_prefix(self):
         return b"\x01"
+
+
+class ActionDelay(BasicAction):
+
+    tag = "delay"
+
+    def __init__(self, delay=0):
+        super().__init__()
+        self.delay = delay
+
+    def serialize(self, vial_protocol):
+        if vial_protocol < 2:
+            raise RuntimeError("ActionDelay can only be used with vial_protocol>=2")
+        delay = self.delay
+        return struct.pack("BBBB", SS_QMK_PREFIX, SS_DELAY_CODE, (delay % 255) + 1, (delay // 255) + 1)
+
+    def save(self):
+        return super().save() + [self.delay]
+
+    def restore(self, act):
+        super().restore(act)
+        self.delay = act[1]
+
+    def __eq__(self, other):
+        return super().__eq__(other) and self.delay == other.delay
