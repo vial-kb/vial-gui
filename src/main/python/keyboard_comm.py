@@ -17,6 +17,9 @@ CMD_VIA_GET_KEYBOARD_VALUE = 0x02
 CMD_VIA_SET_KEYBOARD_VALUE = 0x03
 CMD_VIA_GET_KEYCODE = 0x04
 CMD_VIA_SET_KEYCODE = 0x05
+CMD_VIA_LIGHTING_SET_VALUE = 0x07
+CMD_VIA_LIGHTING_GET_VALUE = 0x08
+CMD_VIA_LIGHTING_SAVE = 0x09
 CMD_VIA_MACRO_GET_COUNT = 0x0C
 CMD_VIA_MACRO_GET_BUFFER_SIZE = 0x0D
 CMD_VIA_MACRO_GET_BUFFER = 0x0E
@@ -27,6 +30,14 @@ CMD_VIA_VIAL_PREFIX = 0xFE
 
 VIA_LAYOUT_OPTIONS = 0x02
 VIA_SWITCH_MATRIX_STATE = 0x03
+
+QMK_BACKLIGHT_BRIGHTNESS = 0x09
+QMK_BACKLIGHT_EFFECT = 0x0A
+
+QMK_RGBLIGHT_BRIGHTNESS = 0x80
+QMK_RGBLIGHT_EFFECT = 0x81
+QMK_RGBLIGHT_EFFECT_SPEED = 0x82
+QMK_RGBLIGHT_COLOR = 0x83
 
 CMD_VIAL_GET_KEYBOARD_ID = 0x00
 CMD_VIAL_GET_SIZE = 0x01
@@ -145,6 +156,7 @@ class Keyboard:
     def __init__(self, dev, usb_send=hid_send):
         self.dev = dev
         self.usb_send = usb_send
+        self.definition = None
 
         # n.b. using OrderedDict here to make order of layout requests consistent for tests
         self.rowcol = OrderedDict()
@@ -163,6 +175,10 @@ class Keyboard:
         self.vibl = False
         self.custom_keycodes = None
 
+        self.lighting_qmk_rgblight = self.lighting_qmk_backlight = False
+        self.underglow_brightness = self.underglow_effect = self.underglow_effect_speed = -1
+        self.underglow_color = (0, 0)
+
         self.via_protocol = self.vial_protocol = self.keyboard_id = -1
 
     def reload(self, sideload_json=None):
@@ -177,6 +193,7 @@ class Keyboard:
         self.reload_layers()
         self.reload_keymap()
         self.reload_macros()
+        self.reload_rgb()
 
     def reload_layers(self):
         """ Get how many layers the keyboard has """
@@ -216,6 +233,8 @@ class Keyboard:
                 sz -= MSG_LEN
 
             payload = json.loads(lzma.decompress(payload))
+
+        self.definition = payload
 
         if "vial" in payload:
             vial = payload["vial"]
@@ -313,6 +332,23 @@ class Keyboard:
             macros = self.macro.split(b"\x00") + [b""] * self.macro_count
             self.macro = b"\x00".join(macros[:self.macro_count]) + b"\x00"
 
+    def reload_rgb(self):
+        if "lighting" in self.definition:
+            self.lighting_qmk_rgblight = self.definition["lighting"] in ["qmk_rgblight", "qmk_backlight_rgblight"]
+            self.lighting_qmk_backlight = self.definition["lighting"] in ["qmk_backlight", "qmk_backlight_rgblight"]
+
+        if self.lighting_qmk_rgblight:
+            self.underglow_brightness = self.usb_send(
+                self.dev, struct.pack(">BB", CMD_VIA_LIGHTING_GET_VALUE, QMK_RGBLIGHT_BRIGHTNESS), retries=20)[2]
+            self.underglow_effect = self.usb_send(
+                self.dev, struct.pack(">BB", CMD_VIA_LIGHTING_GET_VALUE, QMK_RGBLIGHT_EFFECT), retries=20)[2]
+            self.underglow_effect_speed = self.usb_send(
+                self.dev, struct.pack(">BB", CMD_VIA_LIGHTING_GET_VALUE, QMK_RGBLIGHT_EFFECT_SPEED), retries=20)[2]
+            color = self.usb_send(
+                self.dev, struct.pack(">BB", CMD_VIA_LIGHTING_GET_VALUE, QMK_RGBLIGHT_COLOR), retries=20)[2:4]
+            # hue, sat
+            self.underglow_color = (color[0], color[1])
+
     def set_key(self, layer, row, col, code):
         if code < 0:
             return
@@ -353,6 +389,24 @@ class Keyboard:
             self.usb_send(self.dev, struct.pack(">BHB", CMD_VIA_MACRO_SET_BUFFER, off, len(chunk)) + chunk,
                           retries=20)
         self.macro = data
+
+    def set_qmk_rgblight_brightness(self, value):
+        self.underglow_brightness = value
+        self.usb_send(self.dev, struct.pack(">BBB", CMD_VIA_LIGHTING_SET_VALUE, QMK_RGBLIGHT_BRIGHTNESS, value),
+                      retries=20)
+
+    def set_qmk_rgblight_effect(self, index):
+        self.underglow_effect = index
+        self.usb_send(self.dev, struct.pack(">BBB", CMD_VIA_LIGHTING_SET_VALUE, QMK_RGBLIGHT_EFFECT, index),
+                      retries=20)
+
+    def set_qmk_rgblight_effect_speed(self, value):
+        self.underglow_effect_speed = value
+        self.usb_send(self.dev, struct.pack(">BBB", CMD_VIA_LIGHTING_SET_VALUE, QMK_RGBLIGHT_EFFECT_SPEED, value),
+                      retries=20)
+
+    def save_rgb(self):
+        self.usb_send(self.dev, struct.pack(">B", CMD_VIA_LIGHTING_SAVE), retries=20)
 
     def save_layout(self):
         """ Serializes current layout to a binary """
