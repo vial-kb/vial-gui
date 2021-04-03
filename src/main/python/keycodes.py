@@ -539,6 +539,7 @@ def recreate_keyboard_keycodes(keyboard):
         KEYCODES_LAYERS.append(Keycode(0x5F11, "FN_MO23", "Fn2\n(Fn3)"))
 
     KEYCODES_LAYERS.extend(generate_keycodes_for_mask("MO", 0x5100))
+    KEYCODES_LAYERS.extend(generate_keycodes_for_mask("DF", 0x5200))
     KEYCODES_LAYERS.extend(generate_keycodes_for_mask("TG", 0x5300))
     KEYCODES_LAYERS.extend(generate_keycodes_for_mask("TT", 0x5800))
     KEYCODES_LAYERS.extend(generate_keycodes_for_mask("OSL", 0x5400))
