@@ -125,6 +125,8 @@ class RGBConfigurator(BasicEditor):
 
     def on_underglow_color(self):
         color = QColorDialog.getColor(self.current_color())
+        if not color.isValid():
+            return
         self.underglow_color.setStyleSheet("QWidget { background-color: %s}" % color.name())
         h, s, v, a = color.getHsvF()
         if h < 0:
