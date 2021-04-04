@@ -124,9 +124,11 @@ class RGBConfigurator(BasicEditor):
         self.device.keyboard.set_qmk_rgblight_effect_speed(value)
 
     def on_underglow_color(self):
-        color = QColorDialog.getColor()
+        color = QColorDialog.getColor(self.current_color())
         self.underglow_color.setStyleSheet("QWidget { background-color: %s}" % color.name())
         h, s, v, a = color.getHsvF()
+        if h < 0:
+            h = 0
         self.device.keyboard.set_qmk_rgblight_color(int(255 * h), int(255 * s), int(255 * v))
         self.update_color_from_keyboard()
 
@@ -148,6 +150,11 @@ class RGBConfigurator(BasicEditor):
         # self.underglow_effect_speed.blockSignals(False)
         self.underglow_color.blockSignals(False)
 
+    def current_color(self):
+        return QColor.fromHsvF(self.device.keyboard.underglow_color[0] / 255.0,
+                               self.device.keyboard.underglow_color[1] / 255.0,
+                               self.device.keyboard.underglow_brightness / 255.0)
+
     def update_color_from_keyboard(self):
         self.device.keyboard.reload_rgb()
 
@@ -156,10 +163,7 @@ class RGBConfigurator(BasicEditor):
         self.underglow_brightness.setValue(self.device.keyboard.underglow_brightness)
         self.underglow_effect.setCurrentIndex(self.device.keyboard.underglow_effect)
         # self.underglow_effect_speed.setValue(self.device.keyboard.underglow_effect_speed)
-        color = QColor.fromHsvF(self.device.keyboard.underglow_color[0] / 255.0,
-                                self.device.keyboard.underglow_color[1] / 255.0,
-                                self.device.keyboard.underglow_brightness / 255.0)
-        self.underglow_color.setStyleSheet("QWidget { background-color: %s}" % color.name())
+        self.underglow_color.setStyleSheet("QWidget { background-color: %s}" % self.current_color().name())
 
         self.unblock_signals()
 
