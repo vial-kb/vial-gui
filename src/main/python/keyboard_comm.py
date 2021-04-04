@@ -405,6 +405,10 @@ class Keyboard:
         self.usb_send(self.dev, struct.pack(">BBB", CMD_VIA_LIGHTING_SET_VALUE, QMK_RGBLIGHT_EFFECT_SPEED, value),
                       retries=20)
 
+    def set_qmk_rgblight_color(self, h, s, v):
+        self.set_qmk_rgblight_brightness(v)
+        self.usb_send(self.dev, struct.pack(">BBBB", CMD_VIA_LIGHTING_SET_VALUE, QMK_RGBLIGHT_COLOR, h, s))
+
     def save_rgb(self):
         self.usb_send(self.dev, struct.pack(">B", CMD_VIA_LIGHTING_SAVE), retries=20)
 

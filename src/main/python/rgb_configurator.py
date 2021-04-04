@@ -1,9 +1,11 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 from PyQt5 import QtCore
-from PyQt5.QtWidgets import QVBoxLayout, QWidget, QPushButton, QHBoxLayout, QSizePolicy, QGridLayout, QLabel, QSlider, \
-    QComboBox
+from PyQt5.QtGui import QColor
+from PyQt5.QtWidgets import QWidget, QPushButton, QHBoxLayout, QSizePolicy, QGridLayout, QLabel, QSlider, \
+    QComboBox, QColorDialog
 
 from basic_editor import BasicEditor
+from clickable_label import ClickableLabel
 from util import tr
 from vial_device import VialKeyboard
 
@@ -94,7 +96,8 @@ class RGBConfigurator(BasicEditor):
 
         self.lbl_underglow_color = QLabel(tr("RGBConfigurator", "Underglow Color"))
         self.container.addWidget(self.lbl_underglow_color, 3, 0)
-        self.underglow_color = QLabel("x")
+        self.underglow_color = ClickableLabel(" ")
+        self.underglow_color.clicked.connect(self.on_underglow_color)
         self.container.addWidget(self.underglow_color, 3, 1)
 
         self.underglow_effect.currentIndexChanged.connect(self.on_underglow_effect_changed)
@@ -109,6 +112,7 @@ class RGBConfigurator(BasicEditor):
 
     def on_underglow_brightness_changed(self, value):
         self.device.keyboard.set_qmk_rgblight_brightness(value)
+        self.update_color_from_keyboard()
 
     def on_underglow_effect_changed(self, index):
         self.lbl_underglow_color.setVisible(QMK_RGBLIGHT_EFFECTS[index].color_picker)
@@ -119,11 +123,45 @@ class RGBConfigurator(BasicEditor):
     def on_underglow_effect_speed_changed(self, value):
         self.device.keyboard.set_qmk_rgblight_effect_speed(value)
 
+    def on_underglow_color(self):
+        color = QColorDialog.getColor()
+        self.underglow_color.setStyleSheet("QWidget { background-color: %s}" % color.name())
+        h, s, v, a = color.getHsvF()
+        self.device.keyboard.set_qmk_rgblight_color(int(255 * h), int(255 * s), int(255 * v))
+        self.update_color_from_keyboard()
+
     def on_save(self):
         self.device.keyboard.save_rgb()
 
     def valid(self):
         return isinstance(self.device, VialKeyboard) and self.device.keyboard.lighting_qmk_rgblight
+
+    def block_signals(self):
+        self.underglow_brightness.blockSignals(True)
+        self.underglow_effect.blockSignals(True)
+        # self.underglow_effect_speed.blockSignals(True)
+        self.underglow_color.blockSignals(True)
+
+    def unblock_signals(self):
+        self.underglow_brightness.blockSignals(False)
+        self.underglow_effect.blockSignals(False)
+        # self.underglow_effect_speed.blockSignals(False)
+        self.underglow_color.blockSignals(False)
+
+    def update_color_from_keyboard(self):
+        self.device.keyboard.reload_rgb()
+
+        self.block_signals()
+
+        self.underglow_brightness.setValue(self.device.keyboard.underglow_brightness)
+        self.underglow_effect.setCurrentIndex(self.device.keyboard.underglow_effect)
+        # self.underglow_effect_speed.setValue(self.device.keyboard.underglow_effect_speed)
+        color = QColor.fromHsvF(self.device.keyboard.underglow_color[0] / 255.0,
+                                self.device.keyboard.underglow_color[1] / 255.0,
+                                self.device.keyboard.underglow_brightness / 255.0)
+        self.underglow_color.setStyleSheet("QWidget { background-color: %s}" % color.name())
+
+        self.unblock_signals()
 
     def rebuild(self, device):
         super().rebuild(device)
@@ -131,12 +169,4 @@ class RGBConfigurator(BasicEditor):
         if not self.valid():
             return
 
-        # TODO: this should block signals from the actual combobox/etc sending them
-        # self.blockSignals(True)
-
-        self.underglow_brightness.setValue(device.keyboard.underglow_brightness)
-        self.underglow_effect.setCurrentIndex(device.keyboard.underglow_effect)
-        # self.underglow_effect_speed.setValue(device.keyboard.underglow_effect_speed)
-
-        # TODO: as above
-        # self.blockSignals(False)
+        self.update_color_from_keyboard()
