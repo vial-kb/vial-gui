@@ -362,12 +362,14 @@ KEYCODES_QUANTUM = [
       masked=True),
     K(MT(MOD_LGUI|MOD_LSFT), "SGUI_T(kc)", "SGUI_T\n(kc)", "LGUI + LSFT when held, kc when tapped", masked=True),
     K(MT(MOD_LCTL|MOD_LALT), "LCA_T(kc)", "LCA_T\n(kc)", "LCTL + LALT when held, kc when tapped", masked=True),
+    K(MT(MOD_LSFT|MOD_LALT), "LSA_T(kc)", "LSA_T\n(kc)", "LSFT + LALT when held, kc when tapped", masked=True),
 
     K(QK_LCTL|QK_LSFT|QK_LALT|QK_LGUI, "HYPR(kc)", "Hyper\n(kc)", "LCTL + LSFT + LALT + LGUI", masked=True),
     K(QK_LCTL|QK_LSFT|QK_LALT, "MEH(kc)", "Meh\n(kc)", "LCTL + LSFT + LALT", masked=True),
     K(QK_LCTL|QK_LALT|QK_LGUI, "LCAG(kc)", "LCAG\n(kc)", "LCTL + LALT + LGUI", masked=True),
     K(QK_LGUI|QK_LSFT, "SGUI(kc)", "SGUI\n(kc)", "LGUI + LSFT", masked=True),
     K(QK_LCTL|QK_LALT, "LCA(kc)", "LCA\n(kc)", "LCTL + LALT", masked=True),
+    K(QK_LSFT|QK_LALT, "LSA(kc)", "LSA\n(kc)", "LSFT + LALT", masked=True),
     K(QK_LCTL|QK_LSFT, "C_S(kc)", "C_S\n(kc)", "LCTL + LSFT", masked=True),
 
     K(0x5C16, "KC_GESC", "~\nEsc", "Esc normally, but ~ when Shift or GUI is pressed"),
