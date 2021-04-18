@@ -26,6 +26,7 @@ CMD_VIA_KEYMAP_GET_BUFFER = 0x12
 CMD_VIA_VIAL_PREFIX = 0xFE
 
 VIA_LAYOUT_OPTIONS = 0x02
+VIA_SWITCH_MATRIX_STATE = 0x03
 
 CMD_VIAL_GET_KEYBOARD_ID = 0x00
 CMD_VIAL_GET_SIZE = 0x01
@@ -499,6 +500,13 @@ class Keyboard:
             return
 
         self.usb_send(self.dev, struct.pack("BB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_LOCK), retries=20)
+
+    def matrix_poll(self):
+        if self.via_protocol < 0:
+            return
+
+        data = self.usb_send(self.dev, struct.pack("BB", CMD_VIA_GET_KEYBOARD_VALUE, VIA_SWITCH_MATRIX_STATE), retries=20)
+        return data
 
     def macro_serialize(self, macro):
         """
