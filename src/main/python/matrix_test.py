@@ -15,6 +15,8 @@ class MatrixTest(BasicEditor):
         self.layout_editor = layout_editor
 
         self.keyboardWidget = KeyboardWidget(layout_editor)
+        self.keyboardWidget.set_enabled(False)
+
         self.startButtonWidget = QPushButton("Start testing")
 
         layout = QVBoxLayout()
@@ -43,8 +45,6 @@ class MatrixTest(BasicEditor):
         return isinstance(self.device, VialKeyboard)
 
     def matrix_poller(self):
-        # print(f"Rows: {self.keyboard.rows}")
-        # print(f"Cols: {self.keyboard.cols}")
         rows = self.keyboard.rows
         cols = self.keyboard.cols
         matrix = [ [None for y in range(cols)] for x in range(rows) ]
@@ -62,6 +62,17 @@ class MatrixTest(BasicEditor):
                 col_byte = math.floor(col / 8)
                 state = (row_data[col_byte] >> col) & 1
                 matrix[row][col] = state
+
+        for w in self.keyboardWidget.widgets:
+            row = w.desc.row
+            col = w.desc.col
+
+            if row < len(matrix) and col < len(matrix[row]):
+                w.setActive(matrix[row][col])
+        
+        self.keyboardWidget.update_layout()
+        self.keyboardWidget.update()
+        self.keyboardWidget.updateGeometry()
 
     def start_poller(self):
         if not self.polling:
