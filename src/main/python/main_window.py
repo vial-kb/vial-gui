@@ -16,6 +16,7 @@ from macro_recorder import MacroRecorder
 from unlocker import Unlocker
 from util import tr, find_vial_devices, EXAMPLE_KEYBOARDS
 from vial_device import VialKeyboard
+from matrix_test import MatrixTest
 
 import themes
 
@@ -51,9 +52,10 @@ class MainWindow(QMainWindow):
         self.keymap_editor = KeymapEditor(self.layout_editor)
         self.firmware_flasher = FirmwareFlasher(self)
         self.macro_recorder = MacroRecorder()
+        self.matrix_tester = MatrixTest(self.layout_editor)
 
         self.editors = [(self.keymap_editor, "Keymap"), (self.layout_editor, "Layout"), (self.macro_recorder, "Macros"),
-                        (self.firmware_flasher, "Firmware updater")]
+                        (self.matrix_tester, "Matrix tester"), (self.firmware_flasher, "Firmware updater")]
         Unlocker.global_layout_editor = self.layout_editor
 
         self.tabs = QTabWidget()
@@ -234,7 +236,7 @@ class MainWindow(QMainWindow):
             Unlocker.unlock(self.current_device.keyboard)
             self.current_device.keyboard.reload()
 
-        for e in [self.layout_editor, self.keymap_editor, self.firmware_flasher, self.macro_recorder]:
+        for e in [self.layout_editor, self.keymap_editor, self.firmware_flasher, self.macro_recorder, self.matrix_tester]:
             e.rebuild(self.current_device)
 
     def refresh_tabs(self):
