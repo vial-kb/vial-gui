@@ -166,7 +166,7 @@ class Keyboard:
         self.macro_memory = 0
         self.macro = b""
         self.vibl = False
-        self.custom_keycodes = dict()
+        self.custom_keycodes = []
 
         self.via_protocol = self.vial_protocol = self.keyboard_id = -1
 
@@ -230,13 +230,12 @@ class Keyboard:
 
         if "customKeycodes" in payload:
             custom_keycodes = payload["customKeycodes"]
-            self.custom_keycodes = dict()
+            self.custom_keycodes = []
 
             for i in range(len(custom_keycodes)):
                 c_keycode = custom_keycodes[i]
-                qmk_id = "USER{0:02}".format(i)
                 new_c_keycode = CustomKeycode(c_keycode["name"], c_keycode["title"], c_keycode["shortName"])
-                self.custom_keycodes[qmk_id] = new_c_keycode
+                self.custom_keycodes.append(new_c_keycode)
 
         serial = KleSerial()
         kb = serial.deserialize(payload["layouts"]["keymap"])

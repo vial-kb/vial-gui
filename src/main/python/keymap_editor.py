@@ -47,7 +47,6 @@ class KeymapEditor(BasicEditor):
         layout_editor.changed.connect(self.on_layout_changed)
 
         self.keymap_override = KEYMAPS[0][1]
-        self.custom_keycodes = dict()
 
         self.container.anykey.connect(self.on_any_keycode)
 
@@ -87,9 +86,6 @@ class KeymapEditor(BasicEditor):
             # get number of layers
             self.rebuild_layers()
 
-            # get custom keycodes
-            self.custom_keycodes = self.keyboard.custom_keycodes
-
             self.container.set_keys(self.keyboard.keys, self.keyboard.encoders)
 
             self.current_layer = 0
@@ -97,7 +93,6 @@ class KeymapEditor(BasicEditor):
 
             recreate_keyboard_keycodes(self.keyboard)
             self.tabbed_keycodes.recreate_keycode_buttons()
-            self.tabbed_keycodes.set_custom_keycodes(self.custom_keycodes)
             self.refresh_layer_display()
 
     def valid(self):
@@ -135,25 +130,11 @@ class KeymapEditor(BasicEditor):
         key = Keycode.find_outer_keycode(code)
         return key is not None and key.qmk_id in self.keymap_override
 
-    def code_is_custom(self, code):
-        key = Keycode.find_outer_keycode(code)
-        return key is not None and key.qmk_id in self.custom_keycodes
-
     def get_label(self, code):
         """ Get label for a specific keycode """
         if self.code_is_overriden(code):
             return self.keymap_override[Keycode.find_outer_keycode(code).qmk_id]
-        if self.code_is_custom(code):
-            return self.custom_keycodes[Keycode.find_outer_keycode(code).qmk_id].shortName
         return Keycode.label(code)
-
-    def get_tooltip(self, code):
-        if self.code_is_custom(code):
-            name = self.custom_keycodes[Keycode.find_outer_keycode(code).qmk_id].shortName
-            title = self.custom_keycodes[Keycode.find_outer_keycode(code).qmk_id].title
-            return "{0}: {1}".format(name, title)
-        else:
-            return Keycode.tooltip(code)
 
     def code_for_widget(self, widget):
         if widget.desc.row is not None:
@@ -174,7 +155,7 @@ class KeymapEditor(BasicEditor):
         for widget in self.container.widgets:
             code = self.code_for_widget(widget)
             text = self.get_label(code)
-            tooltip = self.get_tooltip(code)
+            tooltip = Keycode.tooltip(code)
             mask = Keycode.is_mask(code)
             mask_text = self.get_label(code & 0xFF)
             if mask:

@@ -488,24 +488,7 @@ KEYCODES_MEDIA = [
     K(132, "KC_LSCR", "Locking\nScroll", "Locking Scroll Lock", alias=["KC_LOCKING_SCROLL"]),
 ]
 
-KEYCODES_USER = [
-    K(0x5F80, "USER00", "User 0", "User keycode 0"),
-    K(0x5F81, "USER01", "User 1", "User keycode 1"),
-    K(0x5F82, "USER02", "User 2", "User keycode 2"),
-    K(0x5F83, "USER03", "User 3", "User keycode 3"),
-    K(0x5F84, "USER04", "User 4", "User keycode 4"),
-    K(0x5F85, "USER05", "User 5", "User keycode 5"),
-    K(0x5F86, "USER06", "User 6", "User keycode 6"),
-    K(0x5F87, "USER07", "User 7", "User keycode 7"),
-    K(0x5F88, "USER08", "User 8", "User keycode 8"),
-    K(0x5F89, "USER09", "User 9", "User keycode 9"),
-    K(0x5F8A, "USER10", "User 10", "User keycode 10"),
-    K(0x5F8B, "USER11", "User 11", "User keycode 11"),
-    K(0x5F8C, "USER12", "User 12", "User keycode 12"),
-    K(0x5F8D, "USER13", "User 13", "User keycode 13"),
-    K(0x5F8E, "USER14", "User 14", "User keycode 14"),
-    K(0x5F8F, "USER15", "User 15", "User keycode 15"),
-]
+KEYCODES_USER = []
 
 KEYCODES_MACRO = []
 
@@ -555,6 +538,12 @@ def recreate_keyboard_keycodes(keyboard):
     for x in range(keyboard.macro_count):
         lbl = "M{}".format(x)
         KEYCODES_MACRO.append(Keycode(0x5F12 + x, lbl, lbl))
+
+    KEYCODES_USER.clear()
+    for x in range(len(keyboard.custom_keycodes)):
+        c_keycode = keyboard.custom_keycodes[x]
+        lbl = "USER{0:02}".format(x)
+        KEYCODES_USER.append(Keycode(0x5F80 + x, c_keycode.shortName, c_keycode.name, c_keycode.title))
 
     recreate_keycodes()
 
