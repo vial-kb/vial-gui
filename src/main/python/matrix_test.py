@@ -89,13 +89,14 @@ class MatrixTest(BasicEditor):
 
         # write matrix state to keyboard widget
         for w in self.keyboardWidget.widgets:
-            row = w.desc.row
-            col = w.desc.col
+            if w.desc.row is not None and w.desc.col is not None:
+                row = w.desc.row
+                col = w.desc.col
 
-            if row < len(matrix) and col < len(matrix[row]):
-                w.setPressed(matrix[row][col])
-                if matrix[row][col]:
-                    w.setActive(True)
+                if row < len(matrix) and col < len(matrix[row]):
+                    w.setPressed(matrix[row][col])
+                    if matrix[row][col]:
+                        w.setActive(True)
         
         self.keyboardWidget.update_layout()
         self.keyboardWidget.update()
