@@ -542,7 +542,6 @@ def recreate_keyboard_keycodes(keyboard):
     KEYCODES_USER.clear()
     for x in range(len(keyboard.custom_keycodes)):
         c_keycode = keyboard.custom_keycodes[x]
-        lbl = "USER{0:02}".format(x)
         KEYCODES_USER.append(Keycode(0x5F80 + x, c_keycode.shortName, c_keycode.name, c_keycode.title))
 
     recreate_keycodes()
