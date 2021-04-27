@@ -138,6 +138,11 @@ def macro_deserialize_v2(data):
                 out.append(cls(args))
     return out
 
+class CustomKeycode:
+    def __init__(self, name, title, shortName):
+        self.name = name
+        self.title = title
+        self.shortName = shortName
 
 class Keyboard:
     """ Low-level communication with a vial-enabled keyboard """
@@ -161,6 +166,7 @@ class Keyboard:
         self.macro_memory = 0
         self.macro = b""
         self.vibl = False
+        self.custom_keycodes = dict()
 
         self.via_protocol = self.vial_protocol = self.keyboard_id = -1
 
@@ -221,6 +227,16 @@ class Keyboard:
 
         self.rows = payload["matrix"]["rows"]
         self.cols = payload["matrix"]["cols"]
+
+        if "customKeycodes" in payload:
+            custom_keycodes = payload["customKeycodes"]
+            self.custom_keycodes = dict()
+
+            for i in range(len(custom_keycodes)):
+                c_keycode = custom_keycodes[i]
+                qmk_id = "USER{0:02}".format(i)
+                new_c_keycode = CustomKeycode(c_keycode["name"], c_keycode["title"], c_keycode["shortName"])
+                self.custom_keycodes[qmk_id] = new_c_keycode
 
         serial = KleSerial()
         kb = serial.deserialize(payload["layouts"]["keymap"])

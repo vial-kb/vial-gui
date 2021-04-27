@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtWidgets import QTabWidget, QWidget, QScrollArea, QApplication
+from PyQt5.QtWidgets import QTabWidget, QWidget, QScrollArea, QApplication, QLabel
 from PyQt5.QtGui import QPalette
 
 from constants import KEYCODE_BTN_RATIO
@@ -22,6 +22,7 @@ class TabbedKeycodes(QTabWidget):
         super().__init__(parent)
 
         self.keymap_override = None
+        self.custom_keycodes = None
 
         self.tab_basic = QScrollArea()
         self.tab_iso = QScrollArea()
@@ -100,14 +101,29 @@ class TabbedKeycodes(QTabWidget):
         self.keymap_override = override
         self.relabel_buttons()
 
+    def set_custom_keycodes(self, custom_keycodes):
+        self.custom_keycodes = custom_keycodes
+        self.relabel_buttons()
+
     def relabel_buttons(self):
         for widget in self.widgets:
             qmk_id = widget.keycode.qmk_id
-            if qmk_id in self.keymap_override:
+            if self.keymap_override is not None and qmk_id in self.keymap_override:
                 label = self.keymap_override[qmk_id]
                 highlight_color = QApplication.palette().color(QPalette.Link).getRgb()
                 widget.setStyleSheet("QPushButton {color: rgb"+str(highlight_color)+";}")
+                widget.setWordWrap(False)
+            elif self.custom_keycodes is not None and qmk_id in self.custom_keycodes:
+                label = self.custom_keycodes[qmk_id].name
+                name = self.custom_keycodes[qmk_id].shortName
+                title = self.custom_keycodes[qmk_id].title
+                tooltip = "{0}: {1}".format(name, title)
+                highlight_color = QApplication.palette().color(QPalette.Link).getRgb()
+                widget.setStyleSheet("color: rgb"+str(highlight_color)+";")
+                widget.setToolTip(tooltip)
+                widget.setWordWrap(True)
             else:
                 label = widget.keycode.label
                 widget.setStyleSheet("QPushButton {}")
+                widget.setWordWrap(False)
             widget.setText(label.replace("&", "&&"))
