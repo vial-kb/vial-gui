@@ -49,6 +49,8 @@ class TabbedKeycodes(QTabWidget):
                 self.layout_layers = layout
             elif tab == self.tab_macro:
                 self.layout_macro = layout
+            elif tab == self.tab_user:
+                self.layout_user = layout
             elif tab == self.tab_basic:
                 # create the "Any" keycode button
                 btn = SquareButton()
@@ -70,13 +72,15 @@ class TabbedKeycodes(QTabWidget):
 
         self.layer_keycode_buttons = []
         self.macro_keycode_buttons = []
+        self.user_keycode_buttons = []
         self.set_keymap_override(KEYMAPS[0][1])
 
-    def create_buttons(self, layout, keycodes):
+    def create_buttons(self, layout, keycodes, wordWrap = False):
         buttons = []
 
         for keycode in keycodes:
             btn = SquareButton()
+            btn.setWordWrap(wordWrap)
             btn.setRelSize(KEYCODE_BTN_RATIO)
             btn.setToolTip(Keycode.tooltip(keycode.code))
             btn.clicked.connect(lambda st, k=keycode: self.keycode_changed.emit(k.code))
@@ -87,13 +91,14 @@ class TabbedKeycodes(QTabWidget):
         return buttons
 
     def recreate_keycode_buttons(self):
-        for btn in self.layer_keycode_buttons + self.macro_keycode_buttons:
+        for btn in self.layer_keycode_buttons + self.macro_keycode_buttons + self.user_keycode_buttons:
             self.widgets.remove(btn)
             btn.hide()
             btn.deleteLater()
         self.layer_keycode_buttons = self.create_buttons(self.layout_layers, KEYCODES_LAYERS)
         self.macro_keycode_buttons = self.create_buttons(self.layout_macro, KEYCODES_MACRO)
-        self.widgets += self.layer_keycode_buttons + self.macro_keycode_buttons
+        self.user_keycode_buttons = self.create_buttons(self.layout_user, KEYCODES_USER, wordWrap=True)
+        self.widgets += self.layer_keycode_buttons + self.macro_keycode_buttons + self.user_keycode_buttons
         self.relabel_buttons()
 
     def set_keymap_override(self, override):

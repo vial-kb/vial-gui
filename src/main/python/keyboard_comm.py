@@ -138,7 +138,6 @@ def macro_deserialize_v2(data):
                 out.append(cls(args))
     return out
 
-
 class Keyboard:
     """ Low-level communication with a vial-enabled keyboard """
 
@@ -161,6 +160,7 @@ class Keyboard:
         self.macro_memory = 0
         self.macro = b""
         self.vibl = False
+        self.custom_keycodes = None
 
         self.via_protocol = self.vial_protocol = self.keyboard_id = -1
 
@@ -221,6 +221,8 @@ class Keyboard:
 
         self.rows = payload["matrix"]["rows"]
         self.cols = payload["matrix"]["cols"]
+
+        self.custom_keycodes = payload.get("customKeycodes", None)
 
         serial = KleSerial()
         kb = serial.deserialize(payload["layouts"]["keymap"])
