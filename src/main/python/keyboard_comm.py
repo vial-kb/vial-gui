@@ -160,7 +160,7 @@ class Keyboard:
         self.macro_memory = 0
         self.macro = b""
         self.vibl = False
-        self.custom_keycodes = []
+        self.custom_keycodes = None
 
         self.via_protocol = self.vial_protocol = self.keyboard_id = -1
 
@@ -222,8 +222,7 @@ class Keyboard:
         self.rows = payload["matrix"]["rows"]
         self.cols = payload["matrix"]["cols"]
 
-        if "customKeycodes" in payload:
-            self.custom_keycodes = payload["customKeycodes"]
+        self.custom_keycodes = payload.get("customKeycodes", None)
 
         serial = KleSerial()
         kb = serial.deserialize(payload["layouts"]["keymap"])
