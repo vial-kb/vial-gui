@@ -504,6 +504,29 @@ def recreate_keycodes():
     KEYCODES.extend(KEYCODES_SPECIAL + KEYCODES_BASIC + KEYCODES_SHIFTED + KEYCODES_ISO + KEYCODES_LAYERS +
                     KEYCODES_QUANTUM + KEYCODES_BACKLIGHT + KEYCODES_MEDIA + KEYCODES_MACRO + KEYCODES_USER)
 
+def create_user_keycodes():
+    KEYCODES_USER.clear()
+    for x in range(16):
+        KEYCODES_USER.append(
+            Keycode(
+                0x5F80 + x,
+                "USER{:02}".format(x),
+                "User {}".format(x),
+                "User keycode {}".format(x)
+            )
+        )
+
+def create_custom_user_keycodes(custom_keycodes):
+    KEYCODES_USER.clear()
+    for x, c_keycode in enumerate(custom_keycodes):
+        KEYCODES_USER.append(
+            Keycode(
+                0x5F80 + x,
+                c_keycode.get("shortName", "USER{:02}".format(x)),
+                c_keycode.get("name", "USER{:02}".format(x)),
+                c_keycode.get("title", "USER{:02}".format(x))
+            )
+        )
 
 def recreate_keyboard_keycodes(keyboard):
     """ Generates keycodes based on information the keyboard provides (e.g. layer keycodes, macros) """
@@ -539,12 +562,12 @@ def recreate_keyboard_keycodes(keyboard):
         lbl = "M{}".format(x)
         KEYCODES_MACRO.append(Keycode(0x5F12 + x, lbl, lbl))
 
-    KEYCODES_USER.clear()
-    for x in range(len(keyboard.custom_keycodes)):
-        c_keycode = keyboard.custom_keycodes[x]
-        KEYCODES_USER.append(Keycode(0x5F80 + x, c_keycode.shortName, c_keycode.name, c_keycode.title))
+    # Check if custom keycodes are defined in keyboard, and if so add them to user keycodes
+    if keyboard.custom_keycodes is not None and len(keyboard.custom_keycodes) > 0:
+        create_custom_user_keycodes(keyboard.custom_keycodes)
+    else:
+        create_user_keycodes()
 
     recreate_keycodes()
-
 
 recreate_keycodes()

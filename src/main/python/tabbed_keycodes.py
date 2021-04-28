@@ -97,7 +97,7 @@ class TabbedKeycodes(QTabWidget):
             btn.deleteLater()
         self.layer_keycode_buttons = self.create_buttons(self.layout_layers, KEYCODES_LAYERS)
         self.macro_keycode_buttons = self.create_buttons(self.layout_macro, KEYCODES_MACRO)
-        self.user_keycode_buttons = self.create_buttons(self.layout_user, KEYCODES_USER, True)
+        self.user_keycode_buttons = self.create_buttons(self.layout_user, KEYCODES_USER, wordWrap=True)
         self.widgets += self.layer_keycode_buttons + self.macro_keycode_buttons + self.user_keycode_buttons
         self.relabel_buttons()
 
