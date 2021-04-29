@@ -8,6 +8,7 @@ import json
 import os
 from urllib.request import urlopen
 
+from editor_container import EditorContainer
 from firmware_flasher import FirmwareFlasher
 from keymap_editor import KeymapEditor
 from keymaps import KEYMAPS
@@ -245,9 +246,8 @@ class MainWindow(QMainWindow):
             if not container.valid():
                 continue
 
-            w = QWidget()
-            w.setLayout(container)
-            self.tabs.addTab(w, tr("MainWindow", lbl))
+            c = EditorContainer(container)
+            self.tabs.addTab(c, tr("MainWindow", lbl))
 
     def load_via_stack_json(self):
         data = urlopen("https://github.com/vial-kb/via-keymap-precompiled/raw/main/via_keyboard_stack.json")
