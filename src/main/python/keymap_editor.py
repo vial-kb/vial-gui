@@ -148,10 +148,6 @@ class KeymapEditor(BasicEditor):
             return self.keyboard.encoder_layout[(self.current_layer, widget.desc.encoder_idx,
                                                  widget.desc.encoder_dir)]
 
-    def mousePressEvent(self, ev):
-        self.container.deselect()
-        self.container.update()
-
     def refresh_layer_display(self):
         """ Refresh text on key widgets to display data corresponding to current layer """
 
