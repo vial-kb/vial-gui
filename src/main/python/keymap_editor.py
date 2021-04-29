@@ -59,6 +59,11 @@ class KeymapEditor(BasicEditor):
 
         self.device = None
 
+    def on_container_clicked(self):
+        """ Called when a mouse click event is bubbled up to the editor's container """
+        self.container.deselect()
+        self.container.update()
+
     def on_keycode_changed(self, code):
         self.set_key(code)
 
@@ -142,6 +147,10 @@ class KeymapEditor(BasicEditor):
         else:
             return self.keyboard.encoder_layout[(self.current_layer, widget.desc.encoder_idx,
                                                  widget.desc.encoder_dir)]
+
+    def mousePressEvent(self, ev):
+        self.container.deselect()
+        self.container.update()
 
     def refresh_layer_display(self):
         """ Refresh text on key widgets to display data corresponding to current layer """
