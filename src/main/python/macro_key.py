@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
-from keycodes import keycode_label
+from keycodes import Keycode
 
 
 class BasicKey:
@@ -13,7 +13,7 @@ class KeyDown(BasicKey):
         self.keycode = keycode
 
     def __repr__(self):
-        return "Down({})".format(keycode_label(self.keycode.code))
+        return "Down({})".format(Keycode.label(self.keycode.code))
 
     def __eq__(self, other):
         return isinstance(other, KeyDown) and other.keycode == self.keycode
@@ -25,7 +25,7 @@ class KeyUp(BasicKey):
         self.keycode = keycode
 
     def __repr__(self):
-        return "Up({})".format(keycode_label(self.keycode.code))
+        return "Up({})".format(Keycode.label(self.keycode.code))
 
     def __eq__(self, other):
         return isinstance(other, KeyUp) and other.keycode == self.keycode
@@ -37,7 +37,7 @@ class KeyTap(BasicKey):
         self.keycode = keycode
 
     def __repr__(self):
-        return "Tap({})".format(keycode_label(self.keycode.code))
+        return "Tap({})".format(Keycode.label(self.keycode.code))
 
     def __eq__(self, other):
         return isinstance(other, KeyTap) and other.keycode == self.keycode

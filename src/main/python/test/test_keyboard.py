@@ -31,6 +31,9 @@ class SimulatedDevice:
         out += b"\x00" * (MSG_LEN - len(out))
         self.expect_data.append((inp, out))
 
+    def expect_via_protocol(self, via_protocol):
+        self.expect("01", struct.pack("BB", 1, via_protocol))
+
     def expect_keyboard_id(self, kbid):
         self.expect("FE00", struct.pack("<IQ", 0, kbid))
 
@@ -93,6 +96,7 @@ class TestKeyboard(unittest.TestCase):
     @staticmethod
     def prepare_keyboard(layout, keymap, encoders=None):
         dev = SimulatedDevice()
+        dev.expect_via_protocol(9)
         dev.expect_keyboard_id(0)
         dev.expect_layout(layout)
         dev.expect_layers(len(keymap))

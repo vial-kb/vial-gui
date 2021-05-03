@@ -4,7 +4,7 @@ from PyQt5.QtGui import QPainter, QColor, QPainterPath, QTransform, QBrush, QPol
 from PyQt5.QtWidgets import QWidget, QToolTip, QApplication
 from PyQt5.QtCore import Qt, QSize, QRect, QPointF, pyqtSignal, QEvent, QRectF
 
-from constants import KEY_SIZE_RATIO, KEY_SPACING_RATIO, KEYBOARD_WIDGET_PADDING, KEYBOARD_WIDGET_MASK_PADDING
+from constants import KEY_SIZE_RATIO, KEY_SPACING_RATIO, KEYBOARD_WIDGET_PADDING, KEYBOARD_WIDGET_MASK_PADDING, KEYBOARD_WIDGET_MASK_HEIGHT
 
 
 class KeyWidget:
@@ -12,6 +12,7 @@ class KeyWidget:
     def __init__(self, desc, scale, shift_x=0, shift_y=0):
         self.active = False
         self.masked = False
+        self.pressed = False
         self.desc = desc
         self.text = ""
         self.mask_text = ""
@@ -48,7 +49,7 @@ class KeyWidget:
             self.w2 = size * self.desc.width2 - spacing
             self.h2 = size * self.desc.height2 - spacing
 
-            self.bbox = self.calculate_bbox(QRectF(self.x, self.y, self.w, self.h))
+            self.bbox = self.calculate_bbox(self.rect)
             self.polygon = QPolygonF(self.bbox + [self.bbox[0]])
             self.draw_path = self.calculate_draw_path()
             self.draw_path2 = self.calculate_draw_path2()
@@ -56,9 +57,12 @@ class KeyWidget:
             # calculate areas where the inner keycode will be located
             # nonmask = outer (e.g. Rsft_T)
             # mask = inner (e.g. KC_A)
-            self.nonmask_rect = QRectF(self.x, self.y, self.w, self.h / 2)
-            self.mask_rect = QRectF(self.x + KEYBOARD_WIDGET_MASK_PADDING, self.y + self.h / 2,
-                                    self.w - 2 * KEYBOARD_WIDGET_MASK_PADDING, self.h / 2 - KEYBOARD_WIDGET_MASK_PADDING)
+            self.nonmask_rect = QRectF(int(self.x), int(self.y), 
+                                       int(self.w), int(self.h * (1 - KEYBOARD_WIDGET_MASK_HEIGHT)))
+            self.mask_rect = QRectF(int(self.x + KEYBOARD_WIDGET_MASK_PADDING), 
+                                    int(self.y) + int(self.h * (1 - KEYBOARD_WIDGET_MASK_HEIGHT)),
+                                    int(self.w - 2 * KEYBOARD_WIDGET_MASK_PADDING), 
+                                    int(self.h * KEYBOARD_WIDGET_MASK_HEIGHT - KEYBOARD_WIDGET_MASK_PADDING))
             self.mask_bbox = self.calculate_bbox(self.mask_rect)
             self.mask_polygon = QPolygonF(self.mask_bbox + [self.mask_bbox[0]])
 
@@ -105,6 +109,9 @@ class KeyWidget:
 
     def setActive(self, active):
         self.active = active
+
+    def setPressed(self, pressed):
+        self.pressed = pressed
 
     def setColor(self, color):
         self.color = color
@@ -260,6 +267,16 @@ class KeyboardWidget(QWidget):
         active_brush.setColor(QApplication.palette().color(QPalette.Highlight))
         active_brush.setStyle(Qt.SolidPattern)
 
+        # for pressed keycaps
+        pressed_pen = qp.pen()
+        pressed_pen_color = QApplication.palette().color(QPalette.HighlightedText).lighter(75)
+        pressed_pen.setColor(pressed_pen_color)
+
+        pressed_brush = QBrush()
+        pressed_brush_color = QApplication.palette().color(QPalette.Highlight).lighter(75)
+        pressed_brush.setColor(pressed_brush_color)
+        pressed_brush.setStyle(Qt.SolidPattern)
+
         mask_font = qp.font()
         mask_font.setPointSize(mask_font.pointSize() * 0.8)
 
@@ -276,6 +293,12 @@ class KeyboardWidget(QWidget):
             if active:
                 qp.setPen(active_pen)
                 qp.setBrush(active_brush)
+
+            if key.pressed:
+                # move key slightly down when pressed
+                qp.translate(0, 5)
+                qp.setPen(pressed_pen)
+                qp.setBrush(pressed_brush)
 
             # draw the keycap
             qp.drawPath(key.draw_path)

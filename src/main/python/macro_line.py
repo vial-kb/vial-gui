@@ -3,7 +3,7 @@
 from PyQt5.QtCore import QObject, pyqtSignal, Qt
 from PyQt5.QtWidgets import QHBoxLayout, QToolButton, QComboBox
 
-from macro_action import ActionText, ActionDown, ActionUp, ActionTap
+from macro_action_ui import ActionTextUI, ActionDownUI, ActionUpUI, ActionTapUI, ActionDelayUI
 
 
 class MacroLine(QObject):
@@ -11,13 +11,17 @@ class MacroLine(QObject):
     changed = pyqtSignal()
 
     types = ["Text", "Down", "Up", "Tap"]
-    type_to_cls = [ActionText, ActionDown, ActionUp, ActionTap]
+    type_to_cls = [ActionTextUI, ActionDownUI, ActionUpUI, ActionTapUI]
 
     def __init__(self, parent, action):
         super().__init__()
 
         self.parent = parent
         self.container = parent.container
+
+        if self.parent.parent.keyboard.vial_protocol >= 2:
+            self.types = self.types[:] + ["Delay (ms)"]
+            self.type_to_cls = self.type_to_cls[:] + [ActionDelayUI]
 
         self.arrows = QHBoxLayout()
         self.btn_up = QToolButton()
@@ -74,6 +78,7 @@ class MacroLine(QObject):
         self.action = self.type_to_cls[self.select_type.currentIndex()](self.container)
         self.action.changed.connect(self.on_change)
         self.action.insert(self.row)
+        self.changed.emit()
 
     def on_remove_clicked(self):
         self.parent.on_remove(self)
@@ -86,6 +91,3 @@ class MacroLine(QObject):
 
     def on_change(self):
         self.changed.emit()
-
-    def serialize(self):
-        return self.action.serialize()

@@ -8,7 +8,7 @@ from PyQt5.QtCore import Qt
 from any_keycode_dialog import AnyKeycodeDialog
 from basic_editor import BasicEditor
 from keyboard_widget import KeyboardWidget, EncoderWidget
-from keycodes import recreate_keyboard_keycodes, find_keycode, keycode_label, keycode_tooltip, keycode_is_mask
+from keycodes import recreate_keyboard_keycodes, Keycode
 from keymaps import KEYMAPS
 from square_button import SquareButton
 from tabbed_keycodes import TabbedKeycodes
@@ -58,6 +58,11 @@ class KeymapEditor(BasicEditor):
         self.addWidget(self.tabbed_keycodes)
 
         self.device = None
+
+    def on_container_clicked(self):
+        """ Called when a mouse click event is bubbled up to the editor's container """
+        self.container.deselect()
+        self.container.update()
 
     def on_keycode_changed(self, code):
         self.set_key(code)
@@ -118,41 +123,45 @@ class KeymapEditor(BasicEditor):
         self.tabbed_keycodes.set_keymap_override(override)
 
     def on_any_keycode(self):
-        dlg = AnyKeycodeDialog()
+        if self.container.active_key is None:
+            return
+        current_code = self.code_for_widget(self.container.active_key)
+        dlg = AnyKeycodeDialog(current_code)
         if dlg.exec_() and dlg.value >= 0:
             self.on_keycode_changed(dlg.value)
 
     def code_is_overriden(self, code):
         """ Check whether a country-specific keymap overrides a code """
-        key = find_keycode(code)
+        key = Keycode.find_outer_keycode(code)
         return key is not None and key.qmk_id in self.keymap_override
 
     def get_label(self, code):
         """ Get label for a specific keycode """
         if self.code_is_overriden(code):
-            return self.keymap_override[find_keycode(code).qmk_id]
-        return keycode_label(code)
+            return self.keymap_override[Keycode.find_outer_keycode(code).qmk_id]
+        return Keycode.label(code)
+
+    def code_for_widget(self, widget):
+        if widget.desc.row is not None:
+            return self.keyboard.layout[(self.current_layer, widget.desc.row, widget.desc.col)]
+        else:
+            return self.keyboard.encoder_layout[(self.current_layer, widget.desc.encoder_idx,
+                                                 widget.desc.encoder_dir)]
 
     def refresh_layer_display(self):
         """ Refresh text on key widgets to display data corresponding to current layer """
 
         self.container.update_layout()
 
-        for btn in self.layer_buttons:
-            btn.setEnabled(True)
-            btn.setChecked(False)
-        self.layer_buttons[self.current_layer].setEnabled(False)
-        self.layer_buttons[self.current_layer].setChecked(True)
+        for idx, btn in enumerate(self.layer_buttons):
+            btn.setEnabled(idx != self.current_layer)
+            btn.setChecked(idx == self.current_layer)
 
         for widget in self.container.widgets:
-            if widget.desc.row is not None:
-                code = self.keyboard.layout[(self.current_layer, widget.desc.row, widget.desc.col)]
-            else:
-                code = self.keyboard.encoder_layout[(self.current_layer, widget.desc.encoder_idx,
-                                                     widget.desc.encoder_dir)]
+            code = self.code_for_widget(widget)
             text = self.get_label(code)
-            tooltip = keycode_tooltip(code)
-            mask = keycode_is_mask(code)
+            tooltip = Keycode.tooltip(code)
+            mask = Keycode.is_mask(code)
             mask_text = self.get_label(code & 0xFF)
             if mask:
                 text = text.split("\n")[0]

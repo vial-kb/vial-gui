@@ -8,14 +8,16 @@ import json
 import os
 from urllib.request import urlopen
 
+from editor_container import EditorContainer
 from firmware_flasher import FirmwareFlasher
 from keymap_editor import KeymapEditor
 from keymaps import KEYMAPS
 from layout_editor import LayoutEditor
 from macro_recorder import MacroRecorder
 from unlocker import Unlocker
-from util import tr, find_vial_devices
+from util import tr, find_vial_devices, EXAMPLE_KEYBOARDS
 from vial_device import VialKeyboard
+from matrix_test import MatrixTest
 
 import themes
 
@@ -26,7 +28,7 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         self.settings = QSettings("Vial", "Vial")
-        themes.set_theme(self.settings.value("theme"))
+        themes.set_theme(self.get_theme())
 
         self.current_device = None
         self.devices = []
@@ -51,9 +53,10 @@ class MainWindow(QMainWindow):
         self.keymap_editor = KeymapEditor(self.layout_editor)
         self.firmware_flasher = FirmwareFlasher(self)
         self.macro_recorder = MacroRecorder()
+        self.matrix_tester = MatrixTest(self.layout_editor)
 
         self.editors = [(self.keymap_editor, "Keymap"), (self.layout_editor, "Layout"), (self.macro_recorder, "Macros"),
-                        (self.firmware_flasher, "Firmware updater")]
+                        (self.matrix_tester, "Matrix tester"), (self.firmware_flasher, "Firmware updater")]
         Unlocker.global_layout_editor = self.layout_editor
 
         self.tabs = QTabWidget()
@@ -132,14 +135,19 @@ class MainWindow(QMainWindow):
 
         keyboard_layout_menu = self.menuBar().addMenu(tr("Menu", "Keyboard layout"))
         keymap_group = QActionGroup(self)
+        selected_keymap = self.settings.value("keymap")
         for idx, keymap in enumerate(KEYMAPS):
             act = QAction(tr("KeyboardLayout", keymap[0]), self)
             act.triggered.connect(lambda checked, x=idx: self.change_keyboard_layout(x))
             act.setCheckable(True)
-            if idx == 0:
+            if selected_keymap == keymap[0]:
+                self.change_keyboard_layout(idx)
                 act.setChecked(True)
             keymap_group.addAction(act)
             keyboard_layout_menu.addAction(act)
+        # check "QWERTY" if nothing else is selected
+        if keymap_group.checkedAction() is None:
+            keymap_group.actions()[0].setChecked(True)
 
         self.security_menu = self.menuBar().addMenu(tr("Menu", "Security"))
         self.security_menu.addAction(keyboard_unlock_act)
@@ -149,7 +157,7 @@ class MainWindow(QMainWindow):
 
         self.theme_menu = self.menuBar().addMenu(tr("Menu", "Theme"))
         theme_group = QActionGroup(self)
-        selected_theme = self.settings.value("theme")
+        selected_theme = self.get_theme()
         for name, _ in [("System", None)] + themes.themes:
             act = QAction(tr("MenuTheme", name), self)
             act.triggered.connect(lambda x,name=name: self.set_theme(name))
@@ -182,8 +190,8 @@ class MainWindow(QMainWindow):
                 outf.write(self.keymap_editor.save_layout())
 
     def on_click_refresh(self):
-        self.devices = find_vial_devices(self.via_stack_json, self.sideload_vid, self.sideload_pid)
         self.combobox_devices.clear()
+        self.devices = find_vial_devices(self.via_stack_json, self.sideload_vid, self.sideload_pid)
 
         for dev in self.devices:
             self.combobox_devices.addItem(dev.title())
@@ -211,6 +219,11 @@ class MainWindow(QMainWindow):
             else:
                 self.current_device.open(None)
 
+            if isinstance(self.current_device, VialKeyboard) \
+                    and self.current_device.keyboard.keyboard_id in EXAMPLE_KEYBOARDS:
+                QMessageBox.warning(self, "", "An example keyboard UID was detected.\n"
+                                              "Please change your keyboard UID to be unique before you ship!")
+
         self.rebuild()
 
         self.refresh_tabs()
@@ -224,7 +237,7 @@ class MainWindow(QMainWindow):
             Unlocker.unlock(self.current_device.keyboard)
             self.current_device.keyboard.reload()
 
-        for e in [self.layout_editor, self.keymap_editor, self.firmware_flasher, self.macro_recorder]:
+        for e in [self.layout_editor, self.keymap_editor, self.firmware_flasher, self.macro_recorder, self.matrix_tester]:
             e.rebuild(self.current_device)
 
     def refresh_tabs(self):
@@ -233,9 +246,8 @@ class MainWindow(QMainWindow):
             if not container.valid():
                 continue
 
-            w = QWidget()
-            w.setLayout(container)
-            self.tabs.addTab(w, tr("MainWindow", lbl))
+            c = EditorContainer(container)
+            self.tabs.addTab(c, tr("MainWindow", lbl))
 
     def load_via_stack_json(self):
         data = urlopen("https://github.com/vial-kb/via-keymap-precompiled/raw/main/via_keyboard_stack.json")
@@ -294,7 +306,11 @@ class MainWindow(QMainWindow):
             self.current_device.keyboard.reset()
 
     def change_keyboard_layout(self, index):
+        self.settings.setValue("keymap", KEYMAPS[index][0])
         self.keymap_editor.set_keymap_override(KEYMAPS[index][1])
+
+    def get_theme(self):
+        return self.settings.value("theme", "Dark")
 
     def set_theme(self, theme):
         themes.set_theme(theme)

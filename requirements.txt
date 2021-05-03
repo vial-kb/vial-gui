@@ -1,7 +1,7 @@
 altgraph==0.17
 fbs==0.9.0
 future==0.18.2
-hidapi==0.9.0.post3
+hidapi==0.10.1
 keyboard==0.13.5
 macholib==1.14
 pefile==2019.4.18

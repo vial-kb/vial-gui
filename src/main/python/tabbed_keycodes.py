@@ -6,8 +6,8 @@ from PyQt5.QtGui import QPalette
 
 from constants import KEYCODE_BTN_RATIO
 from flowlayout import FlowLayout
-from keycodes import keycode_tooltip, KEYCODES_BASIC, KEYCODES_ISO, KEYCODES_MACRO, KEYCODES_LAYERS, KEYCODES_QUANTUM, \
-    KEYCODES_BACKLIGHT, KEYCODES_MEDIA, KEYCODES_SPECIAL, KEYCODES_SHIFTED, KEYCODES_USER
+from keycodes import KEYCODES_BASIC, KEYCODES_ISO, KEYCODES_MACRO, KEYCODES_LAYERS, KEYCODES_QUANTUM, \
+    KEYCODES_BACKLIGHT, KEYCODES_MEDIA, KEYCODES_SPECIAL, KEYCODES_SHIFTED, KEYCODES_USER, Keycode
 from keymaps import KEYMAPS
 from square_button import SquareButton
 from util import tr
@@ -49,6 +49,8 @@ class TabbedKeycodes(QTabWidget):
                 self.layout_layers = layout
             elif tab == self.tab_macro:
                 self.layout_macro = layout
+            elif tab == self.tab_user:
+                self.layout_user = layout
             elif tab == self.tab_basic:
                 # create the "Any" keycode button
                 btn = SquareButton()
@@ -70,15 +72,17 @@ class TabbedKeycodes(QTabWidget):
 
         self.layer_keycode_buttons = []
         self.macro_keycode_buttons = []
+        self.user_keycode_buttons = []
         self.set_keymap_override(KEYMAPS[0][1])
 
-    def create_buttons(self, layout, keycodes):
+    def create_buttons(self, layout, keycodes, wordWrap = False):
         buttons = []
 
         for keycode in keycodes:
             btn = SquareButton()
+            btn.setWordWrap(wordWrap)
             btn.setRelSize(KEYCODE_BTN_RATIO)
-            btn.setToolTip(keycode_tooltip(keycode.code))
+            btn.setToolTip(Keycode.tooltip(keycode.code))
             btn.clicked.connect(lambda st, k=keycode: self.keycode_changed.emit(k.code))
             btn.keycode = keycode
             layout.addWidget(btn)
@@ -87,13 +91,14 @@ class TabbedKeycodes(QTabWidget):
         return buttons
 
     def recreate_keycode_buttons(self):
-        for btn in self.layer_keycode_buttons + self.macro_keycode_buttons:
+        for btn in self.layer_keycode_buttons + self.macro_keycode_buttons + self.user_keycode_buttons:
             self.widgets.remove(btn)
             btn.hide()
             btn.deleteLater()
         self.layer_keycode_buttons = self.create_buttons(self.layout_layers, KEYCODES_LAYERS)
         self.macro_keycode_buttons = self.create_buttons(self.layout_macro, KEYCODES_MACRO)
-        self.widgets += self.layer_keycode_buttons + self.macro_keycode_buttons
+        self.user_keycode_buttons = self.create_buttons(self.layout_user, KEYCODES_USER, wordWrap=True)
+        self.widgets += self.layer_keycode_buttons + self.macro_keycode_buttons + self.user_keycode_buttons
         self.relabel_buttons()
 
     def set_keymap_override(self, override):
