@@ -138,6 +138,7 @@ def macro_deserialize_v2(data):
                 out.append(cls(args))
     return out
 
+
 class Keyboard:
     """ Low-level communication with a vial-enabled keyboard """
 
@@ -182,11 +183,14 @@ class Keyboard:
 
         self.layers = self.usb_send(self.dev, struct.pack("B", CMD_VIA_GET_LAYER_COUNT), retries=20)[1]
 
+    def reload_via_protocol(self):
+        data = self.usb_send(self.dev, struct.pack("B", CMD_VIA_GET_PROTOCOL_VERSION), retries=20)
+        self.via_protocol = struct.unpack(">H", data[1:3])[0]
+
     def reload_layout(self, sideload_json=None):
         """ Requests layout data from the current device """
 
-        data = self.usb_send(self.dev, struct.pack("B", CMD_VIA_GET_PROTOCOL_VERSION), retries=20)
-        self.via_protocol = struct.unpack(">H", data[1:3])[0]
+        self.reload_via_protocol()
 
         if sideload_json is not None:
             payload = sideload_json
@@ -613,3 +617,6 @@ class DummyKeyboard(Keyboard):
 
     def lock(self):
         return
+
+    def reload_via_protocol(self):
+        pass
