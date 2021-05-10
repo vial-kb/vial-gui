@@ -62,6 +62,10 @@ class MatrixTest(BasicEditor):
         self.keyboardWidget.updateGeometry()
 
     def matrix_poller(self):
+        if not self.valid():
+            self.stop()
+            return
+
         # Get size for matrix
         rows = self.keyboard.rows
         cols = self.keyboard.cols
@@ -69,7 +73,12 @@ class MatrixTest(BasicEditor):
         matrix = [[None] * cols for x in range(rows)]
 
         # Get matrix data from keyboard
-        data = self.keyboard.matrix_poll()
+        try:
+            data = self.keyboard.matrix_poll()
+        except (RuntimeError, ValueError):
+            self.stop()
+            return
+
         # Calculate the amount of bytes belong to 1 row, each bit is 1 key, so per 8 keys in a row,
         # a byte is needed for the row.
         row_size = math.ceil(cols / 8)
@@ -112,7 +121,11 @@ class MatrixTest(BasicEditor):
 
     def stop(self):
         self.timer.stop()
-        self.keyboard.lock()
+        try:
+            self.keyboard.lock()
+        except (RuntimeError, ValueError):
+            # if keyboard disappeared, we can't relock it
+            pass
         self.startButtonWidget.setText("Start testing")
         self.polling = False
 
