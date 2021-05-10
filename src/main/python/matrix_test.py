@@ -1,12 +1,14 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
 from PyQt5.QtWidgets import QVBoxLayout, QPushButton
 from PyQt5.QtCore import Qt, QTimer
-import struct
+
 import math
 
 from basic_editor import BasicEditor
 from keyboard_widget import KeyboardWidget
 from vial_device import VialKeyboard
 from unlocker import Unlocker
+
 
 class MatrixTest(BasicEditor):
     def __init__(self, layout_editor):
@@ -35,7 +37,7 @@ class MatrixTest(BasicEditor):
         self.timer = QTimer()
         self.timer.timeout.connect(self.matrix_poller)
 
-        self.startButtonWidget.clicked.connect(self.start_poller)
+        self.startButtonWidget.clicked.connect(self.toggle)
         self.resetButtonWidget.clicked.connect(self.reset_keyboard_widget)
 
     def rebuild(self, device):
@@ -54,7 +56,7 @@ class MatrixTest(BasicEditor):
         for w in self.keyboardWidget.widgets:
             w.setPressed(False)
             w.setActive(False)
-        
+
         self.keyboardWidget.update_layout()
         self.keyboardWidget.update()
         self.keyboardWidget.updateGeometry()
@@ -64,13 +66,13 @@ class MatrixTest(BasicEditor):
         rows = self.keyboard.rows
         cols = self.keyboard.cols
         # Generate 2d array of matrix
-        matrix = [ [None for y in range(cols)] for x in range(rows) ]
+        matrix = [[None] * cols for x in range(rows)]
 
         # Get matrix data from keyboard
         data = self.keyboard.matrix_poll()
-        # Calculate the amount of bytes belong to 1 row, each bit is 1 key, so per 8 keys in a row, a byte is needed for the row.
+        # Calculate the amount of bytes belong to 1 row, each bit is 1 key, so per 8 keys in a row,
+        # a byte is needed for the row.
         row_size = math.ceil(cols / 8)
-
 
         for row in range(rows):
             # Make slice of bytes for the row (skip first 2 bytes, they're for VIAL)
@@ -78,7 +80,7 @@ class MatrixTest(BasicEditor):
             row_data_end = row_data_start + row_size
             row_data = data[row_data_start:row_data_end]
 
-            #Get each bit representing pressed state for col
+            # Get each bit representing pressed state for col
             for col in range(cols):
                 # row_data is array of bytes, calculate in which byte the col is located
                 col_byte = len(row_data) - 1 - math.floor(col / 8)
@@ -97,20 +99,25 @@ class MatrixTest(BasicEditor):
                     w.setPressed(matrix[row][col])
                     if matrix[row][col]:
                         w.setActive(True)
-        
+
         self.keyboardWidget.update_layout()
         self.keyboardWidget.update()
         self.keyboardWidget.updateGeometry()
 
-    def start_poller(self):
+    def start(self):
+        Unlocker.unlock(self.keyboard)
+        self.startButtonWidget.setText("Stop testing")
+        self.timer.start(20)
+        self.polling = True
+
+    def stop(self):
+        self.timer.stop()
+        self.keyboard.lock()
+        self.startButtonWidget.setText("Start testing")
+        self.polling = False
+
+    def toggle(self):
         if not self.polling:
-            Unlocker.unlock(self.keyboard)
-            self.startButtonWidget.setText("Stop testing")
-            self.timer.start(20)
-            self.polling = True
+            self.start()
         else:
-            self.timer.stop()
-            self.keyboard.lock()
-            self.startButtonWidget.setText("Start testing")
-            self.polling = False
-        
+            self.stop()
