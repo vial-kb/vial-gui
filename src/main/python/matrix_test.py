@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
-from PyQt5.QtWidgets import QVBoxLayout, QPushButton
+from PyQt5.QtWidgets import QVBoxLayout, QPushButton, QWidget
 from PyQt5.QtCore import Qt, QTimer
 
 import math
@@ -39,6 +39,8 @@ class MatrixTest(BasicEditor):
 
         self.startButtonWidget.clicked.connect(self.toggle)
         self.resetButtonWidget.clicked.connect(self.reset_keyboard_widget)
+
+        self.grabber = QWidget()
 
     def rebuild(self, device):
         super().rebuild(device)
@@ -114,12 +116,14 @@ class MatrixTest(BasicEditor):
         self.keyboardWidget.updateGeometry()
 
     def start(self):
+        self.grabber.grabKeyboard()
         Unlocker.unlock(self.keyboard)
         self.startButtonWidget.setText("Stop testing")
         self.timer.start(20)
         self.polling = True
 
     def stop(self):
+        self.grabber.releaseKeyboard()
         self.timer.stop()
         try:
             self.keyboard.lock()
