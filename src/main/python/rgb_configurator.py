@@ -86,14 +86,6 @@ class RGBConfigurator(BasicEditor):
         self.underglow_brightness.valueChanged.connect(self.on_underglow_brightness_changed)
         self.container.addWidget(self.underglow_brightness, 1, 1)
 
-        # XXX: qmk speed setting does nothing
-        # self.container.addWidget(QLabel(tr("RGBConfigurator", "Underglow Effect Speed")), 2, 0)
-        # self.underglow_effect_speed = QSlider(QtCore.Qt.Horizontal)
-        # self.underglow_effect_speed.setMinimum(0)
-        # self.underglow_effect_speed.setMaximum(3)
-        # self.underglow_effect_speed.valueChanged.connect(self.on_underglow_effect_speed_changed)
-        # self.container.addWidget(self.underglow_effect_speed, 2, 1)
-
         self.lbl_underglow_color = QLabel(tr("RGBConfigurator", "Underglow Color"))
         self.container.addWidget(self.lbl_underglow_color, 3, 0)
         self.underglow_color = ClickableLabel(" ")
@@ -143,13 +135,11 @@ class RGBConfigurator(BasicEditor):
     def block_signals(self):
         self.underglow_brightness.blockSignals(True)
         self.underglow_effect.blockSignals(True)
-        # self.underglow_effect_speed.blockSignals(True)
         self.underglow_color.blockSignals(True)
 
     def unblock_signals(self):
         self.underglow_brightness.blockSignals(False)
         self.underglow_effect.blockSignals(False)
-        # self.underglow_effect_speed.blockSignals(False)
         self.underglow_color.blockSignals(False)
 
     def current_color(self):
@@ -164,7 +154,6 @@ class RGBConfigurator(BasicEditor):
 
         self.underglow_brightness.setValue(self.device.keyboard.underglow_brightness)
         self.underglow_effect.setCurrentIndex(self.device.keyboard.underglow_effect)
-        # self.underglow_effect_speed.setValue(self.device.keyboard.underglow_effect_speed)
         self.underglow_color.setStyleSheet("QWidget { background-color: %s}" % self.current_color().name())
 
         self.unblock_signals()
