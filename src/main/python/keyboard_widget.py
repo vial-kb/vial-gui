@@ -49,8 +49,13 @@ class KeyWidget:
             self.w2 = size * self.desc.width2 - spacing
             self.h2 = size * self.desc.height2 - spacing
 
+            self.rect2 = QRect(self.x2, self.y2, self.w2, self.h2)
+
             self.bbox = self.calculate_bbox(self.rect)
+            self.bbox2 = self.calculate_bbox(self.rect2)
             self.polygon = QPolygonF(self.bbox + [self.bbox[0]])
+            self.polygon2 = QPolygonF(self.bbox2 + [self.bbox2[0]])
+            self.polygon = self.polygon.united(self.polygon2)
             self.draw_path = self.calculate_draw_path()
             self.draw_path2 = self.calculate_draw_path2()
 
