@@ -3,7 +3,7 @@ from PyQt5 import QtCore
 from PyQt5.QtCore import pyqtSignal, QObject
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QWidget, QPushButton, QHBoxLayout, QSizePolicy, QGridLayout, QLabel, QSlider, \
-    QComboBox, QColorDialog
+    QComboBox, QColorDialog, QCheckBox
 
 from basic_editor import BasicEditor
 from clickable_label import ClickableLabel
@@ -64,12 +64,16 @@ class BasicHandler(QObject):
 
     update = pyqtSignal()
 
-    def __init__(self, contaxiner):
+    def __init__(self, container):
         super().__init__()
         self.device = None
 
     def set_device(self, device):
         self.device = device
+        if self.valid():
+            self.show()
+        else:
+            self.hide()
 
     def show(self):
         raise NotImplementedError
@@ -86,38 +90,55 @@ class BasicHandler(QObject):
     def update_from_keyboard(self):
         raise NotImplementedError
 
+    def valid(self):
+        raise NotImplementedError
+
 
 class QmkRgblightHandler(BasicHandler):
 
     def __init__(self, container):
         super().__init__(container)
 
-        container.addWidget(QLabel(tr("RGBConfigurator", "Underglow Effect")), 0, 0)
+        row = container.rowCount()
+
+        self.lbl_underglow_effect = QLabel(tr("RGBConfigurator", "Underglow Effect"))
+        container.addWidget(self.lbl_underglow_effect, row, 0)
         self.underglow_effect = QComboBox()
         for ef in QMK_RGBLIGHT_EFFECTS:
             self.underglow_effect.addItem(ef.name)
-        container.addWidget(self.underglow_effect, 0, 1)
+        container.addWidget(self.underglow_effect, row, 1)
 
-        container.addWidget(QLabel(tr("RGBConfigurator", "Underglow Brightness")), 1, 0)
+        self.lbl_underglow_brightness = QLabel(tr("RGBConfigurator", "Underglow Brightness"))
+        container.addWidget(self.lbl_underglow_brightness, row + 1, 0)
         self.underglow_brightness = QSlider(QtCore.Qt.Horizontal)
         self.underglow_brightness.setMinimum(0)
         self.underglow_brightness.setMaximum(255)
         self.underglow_brightness.valueChanged.connect(self.on_underglow_brightness_changed)
-        container.addWidget(self.underglow_brightness, 1, 1)
+        container.addWidget(self.underglow_brightness, row + 1, 1)
 
         self.lbl_underglow_color = QLabel(tr("RGBConfigurator", "Underglow Color"))
-        container.addWidget(self.lbl_underglow_color, 3, 0)
+        container.addWidget(self.lbl_underglow_color, row + 2, 0)
         self.underglow_color = ClickableLabel(" ")
         self.underglow_color.clicked.connect(self.on_underglow_color)
-        container.addWidget(self.underglow_color, 3, 1)
+        container.addWidget(self.underglow_color, row + 2, 1)
 
         self.underglow_effect.currentIndexChanged.connect(self.on_underglow_effect_changed)
 
     def show(self):
-        pass
+        self.lbl_underglow_effect.show()
+        self.underglow_effect.show()
+        self.lbl_underglow_brightness.show()
+        self.underglow_brightness.show()
+        self.lbl_underglow_color.show()
+        self.underglow_color.show()
 
     def hide(self):
-        pass
+        self.lbl_underglow_effect.hide()
+        self.underglow_effect.hide()
+        self.lbl_underglow_brightness.hide()
+        self.underglow_brightness.hide()
+        self.lbl_underglow_color.hide()
+        self.underglow_color.hide()
 
     def block_signals(self):
         self.underglow_brightness.blockSignals(True)
@@ -133,6 +154,9 @@ class QmkRgblightHandler(BasicHandler):
         self.underglow_brightness.setValue(self.device.keyboard.underglow_brightness)
         self.underglow_effect.setCurrentIndex(self.device.keyboard.underglow_effect)
         self.underglow_color.setStyleSheet("QWidget { background-color: %s}" % self.current_color().name())
+
+    def valid(self):
+        return self.device.keyboard.lighting_qmk_rgblight
 
     def on_underglow_brightness_changed(self, value):
         self.device.keyboard.set_qmk_rgblight_brightness(value)
@@ -161,6 +185,58 @@ class QmkRgblightHandler(BasicHandler):
                                self.device.keyboard.underglow_brightness / 255.0)
 
 
+class QmkBacklightHandler(BasicHandler):
+
+    def __init__(self, container):
+        super().__init__(container)
+
+        row = container.rowCount()
+
+        self.lbl_backlight_brightness = QLabel(tr("RGBConfigurator", "Backlight Brightness"))
+        container.addWidget(self.lbl_backlight_brightness, row, 0)
+        self.backlight_brightness = QSlider(QtCore.Qt.Horizontal)
+        self.backlight_brightness.setMinimum(0)
+        self.backlight_brightness.setMaximum(255)
+        self.backlight_brightness.valueChanged.connect(self.on_backlight_brightness_changed)
+        container.addWidget(self.backlight_brightness, row, 1)
+
+        self.lbl_backlight_breathing = QLabel(tr("RGBConfigurator", "Backlight Breathing"))
+        container.addWidget(self.lbl_backlight_breathing, row + 1, 0)
+        self.backlight_breathing = QCheckBox()
+        self.backlight_breathing.stateChanged.connect(self.on_backlight_breathing_changed)
+        container.addWidget(self.backlight_breathing, row + 1, 1)
+
+    def show(self):
+        self.lbl_backlight_brightness.show()
+        self.backlight_brightness.show()
+        self.lbl_backlight_breathing.show()
+        self.backlight_breathing.show()
+
+    def hide(self):
+        self.lbl_backlight_brightness.hide()
+        self.backlight_brightness.hide()
+        self.lbl_backlight_breathing.hide()
+        self.backlight_breathing.hide()
+
+    def block_signals(self):
+        pass
+
+    def unblock_signals(self):
+        pass
+
+    def update_from_keyboard(self):
+        pass
+
+    def valid(self):
+        return self.device.keyboard.lighting_qmk_backlight
+
+    def on_backlight_brightness_changed(self):
+        pass
+
+    def on_backlight_breathing_changed(self):
+        pass
+
+
 class RGBConfigurator(BasicEditor):
 
     def __init__(self):
@@ -175,9 +251,11 @@ class RGBConfigurator(BasicEditor):
         self.addWidget(w)
         self.setAlignment(w, QtCore.Qt.AlignHCenter)
 
+        self.handler_backlight = QmkBacklightHandler(self.container)
+        self.handler_backlight.update.connect(self.update_from_keyboard)
         self.handler_rgblight = QmkRgblightHandler(self.container)
         self.handler_rgblight.update.connect(self.update_from_keyboard)
-        self.handlers = [self.handler_rgblight]
+        self.handlers = [self.handler_backlight, self.handler_rgblight]
 
         self.addStretch()
         buttons = QHBoxLayout()
@@ -191,7 +269,8 @@ class RGBConfigurator(BasicEditor):
         self.device.keyboard.save_rgb()
 
     def valid(self):
-        return isinstance(self.device, VialKeyboard) and self.device.keyboard.lighting_qmk_rgblight
+        return isinstance(self.device, VialKeyboard) and \
+               (self.device.keyboard.lighting_qmk_rgblight or self.device.keyboard.lighting_qmk_backlight)
 
     def block_signals(self):
         for h in self.handlers:
