@@ -58,7 +58,7 @@ class MainWindow(QMainWindow):
         self.rgb_configurator = RGBConfigurator()
 
         self.editors = [(self.keymap_editor, "Keymap"), (self.layout_editor, "Layout"), (self.macro_recorder, "Macros"),
-                        (self.matrix_tester, "Matrix tester"), (self.rgb_configurator, "Lighting"),
+                        (self.rgb_configurator, "Lighting"), (self.matrix_tester, "Matrix tester"),
                         (self.firmware_flasher, "Firmware updater")]
 
         Unlocker.global_layout_editor = self.layout_editor
