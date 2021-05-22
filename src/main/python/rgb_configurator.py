@@ -156,7 +156,7 @@ class QmkRgblightHandler(BasicHandler):
         self.underglow_color.setStyleSheet("QWidget { background-color: %s}" % self.current_color().name())
 
     def valid(self):
-        return self.device.keyboard.lighting_qmk_rgblight
+        return isinstance(self.device, VialKeyboard) and self.device.keyboard.lighting_qmk_rgblight
 
     def on_underglow_brightness_changed(self, value):
         self.device.keyboard.set_qmk_rgblight_brightness(value)
@@ -231,7 +231,7 @@ class QmkBacklightHandler(BasicHandler):
         self.backlight_breathing.setChecked(self.device.keyboard.backlight_effect == 1)
 
     def valid(self):
-        return self.device.keyboard.lighting_qmk_backlight
+        return isinstance(self.device, VialKeyboard) and self.device.keyboard.lighting_qmk_backlight
 
     def on_backlight_brightness_changed(self, value):
         self.device.keyboard.set_qmk_backlight_brightness(value)
