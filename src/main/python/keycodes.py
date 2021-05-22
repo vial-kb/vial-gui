@@ -528,6 +528,12 @@ KEYCODES_USER = []
 
 KEYCODES_MACRO = []
 
+KEYCODES_HIDDEN = []
+for x in range(256):
+    from any_keycode import QK_TAP_DANCE
+
+    KEYCODES_HIDDEN.append(K(QK_TAP_DANCE | x, "TD({})".format(x), "TD({})".format(x)))
+
 KEYCODES = []
 
 K = None
@@ -538,7 +544,9 @@ def recreate_keycodes():
 
     KEYCODES.clear()
     KEYCODES.extend(KEYCODES_SPECIAL + KEYCODES_BASIC + KEYCODES_SHIFTED + KEYCODES_ISO + KEYCODES_LAYERS +
-                    KEYCODES_QUANTUM + KEYCODES_BACKLIGHT + KEYCODES_MEDIA + KEYCODES_MACRO + KEYCODES_USER)
+                    KEYCODES_QUANTUM + KEYCODES_BACKLIGHT + KEYCODES_MEDIA + KEYCODES_MACRO + KEYCODES_USER +
+                    KEYCODES_HIDDEN)
+
 
 def create_user_keycodes():
     KEYCODES_USER.clear()
@@ -552,6 +560,7 @@ def create_user_keycodes():
             )
         )
 
+
 def create_custom_user_keycodes(custom_keycodes):
     KEYCODES_USER.clear()
     for x, c_keycode in enumerate(custom_keycodes):
@@ -563,6 +572,7 @@ def create_custom_user_keycodes(custom_keycodes):
                 c_keycode.get("title", "USER{:02}".format(x))
             )
         )
+
 
 def recreate_keyboard_keycodes(keyboard):
     """ Generates keycodes based on information the keyboard provides (e.g. layer keycodes, macros) """
@@ -605,5 +615,6 @@ def recreate_keyboard_keycodes(keyboard):
         create_user_keycodes()
 
     recreate_keycodes()
+
 
 recreate_keycodes()
