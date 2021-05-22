@@ -16,3 +16,9 @@ class BasicEditor(QVBoxLayout):
 
     def on_container_clicked(self):
         pass
+
+    def activate(self):
+        pass
+
+    def deactivate(self):
+        pass

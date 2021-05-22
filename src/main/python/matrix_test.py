@@ -1,16 +1,18 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
-from PyQt5.QtWidgets import QVBoxLayout, QPushButton, QWidget
+from PyQt5.QtWidgets import QVBoxLayout, QPushButton, QWidget, QHBoxLayout, QLabel
 from PyQt5.QtCore import Qt, QTimer
 
 import math
 
 from basic_editor import BasicEditor
 from keyboard_widget import KeyboardWidget
+from util import tr
 from vial_device import VialKeyboard
 from unlocker import Unlocker
 
 
 class MatrixTest(BasicEditor):
+
     def __init__(self, layout_editor):
         super().__init__()
 
@@ -19,16 +21,22 @@ class MatrixTest(BasicEditor):
         self.keyboardWidget = KeyboardWidget(layout_editor)
         self.keyboardWidget.set_enabled(False)
 
-        self.startButtonWidget = QPushButton("Start testing")
-        self.resetButtonWidget = QPushButton("Reset")
+        self.unlock_btn = QPushButton("Unlock")
+        self.reset_btn = QPushButton("Reset")
 
         layout = QVBoxLayout()
         layout.addWidget(self.keyboardWidget)
         layout.setAlignment(self.keyboardWidget, Qt.AlignCenter)
 
         self.addLayout(layout)
-        self.addWidget(self.resetButtonWidget)
-        self.addWidget(self.startButtonWidget)
+
+        btn_layout = QHBoxLayout()
+        btn_layout.addStretch()
+        self.unlock_lbl = QLabel(tr("MatrixTest", "Unlock the keyboard before testing:"))
+        btn_layout.addWidget(self.unlock_lbl)
+        btn_layout.addWidget(self.unlock_btn)
+        btn_layout.addWidget(self.reset_btn)
+        self.addLayout(btn_layout)
 
         self.keyboard = None
         self.device = None
@@ -37,8 +45,8 @@ class MatrixTest(BasicEditor):
         self.timer = QTimer()
         self.timer.timeout.connect(self.matrix_poller)
 
-        self.startButtonWidget.clicked.connect(self.toggle)
-        self.resetButtonWidget.clicked.connect(self.reset_keyboard_widget)
+        self.unlock_btn.clicked.connect(self.unlock)
+        self.reset_btn.clicked.connect(self.reset_keyboard_widget)
 
         self.grabber = QWidget()
 
@@ -52,7 +60,8 @@ class MatrixTest(BasicEditor):
 
     def valid(self):
         # Check if vial protocol is v3 or later
-        return isinstance(self.device, VialKeyboard) and (self.device.keyboard and self.device.keyboard.vial_protocol >= 3)
+        return isinstance(self.device, VialKeyboard) and \
+               (self.device.keyboard and self.device.keyboard.vial_protocol >= 3)
 
     def reset_keyboard_widget(self):
         # reset keyboard widget
@@ -66,8 +75,23 @@ class MatrixTest(BasicEditor):
 
     def matrix_poller(self):
         if not self.valid():
-            self.stop()
+            self.timer.stop()
             return
+
+        try:
+            unlocked = self.keyboard.get_unlock_status(3)
+        except (RuntimeError, ValueError):
+            self.timer.stop()
+            return
+
+        if not unlocked:
+            self.unlock_btn.show()
+            self.unlock_lbl.show()
+            return
+
+        # we're unlocked, so hide unlock button and label
+        self.unlock_btn.hide()
+        self.unlock_lbl.hide()
 
         # Get size for matrix
         rows = self.keyboard.rows
@@ -79,7 +103,7 @@ class MatrixTest(BasicEditor):
         try:
             data = self.keyboard.matrix_poll()
         except (RuntimeError, ValueError):
-            self.stop()
+            self.timer.stop()
             return
 
         # Calculate the amount of bytes belong to 1 row, each bit is 1 key, so per 8 keys in a row,
@@ -116,26 +140,13 @@ class MatrixTest(BasicEditor):
         self.keyboardWidget.update()
         self.keyboardWidget.updateGeometry()
 
-    def start(self):
-        self.grabber.grabKeyboard()
+    def unlock(self):
         Unlocker.unlock(self.keyboard)
-        self.startButtonWidget.setText("Stop testing")
-        self.timer.start(20)
-        self.polling = True
 
-    def stop(self):
+    def activate(self):
+        self.grabber.grabKeyboard()
+        self.timer.start(20)
+
+    def deactivate(self):
         self.grabber.releaseKeyboard()
         self.timer.stop()
-        try:
-            self.keyboard.lock()
-        except (RuntimeError, ValueError):
-            # if keyboard disappeared, we can't relock it
-            pass
-        self.startButtonWidget.setText("Start testing")
-        self.polling = False
-
-    def toggle(self):
-        if not self.polling:
-            self.start()
-        else:
-            self.stop()

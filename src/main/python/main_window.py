@@ -64,7 +64,9 @@ class MainWindow(QMainWindow):
 
         Unlocker.global_layout_editor = self.layout_editor
 
+        self.current_tab = None
         self.tabs = QTabWidget()
+        self.tabs.currentChanged.connect(self.on_tab_changed)
         self.refresh_tabs()
 
         self.lbl_no_devices = QLabel(tr("MainWindow", 'No devices detected. Connect a Vial-compatible device and press '
@@ -328,3 +330,16 @@ class MainWindow(QMainWindow):
         msg = QMessageBox()
         msg.setText(tr("MainWindow", "In order to fully apply the theme you should restart the application."))
         msg.exec_()
+
+    def on_tab_changed(self, index):
+        old_tab = self.current_tab
+        new_tab = None
+        if index >= 0:
+            new_tab = self.tabs.widget(index)
+
+        if old_tab is not None:
+            old_tab.editor.deactivate()
+        if new_tab is not None:
+            new_tab.editor.activate()
+
+        self.current_tab = new_tab

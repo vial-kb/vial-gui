@@ -542,12 +542,13 @@ class Keyboard:
         keyboard_id = data[4:12]
         return keyboard_id
 
-    def get_unlock_status(self):
+    def get_unlock_status(self, retries=20):
         # VIA keyboards are always unlocked
         if self.vial_protocol < 0:
             return 1
 
-        data = self.usb_send(self.dev, struct.pack("BB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_GET_UNLOCK_STATUS), retries=20)
+        data = self.usb_send(self.dev, struct.pack("BB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_GET_UNLOCK_STATUS),
+                             retries=retries)
         return data[0]
 
     def get_unlock_in_progress(self):

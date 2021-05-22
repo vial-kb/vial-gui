@@ -9,6 +9,8 @@ class EditorContainer(QWidget):
     def __init__(self, editor):
         super().__init__()
 
+        self.editor = editor
+
         self.setLayout(editor)
         self.clicked.connect(editor.on_container_clicked)
 
