@@ -177,6 +177,7 @@ class Keyboard:
 
         self.lighting_qmk_rgblight = self.lighting_qmk_backlight = False
         self.underglow_brightness = self.underglow_effect = self.underglow_effect_speed = -1
+        self.backlight_brightness = self.backlight_effect = -1
         self.underglow_color = (0, 0)
 
         self.via_protocol = self.vial_protocol = self.keyboard_id = -1
@@ -349,6 +350,12 @@ class Keyboard:
             # hue, sat
             self.underglow_color = (color[0], color[1])
 
+        if self.lighting_qmk_backlight:
+            self.backlight_brightness = self.usb_send(
+                self.dev, struct.pack(">BB", CMD_VIA_LIGHTING_GET_VALUE, QMK_BACKLIGHT_BRIGHTNESS), retries=20)[2]
+            self.backlight_effect = self.usb_send(
+                self.dev, struct.pack(">BB", CMD_VIA_LIGHTING_GET_VALUE, QMK_BACKLIGHT_EFFECT), retries=20)[2]
+
     def set_key(self, layer, row, col, code):
         if code < 0:
             return
@@ -408,6 +415,14 @@ class Keyboard:
     def set_qmk_rgblight_color(self, h, s, v):
         self.set_qmk_rgblight_brightness(v)
         self.usb_send(self.dev, struct.pack(">BBBB", CMD_VIA_LIGHTING_SET_VALUE, QMK_RGBLIGHT_COLOR, h, s))
+
+    def set_qmk_backlight_brightness(self, value):
+        self.backlight_brightness = value
+        self.usb_send(self.dev, struct.pack(">BBB", CMD_VIA_LIGHTING_SET_VALUE, QMK_BACKLIGHT_BRIGHTNESS, value))
+
+    def set_qmk_backlight_effect(self, value):
+        self.backlight_effect = value
+        self.usb_send(self.dev, struct.pack(">BBB", CMD_VIA_LIGHTING_SET_VALUE, QMK_BACKLIGHT_EFFECT, value))
 
     def save_rgb(self):
         self.usb_send(self.dev, struct.pack(">B", CMD_VIA_LIGHTING_SAVE), retries=20)

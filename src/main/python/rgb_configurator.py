@@ -219,22 +219,25 @@ class QmkBacklightHandler(BasicHandler):
         self.backlight_breathing.hide()
 
     def block_signals(self):
-        pass
+        self.backlight_brightness.blockSignals(True)
+        self.backlight_breathing.blockSignals(True)
 
     def unblock_signals(self):
-        pass
+        self.backlight_brightness.blockSignals(False)
+        self.backlight_breathing.blockSignals(False)
 
     def update_from_keyboard(self):
-        pass
+        self.backlight_brightness.setValue(self.device.keyboard.backlight_brightness)
+        self.backlight_breathing.setChecked(self.device.keyboard.backlight_effect == 1)
 
     def valid(self):
         return self.device.keyboard.lighting_qmk_backlight
 
-    def on_backlight_brightness_changed(self):
-        pass
+    def on_backlight_brightness_changed(self, value):
+        self.device.keyboard.set_qmk_backlight_brightness(value)
 
-    def on_backlight_breathing_changed(self):
-        pass
+    def on_backlight_breathing_changed(self, checked):
+        self.device.keyboard.set_qmk_backlight_effect(int(checked))
 
 
 class RGBConfigurator(BasicEditor):
