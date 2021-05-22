@@ -237,7 +237,8 @@ class MainWindow(QMainWindow):
             Unlocker.unlock(self.current_device.keyboard)
             self.current_device.keyboard.reload()
 
-        for e in [self.layout_editor, self.keymap_editor, self.firmware_flasher, self.macro_recorder, self.matrix_tester]:
+        for e in [self.layout_editor, self.keymap_editor, self.firmware_flasher, self.macro_recorder,
+                  self.matrix_tester]:
             e.rebuild(self.current_device)
 
     def refresh_tabs(self):

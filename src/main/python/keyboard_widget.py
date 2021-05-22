@@ -116,6 +116,14 @@ class KeyWidget:
     def setColor(self, color):
         self.color = color
 
+    def __repr__(self):
+        qualifiers = ["KeyboardWidget"]
+        if self.desc.row is not None:
+            qualifiers.append("matrix:{},{}".format(self.desc.row, self.desc.col))
+        if self.desc.layout_index != -1:
+            qualifiers.append("layout:{},{}".format(self.desc.layout_index, self.desc.layout_option))
+        return " ".join(qualifiers)
+
 
 class EncoderWidget(KeyWidget):
 
@@ -137,6 +145,9 @@ class EncoderWidget(KeyWidget):
             path.moveTo(int(self.x), int(self.y + self.h / 2))
             path.lineTo(int(self.x + self.w / 5), int(self.y + self.h - self.h / 3))
         return path
+
+    def __repr__(self):
+        return "EncoderWidget"
 
 
 class KeyboardWidget(QWidget):
@@ -355,7 +366,8 @@ class KeyboardWidget(QWidget):
         self.update()
 
     def resizeEvent(self, ev):
-        self.update_layout()
+        if self.isEnabled():
+            self.update_layout()
 
     def select_next(self):
         """ Selects next key based on their order in the keymap """

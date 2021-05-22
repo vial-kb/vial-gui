@@ -48,6 +48,7 @@ class MatrixTest(BasicEditor):
             self.keyboard = device.keyboard
 
             self.keyboardWidget.set_keys(self.keyboard.keys, self.keyboard.encoders)
+        self.keyboardWidget.setEnabled(self.valid())
 
     def valid(self):
         # Check if vial protocol is v3 or later
