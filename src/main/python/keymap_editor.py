@@ -77,6 +77,7 @@ class KeymapEditor(BasicEditor):
         # create new layer labels
         for x in range(self.keyboard.layers):
             btn = SquareButton(str(x))
+            btn.setFocusPolicy(Qt.NoFocus)
             btn.setRelSize(1.667)
             btn.setCheckable(True)
             btn.clicked.connect(lambda state, idx=x: self.switch_layer(idx))
