@@ -10,6 +10,7 @@ from urllib.request import urlopen
 
 from editor_container import EditorContainer
 from firmware_flasher import FirmwareFlasher
+from keyboard_comm import ProtocolError
 from keymap_editor import KeymapEditor
 from keymaps import KEYMAPS
 from layout_editor import LayoutEditor
@@ -216,12 +217,16 @@ class MainWindow(QMainWindow):
             self.current_device = self.devices[idx]
 
         if self.current_device is not None:
-            if self.current_device.sideload:
-                self.current_device.open(self.sideload_json)
-            elif self.current_device.via_stack:
-                self.current_device.open(self.via_stack_json["definitions"][self.current_device.via_id])
-            else:
-                self.current_device.open(None)
+            try:
+                if self.current_device.sideload:
+                    self.current_device.open(self.sideload_json)
+                elif self.current_device.via_stack:
+                    self.current_device.open(self.via_stack_json["definitions"][self.current_device.via_id])
+                else:
+                    self.current_device.open(None)
+            except ProtocolError:
+                QMessageBox.warning(self, "", "Unsupported protocol version!\n"
+                                              "Please download latest Vial from https://get.vial.today/")
 
             if isinstance(self.current_device, VialKeyboard) \
                     and self.current_device.keyboard.keyboard_id in EXAMPLE_KEYBOARDS:

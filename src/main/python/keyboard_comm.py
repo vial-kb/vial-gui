@@ -12,6 +12,9 @@ from macro_action import SS_TAP_CODE, SS_DOWN_CODE, SS_UP_CODE, ActionText, Acti
 from unlocker import Unlocker
 from util import MSG_LEN, hid_send, chunks
 
+SUPPORTED_VIA_PROTOCOL = [-1, 9]
+SUPPORTED_VIAL_PROTOCOL = [-1, 0, 1, 2, 3]
+
 CMD_VIA_GET_PROTOCOL_VERSION = 0x01
 CMD_VIA_GET_KEYBOARD_VALUE = 0x02
 CMD_VIA_SET_KEYBOARD_VALUE = 0x03
@@ -51,6 +54,10 @@ CMD_VIAL_LOCK = 0x08
 
 # how much of a macro/keymap buffer we can read/write per packet
 BUFFER_FETCH_CHUNK = 28
+
+
+class ProtocolError(Exception):
+    pass
 
 
 def macro_deserialize_v1(data):
@@ -205,6 +212,10 @@ class Keyboard:
         data = self.usb_send(self.dev, struct.pack("B", CMD_VIA_GET_PROTOCOL_VERSION), retries=20)
         self.via_protocol = struct.unpack(">H", data[1:3])[0]
 
+    def check_protocol_version(self):
+        if self.via_protocol not in SUPPORTED_VIA_PROTOCOL or self.vial_protocol not in SUPPORTED_VIAL_PROTOCOL:
+            raise ProtocolError()
+
     def reload_layout(self, sideload_json=None):
         """ Requests layout data from the current device """
 
@@ -234,6 +245,8 @@ class Keyboard:
                 sz -= MSG_LEN
 
             payload = json.loads(lzma.decompress(payload))
+
+        self.check_protocol_version()
 
         self.definition = payload
 
