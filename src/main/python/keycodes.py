@@ -380,6 +380,42 @@ KEYCODES_QUANTUM = [
     K(0x5CF5, "KC_LAPO", "LA\n(", "Left Alt when held, ( when tapped"),
     K(0x5CF6, "KC_RAPC", "RA\n)", "Right Alt when held, ) when tapped"),
     K(0x5CD9, "KC_SFTENT", "RS\nEnter", "Right Shift when held, Enter when tapped"),
+
+    K(23554, "MAGIC_SWAP_CONTROL_CAPSLOCK", "Swap\nCtrl\nCaps", "Swap Caps Lock and Left Control", alias=["CL_SWAP"]),
+    K(23563, "MAGIC_UNSWAP_CONTROL_CAPSLOCK", "Unswap\nCtrl\nCaps", "Unswap Caps Lock and Left Control",
+      alias=["CL_NORM"]),
+    K(23555, "MAGIC_CAPSLOCK_TO_CONTROL", "Caps\nto\nCtrl", "Treat Caps Lock as Control", alias=["CL_CTRL"]),
+    K(23564, "MAGIC_UNCAPSLOCK_TO_CONTROL", "Caps\nnot to\nCtrl", "Stop treating Caps Lock as Control",
+      alias=["CL_CAPS"]),
+    K(23802, "MAGIC_SWAP_LCTL_LGUI", "Swap\nLCtl\nLGui", "Swap Left Control and GUI", alias=["LCG_SWP"]),
+    K(23804, "MAGIC_UNSWAP_LCTL_LGUI", "Unswap\nLCtl\nLGui", "Unswap Left Control and GUI", alias=["LCG_NRM"]),
+    K(23803, "MAGIC_SWAP_RCTL_RGUI", "Swap\nRCtl\nRGui", "Swap Right Control and GUI", alias=["RCG_SWP"]),
+    K(23805, "MAGIC_UNSWAP_RCTL_RGUI", "Unswap\nRCtl\nRGui", "Unswap Right Control and GUI", alias=["RCG_NRM"]),
+    K(23806, "MAGIC_SWAP_CTL_GUI", "Swap\nCtl\nGui", "Swap Control and GUI on both sides", alias=["CG_SWAP"]),
+    K(23807, "MAGIC_UNSWAP_CTL_GUI", "Unswap\nCtl\nGui", "Unswap Control and GUI on both sides", alias=["CG_NORM"]),
+    K(23808, "MAGIC_TOGGLE_CTL_GUI", "Toggle\nCtl\nGui", "Toggle Control and GUI swap on both sides",
+      alias=["CG_TOGG"]),
+    K(23556, "MAGIC_SWAP_LALT_LGUI", "Swap\nLAlt\nLGui", "Swap Left Alt and GUI", alias=["LAG_SWP"]),
+    K(23565, "MAGIC_UNSWAP_LALT_LGUI", "Unswap\nLAlt\nLGui", "Unswap Left Alt and GUI", alias=["LAG_NRM"]),
+    K(23557, "MAGIC_SWAP_RALT_RGUI", "Swap\nRAlt\nRGui", "Swap Right Alt and GUI", alias=["RAG_SWP"]),
+    K(23566, "MAGIC_UNSWAP_RALT_RGUI", "Unswap\nRAlt\nRGui", "Unswap Right Alt and GUI", alias=["RAG_NRM"]),
+    K(23562, "MAGIC_SWAP_ALT_GUI", "Swap\nAlt\nGui", "Swap Alt and GUI on both sides", alias=["AG_SWAP"]),
+    K(23571, "MAGIC_UNSWAP_ALT_GUI", "Unswap\nAlt\nGui", "Unswap Alt and GUI on both sides", alias=["AG_NORM"]),
+    K(23573, "MAGIC_TOGGLE_ALT_GUI", "Toggle\nAlt\nGui", "Toggle Alt and GUI swap on both sides", alias=["AG_TOGG"]),
+    K(23558, "MAGIC_NO_GUI", "GUI\nOff", "Disable the GUI keys", alias=["GUI_OFF"]),
+    K(23567, "MAGIC_UNNO_GUI", "GUI\nOn", "Enable the GUI keys", alias=["GUI_ON"]),
+    K(23559, "MAGIC_SWAP_GRAVE_ESC", "Swap\n`\nEsc", "Swap ` and Escape", alias=["GE_SWAP"]),
+    K(23568, "MAGIC_UNSWAP_GRAVE_ESC", "Unswap\n`\nEsc", "Unswap ` and Escape", alias=["GE_NORM"]),
+    K(23560, "MAGIC_SWAP_BACKSLASH_BACKSPACE", "Swap\n\\\nBS", "Swap \\ and Backspace", alias=["BS_SWAP"]),
+    K(23569, "MAGIC_UNSWAP_BACKSLASH_BACKSPACE", "Unswap\n\\\nBS", "Unswap \\ and Backspace",
+      alias=["BS_NORM"]),
+    K(23561, "MAGIC_HOST_NKRO", "NKRO\nOn", "Enable N-key rollover", alias=["NK_ON"]),
+    K(23570, "MAGIC_UNHOST_NKRO", "NKRO\nOff", "Disable N-key rollover", alias=["NK_OFF"]),
+    K(23572, "MAGIC_TOGGLE_NKRO", "NKRO\nToggle", "Toggle N-key rollover", alias=["NK_TOGG"]),
+    K(23809, "MAGIC_EE_HANDS_LEFT", "EEH\nLeft",
+      "Set the master half of a split keyboard as the left hand (for EE_HANDS)", alias=["EH_LEFT"]),
+    K(23810, "MAGIC_EE_HANDS_RIGHT", "EEH\nRight",
+      "Set the master half of a split keyboard as the right hand (for EE_HANDS)", alias=["EH_RGHT"]),
 ]
 
 KEYCODES_BACKLIGHT = [
@@ -492,6 +528,12 @@ KEYCODES_USER = []
 
 KEYCODES_MACRO = []
 
+KEYCODES_HIDDEN = []
+for x in range(256):
+    from any_keycode import QK_TAP_DANCE
+
+    KEYCODES_HIDDEN.append(K(QK_TAP_DANCE | x, "TD({})".format(x), "TD({})".format(x)))
+
 KEYCODES = []
 
 K = None
@@ -502,7 +544,9 @@ def recreate_keycodes():
 
     KEYCODES.clear()
     KEYCODES.extend(KEYCODES_SPECIAL + KEYCODES_BASIC + KEYCODES_SHIFTED + KEYCODES_ISO + KEYCODES_LAYERS +
-                    KEYCODES_QUANTUM + KEYCODES_BACKLIGHT + KEYCODES_MEDIA + KEYCODES_MACRO + KEYCODES_USER)
+                    KEYCODES_QUANTUM + KEYCODES_BACKLIGHT + KEYCODES_MEDIA + KEYCODES_MACRO + KEYCODES_USER +
+                    KEYCODES_HIDDEN)
+
 
 def create_user_keycodes():
     KEYCODES_USER.clear()
@@ -516,6 +560,7 @@ def create_user_keycodes():
             )
         )
 
+
 def create_custom_user_keycodes(custom_keycodes):
     KEYCODES_USER.clear()
     for x, c_keycode in enumerate(custom_keycodes):
@@ -527,6 +572,7 @@ def create_custom_user_keycodes(custom_keycodes):
                 c_keycode.get("title", "USER{:02}".format(x))
             )
         )
+
 
 def recreate_keyboard_keycodes(keyboard):
     """ Generates keycodes based on information the keyboard provides (e.g. layer keycodes, macros) """
@@ -569,5 +615,6 @@ def recreate_keyboard_keycodes(keyboard):
         create_user_keycodes()
 
     recreate_keycodes()
+
 
 recreate_keycodes()

@@ -49,8 +49,13 @@ class KeyWidget:
             self.w2 = size * self.desc.width2 - spacing
             self.h2 = size * self.desc.height2 - spacing
 
+            self.rect2 = QRect(self.x2, self.y2, self.w2, self.h2)
+
             self.bbox = self.calculate_bbox(self.rect)
+            self.bbox2 = self.calculate_bbox(self.rect2)
             self.polygon = QPolygonF(self.bbox + [self.bbox[0]])
+            self.polygon2 = QPolygonF(self.bbox2 + [self.bbox2[0]])
+            self.polygon = self.polygon.united(self.polygon2)
             self.draw_path = self.calculate_draw_path()
             self.draw_path2 = self.calculate_draw_path2()
 
@@ -116,6 +121,14 @@ class KeyWidget:
     def setColor(self, color):
         self.color = color
 
+    def __repr__(self):
+        qualifiers = ["KeyboardWidget"]
+        if self.desc.row is not None:
+            qualifiers.append("matrix:{},{}".format(self.desc.row, self.desc.col))
+        if self.desc.layout_index != -1:
+            qualifiers.append("layout:{},{}".format(self.desc.layout_index, self.desc.layout_option))
+        return " ".join(qualifiers)
+
 
 class EncoderWidget(KeyWidget):
 
@@ -137,6 +150,9 @@ class EncoderWidget(KeyWidget):
             path.moveTo(int(self.x), int(self.y + self.h / 2))
             path.lineTo(int(self.x + self.w / 5), int(self.y + self.h - self.h / 3))
         return path
+
+    def __repr__(self):
+        return "EncoderWidget"
 
 
 class KeyboardWidget(QWidget):
@@ -355,7 +371,8 @@ class KeyboardWidget(QWidget):
         self.update()
 
     def resizeEvent(self, ev):
-        self.update_layout()
+        if self.isEnabled():
+            self.update_layout()
 
     def select_next(self):
         """ Selects next key based on their order in the keymap """

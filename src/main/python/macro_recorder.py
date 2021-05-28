@@ -29,6 +29,7 @@ class MacroRecorder(BasicEditor):
         super().__init__()
 
         self.keyboard = None
+        self.suppress_change = False
 
         self.keystrokes = []
         self.macro_tabs = []
@@ -93,7 +94,6 @@ class MacroRecorder(BasicEditor):
             self.tabs.removeTab(x)
         for x, w in enumerate(self.macro_tab_w[:self.keyboard.macro_count]):
             self.tabs.addTab(w, "")
-        self.update_tab_titles()
 
         # deserialize macros that came from keyboard
         self.deserialize(self.keyboard.macro)
@@ -153,6 +153,9 @@ class MacroRecorder(BasicEditor):
         self.keystrokes.append(keystroke)
 
     def on_change(self):
+        if self.suppress_change:
+            return
+
         data = self.serialize()
         memory = len(data)
         self.lbl_memory.setText("Memory used by macros: {}/{}".format(memory, self.keyboard.macro_memory))
@@ -167,11 +170,13 @@ class MacroRecorder(BasicEditor):
         return self.keyboard.macros_serialize(macros)
 
     def deserialize(self, data):
+        self.suppress_change = True
         macros = self.keyboard.macros_deserialize(data)
         for macro, tab in zip(macros, self.macro_tabs[:self.keyboard.macro_count]):
             tab.clear()
             for act in macro:
                 tab.add_action(ui_action[type(act)](tab.container, act))
+        self.suppress_change = False
 
     def on_revert(self):
         self.keyboard.reload_macros()

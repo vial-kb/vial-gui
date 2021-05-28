@@ -12,11 +12,17 @@ from macro_action import SS_TAP_CODE, SS_DOWN_CODE, SS_UP_CODE, ActionText, Acti
 from unlocker import Unlocker
 from util import MSG_LEN, hid_send, chunks
 
+SUPPORTED_VIA_PROTOCOL = [-1, 9]
+SUPPORTED_VIAL_PROTOCOL = [-1, 0, 1, 2, 3]
+
 CMD_VIA_GET_PROTOCOL_VERSION = 0x01
 CMD_VIA_GET_KEYBOARD_VALUE = 0x02
 CMD_VIA_SET_KEYBOARD_VALUE = 0x03
 CMD_VIA_GET_KEYCODE = 0x04
 CMD_VIA_SET_KEYCODE = 0x05
+CMD_VIA_LIGHTING_SET_VALUE = 0x07
+CMD_VIA_LIGHTING_GET_VALUE = 0x08
+CMD_VIA_LIGHTING_SAVE = 0x09
 CMD_VIA_MACRO_GET_COUNT = 0x0C
 CMD_VIA_MACRO_GET_BUFFER_SIZE = 0x0D
 CMD_VIA_MACRO_GET_BUFFER = 0x0E
@@ -27,6 +33,14 @@ CMD_VIA_VIAL_PREFIX = 0xFE
 
 VIA_LAYOUT_OPTIONS = 0x02
 VIA_SWITCH_MATRIX_STATE = 0x03
+
+QMK_BACKLIGHT_BRIGHTNESS = 0x09
+QMK_BACKLIGHT_EFFECT = 0x0A
+
+QMK_RGBLIGHT_BRIGHTNESS = 0x80
+QMK_RGBLIGHT_EFFECT = 0x81
+QMK_RGBLIGHT_EFFECT_SPEED = 0x82
+QMK_RGBLIGHT_COLOR = 0x83
 
 CMD_VIAL_GET_KEYBOARD_ID = 0x00
 CMD_VIAL_GET_SIZE = 0x01
@@ -40,6 +54,10 @@ CMD_VIAL_LOCK = 0x08
 
 # how much of a macro/keymap buffer we can read/write per packet
 BUFFER_FETCH_CHUNK = 28
+
+
+class ProtocolError(Exception):
+    pass
 
 
 def macro_deserialize_v1(data):
@@ -138,12 +156,14 @@ def macro_deserialize_v2(data):
                 out.append(cls(args))
     return out
 
+
 class Keyboard:
     """ Low-level communication with a vial-enabled keyboard """
 
     def __init__(self, dev, usb_send=hid_send):
         self.dev = dev
         self.usb_send = usb_send
+        self.definition = None
 
         # n.b. using OrderedDict here to make order of layout requests consistent for tests
         self.rowcol = OrderedDict()
@@ -162,6 +182,11 @@ class Keyboard:
         self.vibl = False
         self.custom_keycodes = None
 
+        self.lighting_qmk_rgblight = self.lighting_qmk_backlight = False
+        self.underglow_brightness = self.underglow_effect = self.underglow_effect_speed = -1
+        self.backlight_brightness = self.backlight_effect = -1
+        self.underglow_color = (0, 0)
+
         self.via_protocol = self.vial_protocol = self.keyboard_id = -1
 
     def reload(self, sideload_json=None):
@@ -176,17 +201,25 @@ class Keyboard:
         self.reload_layers()
         self.reload_keymap()
         self.reload_macros()
+        self.reload_rgb()
 
     def reload_layers(self):
         """ Get how many layers the keyboard has """
 
         self.layers = self.usb_send(self.dev, struct.pack("B", CMD_VIA_GET_LAYER_COUNT), retries=20)[1]
 
+    def reload_via_protocol(self):
+        data = self.usb_send(self.dev, struct.pack("B", CMD_VIA_GET_PROTOCOL_VERSION), retries=20)
+        self.via_protocol = struct.unpack(">H", data[1:3])[0]
+
+    def check_protocol_version(self):
+        if self.via_protocol not in SUPPORTED_VIA_PROTOCOL or self.vial_protocol not in SUPPORTED_VIAL_PROTOCOL:
+            raise ProtocolError()
+
     def reload_layout(self, sideload_json=None):
         """ Requests layout data from the current device """
 
-        data = self.usb_send(self.dev, struct.pack("B", CMD_VIA_GET_PROTOCOL_VERSION), retries=20)
-        self.via_protocol = struct.unpack(">H", data[1:3])[0]
+        self.reload_via_protocol()
 
         if sideload_json is not None:
             payload = sideload_json
@@ -212,6 +245,10 @@ class Keyboard:
                 sz -= MSG_LEN
 
             payload = json.loads(lzma.decompress(payload))
+
+        self.check_protocol_version()
+
+        self.definition = payload
 
         if "vial" in payload:
             vial = payload["vial"]
@@ -309,6 +346,29 @@ class Keyboard:
             macros = self.macro.split(b"\x00") + [b""] * self.macro_count
             self.macro = b"\x00".join(macros[:self.macro_count]) + b"\x00"
 
+    def reload_rgb(self):
+        if "lighting" in self.definition:
+            self.lighting_qmk_rgblight = self.definition["lighting"] in ["qmk_rgblight", "qmk_backlight_rgblight"]
+            self.lighting_qmk_backlight = self.definition["lighting"] in ["qmk_backlight", "qmk_backlight_rgblight"]
+
+        if self.lighting_qmk_rgblight:
+            self.underglow_brightness = self.usb_send(
+                self.dev, struct.pack(">BB", CMD_VIA_LIGHTING_GET_VALUE, QMK_RGBLIGHT_BRIGHTNESS), retries=20)[2]
+            self.underglow_effect = self.usb_send(
+                self.dev, struct.pack(">BB", CMD_VIA_LIGHTING_GET_VALUE, QMK_RGBLIGHT_EFFECT), retries=20)[2]
+            self.underglow_effect_speed = self.usb_send(
+                self.dev, struct.pack(">BB", CMD_VIA_LIGHTING_GET_VALUE, QMK_RGBLIGHT_EFFECT_SPEED), retries=20)[2]
+            color = self.usb_send(
+                self.dev, struct.pack(">BB", CMD_VIA_LIGHTING_GET_VALUE, QMK_RGBLIGHT_COLOR), retries=20)[2:4]
+            # hue, sat
+            self.underglow_color = (color[0], color[1])
+
+        if self.lighting_qmk_backlight:
+            self.backlight_brightness = self.usb_send(
+                self.dev, struct.pack(">BB", CMD_VIA_LIGHTING_GET_VALUE, QMK_BACKLIGHT_BRIGHTNESS), retries=20)[2]
+            self.backlight_effect = self.usb_send(
+                self.dev, struct.pack(">BB", CMD_VIA_LIGHTING_GET_VALUE, QMK_BACKLIGHT_EFFECT), retries=20)[2]
+
     def set_key(self, layer, row, col, code):
         if code < 0:
             return
@@ -349,6 +409,36 @@ class Keyboard:
             self.usb_send(self.dev, struct.pack(">BHB", CMD_VIA_MACRO_SET_BUFFER, off, len(chunk)) + chunk,
                           retries=20)
         self.macro = data
+
+    def set_qmk_rgblight_brightness(self, value):
+        self.underglow_brightness = value
+        self.usb_send(self.dev, struct.pack(">BBB", CMD_VIA_LIGHTING_SET_VALUE, QMK_RGBLIGHT_BRIGHTNESS, value),
+                      retries=20)
+
+    def set_qmk_rgblight_effect(self, index):
+        self.underglow_effect = index
+        self.usb_send(self.dev, struct.pack(">BBB", CMD_VIA_LIGHTING_SET_VALUE, QMK_RGBLIGHT_EFFECT, index),
+                      retries=20)
+
+    def set_qmk_rgblight_effect_speed(self, value):
+        self.underglow_effect_speed = value
+        self.usb_send(self.dev, struct.pack(">BBB", CMD_VIA_LIGHTING_SET_VALUE, QMK_RGBLIGHT_EFFECT_SPEED, value),
+                      retries=20)
+
+    def set_qmk_rgblight_color(self, h, s, v):
+        self.set_qmk_rgblight_brightness(v)
+        self.usb_send(self.dev, struct.pack(">BBBB", CMD_VIA_LIGHTING_SET_VALUE, QMK_RGBLIGHT_COLOR, h, s))
+
+    def set_qmk_backlight_brightness(self, value):
+        self.backlight_brightness = value
+        self.usb_send(self.dev, struct.pack(">BBB", CMD_VIA_LIGHTING_SET_VALUE, QMK_BACKLIGHT_BRIGHTNESS, value))
+
+    def set_qmk_backlight_effect(self, value):
+        self.backlight_effect = value
+        self.usb_send(self.dev, struct.pack(">BBB", CMD_VIA_LIGHTING_SET_VALUE, QMK_BACKLIGHT_EFFECT, value))
+
+    def save_rgb(self):
+        self.usb_send(self.dev, struct.pack(">B", CMD_VIA_LIGHTING_SAVE), retries=20)
 
     def save_layout(self):
         """ Serializes current layout to a binary """
@@ -452,12 +542,13 @@ class Keyboard:
         keyboard_id = data[4:12]
         return keyboard_id
 
-    def get_unlock_status(self):
+    def get_unlock_status(self, retries=20):
         # VIA keyboards are always unlocked
         if self.vial_protocol < 0:
             return 1
 
-        data = self.usb_send(self.dev, struct.pack("BB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_GET_UNLOCK_STATUS), retries=20)
+        data = self.usb_send(self.dev, struct.pack("BB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_GET_UNLOCK_STATUS),
+                             retries=retries)
         return data[0]
 
     def get_unlock_in_progress(self):
@@ -613,3 +704,6 @@ class DummyKeyboard(Keyboard):
 
     def lock(self):
         return
+
+    def reload_via_protocol(self):
+        pass

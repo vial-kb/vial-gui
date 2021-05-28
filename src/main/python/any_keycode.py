@@ -14,6 +14,7 @@ QK_DEF_LAYER = 0x5200
 QK_TOGGLE_LAYER = 0x5300
 QK_ONE_SHOT_LAYER = 0x5400
 QK_ONE_SHOT_MOD = 0x5500
+QK_TAP_DANCE = 0x5700
 QK_LAYER_TAP_TOGGLE = 0x5800
 QK_LAYER_MOD = 0x5900
 QK_MOD_TAP = 0x6000
@@ -58,6 +59,7 @@ def LM(layer, mod): return (QK_LAYER_MOD | (((layer)&0xF) << 4) | ((mod)&0xF))
 def OSM(mod): return (QK_ONE_SHOT_MOD | ((mod)&0xFF))
 def TT(layer): return (QK_LAYER_TAP_TOGGLE | ((layer)&0xFF))
 def MT(mod, kc): return (QK_MOD_TAP | (((mod)&0x1F) << 8) | ((kc)&0xFF))
+def TD(n): return (QK_TAP_DANCE | ((n)&0xFF))
 
 
 def LCTL_T(kc): return MT(MOD_LCTL, kc)
@@ -96,6 +98,7 @@ functions = {
     "C_S_T": C_S_T, "MEH_T": MEH_T,
     "LCAG_T": LCAG_T, "RCAG_T": RCAG_T, "HYPR_T": HYPR_T, "SGUI_T": SGUI_T, "SCMD_T": SGUI_T, "SWIN_T": SGUI_T,
     "LCA_T": LCA_T, "LSA_T": LSA_T, "RSA_T": RSA_T, "RCS_T": RCS_T, "SAGR_T": RSA_T, "ALL_T": HYPR_T,
+    "TD": TD,
 }
 
 

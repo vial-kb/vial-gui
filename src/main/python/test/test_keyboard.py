@@ -32,7 +32,7 @@ class SimulatedDevice:
         self.expect_data.append((inp, out))
 
     def expect_via_protocol(self, via_protocol):
-        self.expect("01", struct.pack("BB", 1, via_protocol))
+        self.expect("01", struct.pack(">BH", 1, via_protocol))
 
     def expect_keyboard_id(self, kbid):
         self.expect("FE00", struct.pack("<IQ", 0, kbid))

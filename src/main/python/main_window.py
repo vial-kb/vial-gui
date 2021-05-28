@@ -10,10 +10,12 @@ from urllib.request import urlopen
 
 from editor_container import EditorContainer
 from firmware_flasher import FirmwareFlasher
+from keyboard_comm import ProtocolError
 from keymap_editor import KeymapEditor
 from keymaps import KEYMAPS
 from layout_editor import LayoutEditor
 from macro_recorder import MacroRecorder
+from rgb_configurator import RGBConfigurator
 from unlocker import Unlocker
 from util import tr, find_vial_devices, EXAMPLE_KEYBOARDS
 from vial_device import VialKeyboard
@@ -54,12 +56,17 @@ class MainWindow(QMainWindow):
         self.firmware_flasher = FirmwareFlasher(self)
         self.macro_recorder = MacroRecorder()
         self.matrix_tester = MatrixTest(self.layout_editor)
+        self.rgb_configurator = RGBConfigurator()
 
         self.editors = [(self.keymap_editor, "Keymap"), (self.layout_editor, "Layout"), (self.macro_recorder, "Macros"),
-                        (self.matrix_tester, "Matrix tester"), (self.firmware_flasher, "Firmware updater")]
+                        (self.rgb_configurator, "Lighting"), (self.matrix_tester, "Matrix tester"),
+                        (self.firmware_flasher, "Firmware updater")]
+
         Unlocker.global_layout_editor = self.layout_editor
 
+        self.current_tab = None
         self.tabs = QTabWidget()
+        self.tabs.currentChanged.connect(self.on_tab_changed)
         self.refresh_tabs()
 
         self.lbl_no_devices = QLabel(tr("MainWindow", 'No devices detected. Connect a Vial-compatible device and press '
@@ -212,12 +219,16 @@ class MainWindow(QMainWindow):
             self.current_device = self.devices[idx]
 
         if self.current_device is not None:
-            if self.current_device.sideload:
-                self.current_device.open(self.sideload_json)
-            elif self.current_device.via_stack:
-                self.current_device.open(self.via_stack_json["definitions"][self.current_device.via_id])
-            else:
-                self.current_device.open(None)
+            try:
+                if self.current_device.sideload:
+                    self.current_device.open(self.sideload_json)
+                elif self.current_device.via_stack:
+                    self.current_device.open(self.via_stack_json["definitions"][self.current_device.via_id])
+                else:
+                    self.current_device.open(None)
+            except ProtocolError:
+                QMessageBox.warning(self, "", "Unsupported protocol version!\n"
+                                              "Please download latest Vial from https://get.vial.today/")
 
             if isinstance(self.current_device, VialKeyboard) \
                     and self.current_device.keyboard.keyboard_id in EXAMPLE_KEYBOARDS:
@@ -237,7 +248,8 @@ class MainWindow(QMainWindow):
             Unlocker.unlock(self.current_device.keyboard)
             self.current_device.keyboard.reload()
 
-        for e in [self.layout_editor, self.keymap_editor, self.firmware_flasher, self.macro_recorder, self.matrix_tester]:
+        for e in [self.layout_editor, self.keymap_editor, self.firmware_flasher, self.macro_recorder,
+                  self.matrix_tester, self.rgb_configurator]:
             e.rebuild(self.current_device)
 
     def refresh_tabs(self):
@@ -318,3 +330,16 @@ class MainWindow(QMainWindow):
         msg = QMessageBox()
         msg.setText(tr("MainWindow", "In order to fully apply the theme you should restart the application."))
         msg.exec_()
+
+    def on_tab_changed(self, index):
+        old_tab = self.current_tab
+        new_tab = None
+        if index >= 0:
+            new_tab = self.tabs.widget(index)
+
+        if old_tab is not None:
+            old_tab.editor.deactivate()
+        if new_tab is not None:
+            new_tab.editor.activate()
+
+        self.current_tab = new_tab

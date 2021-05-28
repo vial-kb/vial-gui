@@ -7,7 +7,7 @@ class FakeKeyboard:
 
     layers = 4
     macro_count = 16
-
+    custom_keycodes = None
 
 
 class TestKeycode(unittest.TestCase):
