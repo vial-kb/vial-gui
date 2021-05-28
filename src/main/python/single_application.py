@@ -1,3 +1,4 @@
+#Based on https://stackoverflow.com/questions/12712360/qtsingleapplication-for-pyside-or-pyqt/12712362#12712362
 from PyQt5.QtCore import pyqtSignal, QTextStream
 from PyQt5.QtNetwork import QLocalSocket, QLocalServer
 from PyQt5.QtWidgets import QApplication
