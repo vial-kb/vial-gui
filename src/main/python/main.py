@@ -60,9 +60,6 @@ class UncaughtHook(QtCore.QObject):
 
 if __name__ == '__main__':
     if len(sys.argv) == 2 and sys.argv[1] == "--linux-recorder":
-        app = QtSingleApplication('3A07-4923-A4C0-45CD-FAE9-F3D5-0177-52B9', sys.argv) #VIAL-LINUX-RECORDER
-        if app.isRunning(): sys.exit(0)
-
         from linux_keystroke_recorder import linux_keystroke_recorder
 
         linux_keystroke_recorder()
