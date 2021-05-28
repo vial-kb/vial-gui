@@ -90,8 +90,8 @@ class MacroRecorder(BasicEditor):
         self.keyboard = self.device.keyboard
 
         # only show the number of macro editors that keyboard supports
-        for x in range(self.tabs.count()):
-            self.tabs.removeTab(x)
+        while self.tabs.count() > 0:
+            self.tabs.removeTab(0)
         for x, w in enumerate(self.macro_tab_w[:self.keyboard.macro_count]):
             self.tabs.addTab(w, "")
 
