@@ -1,3 +1,10 @@
+import sys
+
+from single_application import QtSingleApplication
+
+app = QtSingleApplication('EA48-A684-BD42-588B-2EA1-2E08-12BD-2418', sys.argv)
+if app.isRunning(): sys.exit(0)
+
 # SPDX-License-Identifier: GPL-2.0-or-later
 import ssl
 import certifi
@@ -12,7 +19,6 @@ from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import pyqtSignal
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
 
-import sys
 
 from main_window import MainWindow
 from constants import WINDOW_WIDTH, WINDOW_HEIGHT
