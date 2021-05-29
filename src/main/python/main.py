@@ -21,9 +21,6 @@ from constants import WINDOW_WIDTH, WINDOW_HEIGHT
 # http://timlehr.com/python-exception-hooks-with-qt-message-box/
 from util import init_logger
 
-#Single instance app
-from single_application import QtSingleApplication
-
 
 def show_exception_box(log_msg):
     if QtWidgets.QApplication.instance() is not None:
@@ -63,7 +60,9 @@ if __name__ == '__main__':
         from linux_keystroke_recorder import linux_keystroke_recorder
 
         linux_keystroke_recorder()
-    else:
+    else:        
+        #Single instance app
+        from single_application import QtSingleApplication
         app = QtSingleApplication('EA48-A684-BD42-588B-2EA1-2E08-12BD-2418', sys.argv) #VIAL-APP
         if app.isRunning(): sys.exit(0)
 
