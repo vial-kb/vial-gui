@@ -98,6 +98,7 @@ class Serial:
         cluster = Cluster()
         kbd = Keyboard()
         align = 4
+        item = None
 
         for r in range(len(rows)):
             if isinstance(rows[r], list):
@@ -200,7 +201,9 @@ class Serial:
                     self.deserializeError("keyboard metadata must the be first element", rows[r])
                 # TODO: parse prop
             else:
-                self.deserializeError("unexpected", rows[r])
+                pass
+                # self.deserializeError("unexpected", rows[r])
+                # TODO: first item could be {"name": "something"} - should handle it
         return kbd
 
 
