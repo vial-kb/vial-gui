@@ -24,12 +24,14 @@ class KeymapEditor(BasicEditor):
         self.layout_editor = layout_editor
 
         self.layout_layers = QHBoxLayout()
+        self.layout_size = QVBoxLayout()
         layer_label = QLabel(tr("KeymapEditor", "Layer"))
 
         layout_labels_container = QHBoxLayout()
         layout_labels_container.addWidget(layer_label)
         layout_labels_container.addLayout(self.layout_layers)
         layout_labels_container.addStretch()
+        layout_labels_container.addLayout(self.layout_size)
 
         # contains the actual keyboard
         self.container = KeyboardWidget(layout_editor)
@@ -83,6 +85,20 @@ class KeymapEditor(BasicEditor):
             btn.clicked.connect(lambda state, idx=x: self.switch_layer(idx))
             self.layout_layers.addWidget(btn)
             self.layer_buttons.append(btn)
+        for x in range(0,2):
+            btn = SquareButton("-") if x else SquareButton("+")
+            btn.setFocusPolicy(Qt.NoFocus)
+            btn.setCheckable(False)
+            btn.clicked.connect(lambda state, idx=x: self.adjust_size(idx))
+            self.layout_size.addWidget(btn)
+            self.layer_buttons.append(btn)
+
+    def adjust_size(self, minus):
+        if minus:
+            self.container.set_scale(self.container.get_scale() - 0.1)
+        else:
+            self.container.set_scale(self.container.get_scale() + 0.1)
+        self.refresh_layer_display()
 
     def rebuild(self, device):
         super().rebuild(device)
