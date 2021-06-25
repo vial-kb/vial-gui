@@ -4,7 +4,7 @@ from PyQt5.QtGui import QPainter, QColor, QPainterPath, QTransform, QBrush, QPol
 from PyQt5.QtWidgets import QWidget, QToolTip, QApplication
 from PyQt5.QtCore import Qt, QSize, QRect, QPointF, pyqtSignal, QEvent, QRectF
 
-from constants import KEY_SIZE_RATIO, KEY_SPACING_RATIO, KEYBOARD_WIDGET_PADDING, KEYBOARD_WIDGET_MASK_PADDING, KEYBOARD_WIDGET_MASK_HEIGHT
+from constants import KEY_SIZE_RATIO, KEY_SPACING_RATIO, KEYBOARD_WIDGET_PADDING, KEYBOARD_WIDGET_MASK_PADDING, KEYBOARD_WIDGET_MASK_HEIGHT, KEY_ROUNDNESS
 
 
 class KeyWidget:
@@ -90,12 +90,13 @@ class KeyWidget:
 
     def calculate_draw_path(self):
         path = QPainterPath()
-        path.addRect(int(self.x), int(self.y), int(self.w), int(self.h))
+        corner = int(self.h/KEY_ROUNDNESS) if (self.w > self.h) else int(self.w/KEY_ROUNDNESS)
+        path.addRoundedRect(int(self.x), int(self.y), int(self.w), int(self.h), corner, corner)
 
         # second part only considered if different from first
         if self.has2:
             path2 = QPainterPath()
-            path2.addRect(int(self.x2), int(self.y2), int(self.w2), int(self.h2))
+            path2.addRoundedRect(int(self.x2), int(self.y2), int(self.w2), int(self.h2), corner, corner)
             path = path.united(path2)
 
         return path
@@ -333,7 +334,9 @@ class KeyboardWidget(QWidget):
                     qp.setPen(active_pen)
                     qp.setBrush(active_brush)
 
-                qp.drawRect(key.mask_rect)
+                qp.drawRoundedRect(key.mask_rect,
+                                   key.mask_rect.height()/KEY_ROUNDNESS,
+                                   key.mask_rect.height()/KEY_ROUNDNESS)
                 if key.color is not None and not active:
                     qp.setPen(key.color)
                 qp.drawText(key.mask_rect, Qt.AlignCenter, key.mask_text)
