@@ -357,9 +357,9 @@ class KeyboardWidget(QWidget):
         """ Returns key, hit_masked_part """
 
         for key in self.widgets:
-            if key.masked and key.mask_polygon.containsPoint(pos, Qt.OddEvenFill):
+            if key.masked and key.mask_polygon.containsPoint(pos/self.scale, Qt.OddEvenFill):
                 return key, True
-            if key.polygon.containsPoint(pos, Qt.OddEvenFill):
+            if key.polygon.containsPoint(pos/self.scale, Qt.OddEvenFill):
                 return key, False
 
         return None, False
@@ -414,3 +414,6 @@ class KeyboardWidget(QWidget):
 
     def set_scale(self, scale):
         self.scale = scale
+
+    def get_scale(self):
+        return self.scale
