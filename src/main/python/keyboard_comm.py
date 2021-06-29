@@ -52,6 +52,10 @@ CMD_VIAL_UNLOCK_START = 0x06
 CMD_VIAL_UNLOCK_POLL = 0x07
 CMD_VIAL_LOCK = 0x08
 
+CMD_VIAL_QMK_SETTINGS_QUERY = 0x09
+CMD_VIAL_QMK_SETTINGS_GET = 0x0A
+CMD_VIAL_QMK_SETTINGS_SET = 0x0B
+
 # how much of a macro/keymap buffer we can read/write per packet
 BUFFER_FETCH_CHUNK = 28
 
@@ -636,6 +640,23 @@ class Keyboard:
             macros += [b""] * (self.macro_count - len(macros))
         macros = macros[:self.macro_count]
         return [self.macro_deserialize(x) for x in macros]
+
+    def qmk_settings_query(self):
+        raise NotImplementedError
+
+    def qmk_settings_get(self, qsid):
+        data = self.usb_send(self.dev, struct.pack("<BBH", CMD_VIA_VIAL_PREFIX, CMD_VIAL_QMK_SETTINGS_GET, qsid),
+                             retries=20)
+        if data[0] != 0:
+            return b""
+        return data[1:]
+
+    def qmk_settings_set(self, qsid, value):
+        print("change setting {} to value {}".format(qsid, value.hex()))
+        data = self.usb_send(self.dev, struct.pack("<BBH", CMD_VIA_VIAL_PREFIX, CMD_VIAL_QMK_SETTINGS_SET, qsid) + value,
+                             retries=20)
+        print("resp", data.hex())
+        return data[0]
 
 
 class DummyKeyboard(Keyboard):
