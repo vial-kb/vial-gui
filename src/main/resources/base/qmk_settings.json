@@ -25,7 +25,7 @@
                 { "type": "boolean", "title": "Do not Auto Shift numeric keys", "qsid": 3, "bit": 3 },
                 { "type": "boolean", "title": "Do not Auto Shift alpha characters", "qsid": 3, "bit": 4 },
                 { "type": "boolean", "title": "Enable keyrepeat", "qsid": 3, "bit": 5 },
-                { "type": "boolean", "title": "Disable automatically keyrepeating when AUTO_SHIFT_TIMEOUT is exceeded", "qsid": 3, "bit": 6 }
+                { "type": "boolean", "title": "Disable keyrepeat when timeout is exceeded", "qsid": 3, "bit": 6 }
             ]
         },
         {
