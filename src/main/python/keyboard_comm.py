@@ -643,7 +643,17 @@ class Keyboard:
         return [self.macro_deserialize(x) for x in macros]
 
     def qmk_settings_query(self):
-        raise NotImplementedError
+        cur = 0
+        supported_settings = []
+        while cur != 0xFFFF:
+            data = self.usb_send(self.dev, struct.pack("<BBH", CMD_VIA_VIAL_PREFIX, CMD_VIAL_QMK_SETTINGS_QUERY, cur),
+                                 retries=20)
+            for x in range(0, len(data), 2):
+                qsid = int.from_bytes(data[x:x+2], byteorder="little")
+                cur = max(cur, qsid)
+                if qsid != 0xFFFF:
+                    supported_settings.append(qsid)
+        return supported_settings
 
     def qmk_settings_get(self, qsid):
         data = self.usb_send(self.dev, struct.pack("<BBH", CMD_VIA_VIAL_PREFIX, CMD_VIAL_QMK_SETTINGS_GET, qsid),

@@ -124,6 +124,9 @@ class QmkSettings(BasicEditor):
             self.tabs.append(self.populate_tab(tab, container))
 
     def reload_settings(self):
+        settings = self.keyboard.qmk_settings_query()
+        print(settings)
+
         for tab in self.tabs:
             for field in tab:
                 field.reload(self.keyboard)
