@@ -19,13 +19,18 @@ class GenericOption:
         self.qsid = self.option["qsid"]
         self.container = container
 
-        self.container.addWidget(QLabel(option["title"]), self.row, 0)
+        self.lbl = QLabel(option["title"])
+        self.container.addWidget(self.lbl, self.row, 0)
 
     def reload(self, keyboard):
         data = keyboard.qmk_settings_get(self.qsid)
         if not data:
             raise RuntimeError("failed to retrieve setting {} from keyboard".format(self.option))
         return data
+
+    def delete(self):
+        self.lbl.hide()
+        self.lbl.deleteLater()
 
 
 class BooleanOption(GenericOption):
@@ -50,6 +55,11 @@ class BooleanOption(GenericOption):
         checked = int(self.checkbox.isChecked())
         return checked << self.qsid_bit
 
+    def delete(self):
+        super().delete()
+        self.checkbox.hide()
+        self.checkbox.deleteLater()
+
 
 class IntegerOption(GenericOption):
 
@@ -67,6 +77,11 @@ class IntegerOption(GenericOption):
 
     def value(self):
         return self.spinbox.value().to_bytes(self.option["width"], byteorder="little")
+
+    def delete(self):
+        super().delete()
+        self.spinbox.hide()
+        self.spinbox.deleteLater()
 
 
 class QmkSettings(BasicEditor):
@@ -91,13 +106,15 @@ class QmkSettings(BasicEditor):
         buttons.addWidget(btn_reset)
         self.addLayout(buttons)
 
+        self.supported_settings = set()
         self.tabs = []
-        self.create_gui()
+        self.misc_widgets = []
 
-    @staticmethod
-    def populate_tab(tab, container):
+    def populate_tab(self, tab, container):
         options = []
         for field in tab["fields"]:
+            if field["qsid"] not in self.supported_settings:
+                continue
             if field["type"] == "boolean":
                 options.append(BooleanOption(field, container))
             elif field["type"] == "integer":
@@ -106,11 +123,33 @@ class QmkSettings(BasicEditor):
                 raise RuntimeError("unsupported field type: {}".format(field))
         return options
 
-    def create_gui(self):
+    def recreate_gui(self):
+        # delete old GUI
+        for tab in self.tabs:
+            for field in tab:
+                field.delete()
+        self.tabs.clear()
+        for w in self.misc_widgets:
+            w.hide()
+            w.deleteLater()
+        self.misc_widgets.clear()
+        while self.tabs_widget.count() > 0:
+            self.tabs_widget.removeTab(0)
+
         with open(self.appctx.get_resource("qmk_settings.json"), "r") as inf:
             settings = json.load(inf)
 
+        # create new GUI
         for tab in settings["tabs"]:
+            # don't bother creating tabs that would be empty - i.e. at least one qsid in a tab should be supported
+            use_tab = False
+            for field in tab["fields"]:
+                if field["qsid"] in self.supported_settings:
+                    use_tab = True
+                    break
+            if not use_tab:
+                continue
+
             w = QWidget()
             w.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
             container = QGridLayout()
@@ -120,12 +159,13 @@ class QmkSettings(BasicEditor):
             l.setAlignment(w, QtCore.Qt.AlignHCenter)
             w2 = QWidget()
             w2.setLayout(l)
+            self.misc_widgets += [w, w2]
             self.tabs_widget.addTab(w2, tab["name"])
             self.tabs.append(self.populate_tab(tab, container))
 
     def reload_settings(self):
-        settings = self.keyboard.qmk_settings_query()
-        print(settings)
+        self.supported_settings = set(self.keyboard.qmk_settings_query())
+        self.recreate_gui()
 
         for tab in self.tabs:
             for field in tab:
