@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 import json
-import struct
+from collections import defaultdict
 
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QVBoxLayout, QCheckBox, QGridLayout, QLabel, QWidget, QSizePolicy, QTabWidget, QSpinBox, \
@@ -36,11 +36,7 @@ class BooleanOption(GenericOption):
         self.qsid_bit = self.option["bit"]
 
         self.checkbox = QCheckBox()
-        self.checkbox.stateChanged.connect(self.on_change)
         self.container.addWidget(self.checkbox, self.row, 1)
-
-    def on_change(self):
-        print(self.option, self.checkbox.isChecked())
 
     def reload(self, keyboard):
         data = super().reload(keyboard)
@@ -49,6 +45,10 @@ class BooleanOption(GenericOption):
         self.checkbox.blockSignals(True)
         self.checkbox.setChecked(checked != 0)
         self.checkbox.blockSignals(False)
+
+    def value(self):
+        checked = int(self.checkbox.isChecked())
+        return checked << self.qsid_bit
 
 
 class IntegerOption(GenericOption):
@@ -65,6 +65,9 @@ class IntegerOption(GenericOption):
         data = super().reload(keyboard)[0:self.option["width"]]
         self.spinbox.setValue(int.from_bytes(data, byteorder="little"))
 
+    def value(self):
+        return self.spinbox.value().to_bytes(self.option["width"], byteorder="little")
+
 
 class QmkSettings(BasicEditor):
 
@@ -77,11 +80,15 @@ class QmkSettings(BasicEditor):
         self.addWidget(self.tabs_widget)
         buttons = QHBoxLayout()
         buttons.addStretch()
-        buttons.addWidget(QPushButton(tr("QmkSettings", "Save")))
+        btn_save = QPushButton(tr("QmkSettings", "Save"))
+        btn_save.clicked.connect(self.save_settings)
+        buttons.addWidget(btn_save)
         btn_undo = QPushButton(tr("QmkSettings", "Undo"))
         btn_undo.clicked.connect(self.reload_settings)
         buttons.addWidget(btn_undo)
-        buttons.addWidget(QPushButton(tr("QmkSettings", "Reset")))
+        btn_reset = QPushButton(tr("QmkSettings", "Reset"))
+        btn_reset.clicked.connect(self.reset_settings)
+        buttons.addWidget(btn_reset)
         self.addLayout(buttons)
 
         self.tabs = []
@@ -126,6 +133,25 @@ class QmkSettings(BasicEditor):
         if self.valid():
             self.keyboard = device.keyboard
             self.reload_settings()
+
+    def save_settings(self):
+        qsid_values = defaultdict(int)
+        for tab in self.tabs:
+            for field in tab:
+                # hack for boolean options - we pack several booleans into a single byte
+                if isinstance(field, BooleanOption):
+                    qsid_values[field.qsid] |= field.value()
+                else:
+                    qsid_values[field.qsid] = field.value()
+
+        for qsid, value in qsid_values.items():
+            if isinstance(value, int):
+                value = value.to_bytes(1, byteorder="little")
+            self.keyboard.qmk_settings_set(qsid, value)
+
+    def reset_settings(self):
+        # TODO: implement this
+        raise NotImplementedError
 
     def valid(self):
         return isinstance(self.device, VialKeyboard) and \
