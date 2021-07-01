@@ -7,6 +7,7 @@ from PyQt5.QtWidgets import QVBoxLayout, QCheckBox, QGridLayout, QLabel, QWidget
     QHBoxLayout, QPushButton
 
 from basic_editor import BasicEditor
+from util import tr
 from vial_device import VialKeyboard
 
 
@@ -15,9 +16,16 @@ class GenericOption:
     def __init__(self, option, container):
         self.row = container.rowCount()
         self.option = option
+        self.qsid = self.option["qsid"]
         self.container = container
 
         self.container.addWidget(QLabel(option["title"]), self.row, 0)
+
+    def reload(self, keyboard):
+        data = keyboard.qmk_settings_get(self.qsid)
+        if not data:
+            raise RuntimeError("failed to retrieve setting {} from keyboard".format(self.option))
+        return data
 
 
 class BooleanOption(GenericOption):
@@ -25,17 +33,37 @@ class BooleanOption(GenericOption):
     def __init__(self, option, container):
         super().__init__(option, container)
 
+        self.qsid_bit = self.option["bit"]
+
         self.checkbox = QCheckBox()
+        self.checkbox.stateChanged.connect(self.on_change)
         self.container.addWidget(self.checkbox, self.row, 1)
+
+    def on_change(self):
+        print(self.option, self.checkbox.isChecked())
+
+    def reload(self, keyboard):
+        data = super().reload(keyboard)
+        checked = data[0] & (1 << self.qsid_bit)
+
+        self.checkbox.blockSignals(True)
+        self.checkbox.setChecked(checked != 0)
+        self.checkbox.blockSignals(False)
 
 
 class IntegerOption(GenericOption):
 
-    def __init__(self, option ,container):
+    def __init__(self, option, container):
         super().__init__(option, container)
 
         self.spinbox = QSpinBox()
+        self.spinbox.setMinimum(option["min"])
+        self.spinbox.setMaximum(option["max"])
         self.container.addWidget(self.spinbox, self.row, 1)
+
+    def reload(self, keyboard):
+        data = super().reload(keyboard)[0:self.option["width"]]
+        self.spinbox.setValue(int.from_bytes(data, byteorder="little"))
 
 
 class QmkSettings(BasicEditor):
@@ -49,9 +77,11 @@ class QmkSettings(BasicEditor):
         self.addWidget(self.tabs_widget)
         buttons = QHBoxLayout()
         buttons.addStretch()
-        buttons.addWidget(QPushButton("Save"))
-        buttons.addWidget(QPushButton("Undo"))
-        buttons.addWidget(QPushButton("Reset"))
+        buttons.addWidget(QPushButton(tr("QmkSettings", "Save")))
+        btn_undo = QPushButton(tr("QmkSettings", "Undo"))
+        btn_undo.clicked.connect(self.reload_settings)
+        buttons.addWidget(btn_undo)
+        buttons.addWidget(QPushButton(tr("QmkSettings", "Reset")))
         self.addLayout(buttons)
 
         self.tabs = []
@@ -86,24 +116,10 @@ class QmkSettings(BasicEditor):
             self.tabs_widget.addTab(w2, tab["name"])
             self.tabs.append(self.populate_tab(tab, container))
 
-        # self.container.addWidget(QLabel("Always send Escape if Alt is pressed"), 0, 0)
-        # self.container.addWidget(QCheckBox(), 0, 1)
-        # self.container.addWidget(QLabel("Always send Escape if Control is pressed"), 1, 0)
-        # self.chk_ctrl = QCheckBox()
-        # self.chk_ctrl.stateChanged.connect(self.on_checked)
-        # self.container.addWidget(self.chk_ctrl, 1, 1)
-        # self.container.addWidget(QLabel("Always send Escape if GUI is pressed"), 2, 0)
-        # self.container.addWidget(QCheckBox(), 2, 1)
-        # self.container.addWidget(QLabel("Always send Escape if Shift is pressed"), 3, 0)
-        # self.container.addWidget(QCheckBox(), 3, 1)
-
     def reload_settings(self):
-        gresc = self.keyboard.qmk_settings_get(1)[0]
-        # self.chk_ctrl.setChecked(gresc & 2)
-
-    def on_checked(self, state):
-        data = struct.pack("B", int(self.chk_ctrl.isChecked()) * 2)
-        self.keyboard.qmk_settings_set(1, data)
+        for tab in self.tabs:
+            for field in tab:
+                field.reload(self.keyboard)
 
     def rebuild(self, device):
         super().rebuild(device)
