@@ -1,0 +1,48 @@
+{
+    "tabs": [
+        {
+            "name": "Grave Escape",
+            "fields": [
+                { "type": "boolean", "title": "Always send Escape if Alt is pressed", "qsid": 1, "bit": 0 },
+                { "type": "boolean", "title": "Always send Escape if Control is pressed", "qsid": 1, "bit": 1 },
+                { "type": "boolean", "title": "Always send Escape if GUI is pressed", "qsid": 1, "bit": 2 },
+                { "type": "boolean", "title": "Always send Escape if Shift is pressed", "qsid": 1, "bit": 3 }
+            ]
+        },
+        {
+            "name": "Debounce",
+            "fields": [
+                { "type": "integer", "title": "Debounce time (ms)", "qsid": 2, "min": 0, "max": 1000 }
+            ]
+        },
+        {
+            "name": "Auto Shift",
+            "fields": [
+                { "type": "boolean", "title": "Enable", "qsid": 3, "bit": 0 },
+                { "type": "boolean", "title": "Enable for modifiers", "qsid": 3, "bit": 1 },
+                { "type": "integer", "title": "Timeout", "qsid": 4, "min": 0, "max": 1000 },
+                { "type": "boolean", "title": "Do not Auto Shift special keys", "qsid": 3, "bit": 2 },
+                { "type": "boolean", "title": "Do not Auto Shift numeric keys", "qsid": 3, "bit": 3 },
+                { "type": "boolean", "title": "Do not Auto Shift alpha characters", "qsid": 3, "bit": 4 },
+                { "type": "boolean", "title": "Enable keyrepeat", "qsid": 3, "bit": 5 },
+                { "type": "boolean", "title": "Disable automatically keyrepeating when AUTO_SHIFT_TIMEOUT is exceeded", "qsid": 3, "bit": 6 }
+            ]
+        },
+        {
+            "name": "One Shot Keys",
+            "fields": [
+                { "type": "integer", "title": "Tapping this number of times holds the key until tapped once again", "qsid": 5, "min": 0, "max": 50 },
+                { "type": "integer", "title": "Time (in ms) before the one shot key is released", "qsid": 6, "min": 0, "max": 100000 }
+            ]
+        },
+        {
+            "name": "Tap-Hold",
+            "fields": [
+                { "type": "integer", "title": "TAPPING_TERM", "qsid": 7, "min": 0, "max": 10000 },
+                { "type": "boolean", "title": "PERMISSIVE_HOLD", "qsid": 8, "bit": 0 },
+                { "type": "boolean", "title": "IGNORE_MOD_TAP_INTERRUPT", "qsid": 8, "bit": 1 },
+                { "type": "boolean", "title": "TAPPING_FORCE_HOLD", "qsid": 8, "bit": 2 }
+            ]
+        }
+    ]
+}

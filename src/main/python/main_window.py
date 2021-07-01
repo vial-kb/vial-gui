@@ -28,8 +28,9 @@ import themes
 
 class MainWindow(QMainWindow):
 
-    def __init__(self):
+    def __init__(self, appctx):
         super().__init__()
+        self.appctx = appctx
 
         self.settings = QSettings("Vial", "Vial")
         themes.set_theme(self.get_theme())
@@ -57,7 +58,7 @@ class MainWindow(QMainWindow):
         self.keymap_editor = KeymapEditor(self.layout_editor)
         self.firmware_flasher = FirmwareFlasher(self)
         self.macro_recorder = MacroRecorder()
-        self.qmk_settings = QmkSettings()
+        self.qmk_settings = QmkSettings(self.appctx)
         self.matrix_tester = MatrixTest(self.layout_editor)
         self.rgb_configurator = RGBConfigurator()
 
