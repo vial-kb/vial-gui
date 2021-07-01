@@ -55,6 +55,7 @@ CMD_VIAL_LOCK = 0x08
 CMD_VIAL_QMK_SETTINGS_QUERY = 0x09
 CMD_VIAL_QMK_SETTINGS_GET = 0x0A
 CMD_VIAL_QMK_SETTINGS_SET = 0x0B
+CMD_VIAL_QMK_SETTINGS_RESET = 0x0C
 
 # how much of a macro/keymap buffer we can read/write per packet
 BUFFER_FETCH_CHUNK = 28
@@ -657,6 +658,9 @@ class Keyboard:
                              retries=20)
         print("resp", data.hex())
         return data[0]
+
+    def qmk_settings_reset(self):
+        self.usb_send(self.dev, struct.pack("BB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_QMK_SETTINGS_RESET))
 
 
 class DummyKeyboard(Keyboard):

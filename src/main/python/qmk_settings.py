@@ -4,7 +4,7 @@ from collections import defaultdict
 
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QVBoxLayout, QCheckBox, QGridLayout, QLabel, QWidget, QSizePolicy, QTabWidget, QSpinBox, \
-    QHBoxLayout, QPushButton
+    QHBoxLayout, QPushButton, QMessageBox
 
 from basic_editor import BasicEditor
 from util import tr
@@ -150,8 +150,11 @@ class QmkSettings(BasicEditor):
             self.keyboard.qmk_settings_set(qsid, value)
 
     def reset_settings(self):
-        # TODO: implement this
-        raise NotImplementedError
+        if QMessageBox.question(self.widget(), "",
+                                tr("QmkSettings", "Reset all settings to default values?"),
+                                QMessageBox.Yes | QMessageBox.No) == QMessageBox.Yes:
+            self.keyboard.qmk_settings_reset()
+            self.reload_settings()
 
     def valid(self):
         return isinstance(self.device, VialKeyboard) and \
