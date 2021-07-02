@@ -10,12 +10,6 @@
             ]
         },
         {
-            "name": "Debounce",
-            "fields": [
-                { "type": "integer", "title": "Debounce time (ms)", "qsid": 2, "min": 0, "max": 1000, "width": 2 }
-            ]
-        },
-        {
             "name": "Auto Shift",
             "fields": [
                 { "type": "boolean", "title": "Enable", "qsid": 3, "bit": 0 },
@@ -47,15 +41,6 @@
                 { "type": "integer", "title": "Time between wheel movements", "qsid": 15, "min": 0, "max": 10000, "width": 2 },
                 { "type": "integer", "title": "Maximum number of scroll steps per scroll action", "qsid": 16, "min": 0, "max": 1000, "width": 2 },
                 { "type": "integer", "title": "Time until maximum scroll speed is reached", "qsid": 17, "min": 0, "max": 1000, "width": 2 }
-            ]
-        },
-        {
-            "name": "Tap-Hold",
-            "fields": [
-                { "type": "integer", "title": "TAPPING_TERM", "qsid": 7, "min": 0, "max": 10000, "width": 2 },
-                { "type": "boolean", "title": "PERMISSIVE_HOLD", "qsid": 8, "bit": 0 },
-                { "type": "boolean", "title": "IGNORE_MOD_TAP_INTERRUPT", "qsid": 8, "bit": 1 },
-                { "type": "boolean", "title": "TAPPING_FORCE_HOLD", "qsid": 8, "bit": 2 }
             ]
         }
     ]
