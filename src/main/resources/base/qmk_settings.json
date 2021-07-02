@@ -36,6 +36,20 @@
             ]
         },
         {
+            "name": "Mouse keys",
+            "fields": [
+                { "type": "integer", "title": "Delay between pressing a movement key and cursor movement", "qsid": 9, "min": 0, "max": 10000, "width": 2 },
+                { "type": "integer", "title": "Time between cursor movements in milliseconds", "qsid": 10, "min": 0, "max": 10000, "width": 2 },
+                { "type": "integer", "title": "Step size", "qsid": 11, "min": 0, "max": 1000, "width": 2 },
+                { "type": "integer", "title": "Maximum cursor speed at which acceleration stops", "qsid": 12, "min": 0, "max": 1000, "width": 2 },
+                { "type": "integer", "title": "Time until maximum cursor speed is reached", "qsid": 13, "min": 0, "max": 1000, "width": 2 },
+                { "type": "integer", "title": "Delay between pressing a wheel key and wheel movement", "qsid": 14, "min": 0, "max": 10000, "width": 2 },
+                { "type": "integer", "title": "Time between wheel movements", "qsid": 15, "min": 0, "max": 10000, "width": 2 },
+                { "type": "integer", "title": "Maximum number of scroll steps per scroll action", "qsid": 16, "min": 0, "max": 1000, "width": 2 },
+                { "type": "integer", "title": "Time until maximum scroll speed is reached", "qsid": 17, "min": 0, "max": 1000, "width": 2 }
+            ]
+        },
+        {
             "name": "Tap-Hold",
             "fields": [
                 { "type": "integer", "title": "TAPPING_TERM", "qsid": 7, "min": 0, "max": 10000, "width": 2 },
