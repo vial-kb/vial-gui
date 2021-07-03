@@ -1,11 +1,73 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QTabWidget, QWidget, QSizePolicy, QGridLayout, QVBoxLayout, QLabel, QLineEdit, QHBoxLayout, \
-    QPushButton
+    QPushButton, QSpinBox
 
 from util import tr
 from vial_device import VialKeyboard
 from basic_editor import BasicEditor
+
+
+class TapDanceEntryUI:
+
+    def __init__(self, idx):
+        self.idx = idx
+        self.container = QGridLayout()
+        self.populate_container()
+
+        w = QWidget()
+        w.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
+        w.setLayout(self.container)
+        l = QVBoxLayout()
+        l.addStretch()
+        l.addSpacing(100)
+        l.addWidget(w)
+        l.setAlignment(w, QtCore.Qt.AlignHCenter)
+        l.addSpacing(100)
+        lbl = QLabel("Use <code>TD({})</code> to set up this action in the keymap.".format(self.idx))
+        l.addWidget(lbl)
+        l.setAlignment(lbl, QtCore.Qt.AlignHCenter)
+        l.addStretch()
+        self.w2 = QWidget()
+        self.w2.setLayout(l)
+
+    def populate_container(self):
+        self.container.addWidget(QLabel("On tap"), 0, 0)
+        self.txt_on_tap = QLineEdit()
+        self.container.addWidget(self.txt_on_tap, 0, 1)
+        self.container.addWidget(QLabel("On hold"), 1, 0)
+        self.txt_on_hold = QLineEdit()
+        self.container.addWidget(self.txt_on_hold, 1, 1)
+        self.container.addWidget(QLabel("On double tap"), 2, 0)
+        self.txt_on_double_tap = QLineEdit()
+        self.container.addWidget(self.txt_on_double_tap, 2, 1)
+        self.container.addWidget(QLabel("On tap + hold"), 3, 0)
+        self.txt_on_tap_hold = QLineEdit()
+        self.container.addWidget(self.txt_on_tap_hold, 3, 1)
+        self.container.addWidget(QLabel("Tapping term (ms)"), 4, 0)
+        self.txt_tapping_term = QSpinBox()
+        self.txt_tapping_term.setMinimum(0)
+        self.txt_tapping_term.setMaximum(10000)
+        self.container.addWidget(self.txt_tapping_term, 4, 1)
+
+    def widget(self):
+        return self.w2
+
+    def load(self, data):
+        self.txt_on_tap.setText(str(data[0]))
+        self.txt_on_hold.setText(str(data[1]))
+        self.txt_on_double_tap.setText(str(data[2]))
+        self.txt_on_tap_hold.setText(str(data[3]))
+        self.txt_tapping_term.setValue(data[4])
+
+    def save(self):
+        return (
+            int(self.txt_on_tap.text()),
+            int(self.txt_on_hold.text()),
+            int(self.txt_on_double_tap.text()),
+            int(self.txt_on_tap_hold.text()),
+            self.txt_tapping_term.value()
+        )
 
 
 class TapDance(BasicEditor):
@@ -14,49 +76,50 @@ class TapDance(BasicEditor):
         super().__init__()
         self.keyboard = None
 
+        self.tap_dance_entries = []
+        self.tap_dance_entries_available = []
         self.tabs = QTabWidget()
-        for x in range(32):
-            container = QGridLayout()
-
-            container.addWidget(QLabel("On tap"), 0, 0)
-            container.addWidget(QLineEdit(), 0, 1)
-            container.addWidget(QLabel("On hold"), 1, 0)
-            container.addWidget(QLineEdit(), 1, 1)
-            container.addWidget(QLabel("On double tap"), 2, 0)
-            container.addWidget(QLineEdit(), 2, 1)
-            container.addWidget(QLabel("On tap + hold"), 3, 0)
-            container.addWidget(QLineEdit(), 3, 1)
-
-            w = QWidget()
-            w.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
-            w.setLayout(container)
-            l = QVBoxLayout()
-            l.addStretch()
-            l.addWidget(w)
-            l.setAlignment(w, QtCore.Qt.AlignHCenter)
-            l.addSpacing(100)
-            lbl = QLabel("Use <code>TD({})</code> to set up this action in the keymap.".format(x))
-            l.addWidget(lbl)
-            l.setAlignment(lbl, QtCore.Qt.AlignHCenter)
-            l.addStretch()
-            w2 = QWidget()
-            w2.setLayout(l)
-            self.tabs.addTab(w2, str(x))
+        for x in range(128):
+            self.tap_dance_entries_available.append(TapDanceEntryUI(x))
 
         self.addWidget(self.tabs)
         buttons = QHBoxLayout()
         buttons.addStretch()
         btn_save = QPushButton(tr("TapDance", "Save"))
+        btn_save.clicked.connect(self.on_save)
         btn_revert = QPushButton(tr("TapDance", "Revert"))
+        btn_revert.clicked.connect(self.on_revert)
         buttons.addWidget(btn_save)
         buttons.addWidget(btn_revert)
         self.addLayout(buttons)
+
+    def rebuild_ui(self):
+        while self.tabs.count() > 0:
+            self.tabs.removeTab(0)
+        self.tap_dance_entries = self.tap_dance_entries_available[:self.keyboard.tap_dance_count]
+        for x, e in enumerate(self.tap_dance_entries):
+            self.tabs.addTab(e.widget(), str(x))
+        self.reload_ui()
+
+    def reload_ui(self):
+        for x, e in enumerate(self.tap_dance_entries):
+            e.load(self.keyboard.tap_dance_get(x))
+
+    def on_save(self):
+        for x, e in enumerate(self.tap_dance_entries):
+            self.keyboard.tap_dance_set(x, self.tap_dance_entries[x].save())
+
+    def on_revert(self):
+        self.keyboard.reload_dynamic()
+        self.reload_ui()
 
     def rebuild(self, device):
         super().rebuild(device)
         if self.valid():
             self.keyboard = device.keyboard
+            self.rebuild_ui()
 
     def valid(self):
         return isinstance(self.device, VialKeyboard) and \
-               (self.device.keyboard and self.device.keyboard.vial_protocol >= 4)
+               (self.device.keyboard and self.device.keyboard.vial_protocol >= 4
+                and self.device.keyboard.tap_dance_count > 0)
