@@ -663,10 +663,8 @@ class Keyboard:
         return data[1:]
 
     def qmk_settings_set(self, qsid, value):
-        print("change setting {} to value {}".format(qsid, value.hex()))
         data = self.usb_send(self.dev, struct.pack("<BBH", CMD_VIA_VIAL_PREFIX, CMD_VIAL_QMK_SETTINGS_SET, qsid) + value,
                              retries=20)
-        print("resp", data.hex())
         return data[0]
 
     def qmk_settings_reset(self):
