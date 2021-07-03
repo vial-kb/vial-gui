@@ -146,4 +146,5 @@ class TabbedKeycodes(QTabWidget):
             self.target.on_keycode_changed(kc)
 
     def on_tray_anykey(self):
-        pass
+        if self.target is not None:
+            self.target.on_anykey()
