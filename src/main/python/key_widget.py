@@ -1,3 +1,5 @@
+from PyQt5.QtCore import pyqtSignal
+
 from any_keycode_dialog import AnyKeycodeDialog
 from keyboard_widget import KeyboardWidget
 from kle_serial import Key
@@ -6,6 +8,8 @@ from util import KeycodeDisplay
 
 
 class KeyWidget(KeyboardWidget):
+
+    changed = pyqtSignal()
 
     def __init__(self):
         super().__init__(None)
@@ -45,6 +49,10 @@ class KeyWidget(KeyboardWidget):
             self.set_keycode(dlg.value)
 
     def set_keycode(self, kc):
+        if kc == self.keycode:
+            return
         self.keycode = kc
         KeycodeDisplay.display_keycode(self.widgets[0], self.keycode)
         self.update()
+
+        self.changed.emit()
