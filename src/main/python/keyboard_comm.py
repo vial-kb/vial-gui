@@ -13,7 +13,7 @@ from unlocker import Unlocker
 from util import MSG_LEN, hid_send, chunks
 
 SUPPORTED_VIA_PROTOCOL = [-1, 9]
-SUPPORTED_VIAL_PROTOCOL = [-1, 0, 1, 2, 3]
+SUPPORTED_VIAL_PROTOCOL = [-1, 0, 1, 2, 3, 4]
 
 CMD_VIA_GET_PROTOCOL_VERSION = 0x01
 CMD_VIA_GET_KEYBOARD_VALUE = 0x02
