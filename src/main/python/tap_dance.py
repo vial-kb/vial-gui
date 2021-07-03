@@ -3,6 +3,7 @@ from PyQt5 import QtCore
 from PyQt5.QtWidgets import QTabWidget, QWidget, QSizePolicy, QGridLayout, QVBoxLayout, QLabel, QLineEdit, QHBoxLayout, \
     QPushButton, QSpinBox
 
+from key_widget import KeyWidget
 from util import tr
 from vial_device import VialKeyboard
 from basic_editor import BasicEditor
@@ -20,10 +21,10 @@ class TapDanceEntryUI:
         w.setLayout(self.container)
         l = QVBoxLayout()
         l.addStretch()
-        l.addSpacing(100)
+        l.addSpacing(10)
         l.addWidget(w)
         l.setAlignment(w, QtCore.Qt.AlignHCenter)
-        l.addSpacing(100)
+        l.addSpacing(10)
         lbl = QLabel("Use <code>TD({})</code> to set up this action in the keymap.".format(self.idx))
         l.addWidget(lbl)
         l.setAlignment(lbl, QtCore.Qt.AlignHCenter)
@@ -34,16 +35,17 @@ class TapDanceEntryUI:
     def populate_container(self):
         self.container.addWidget(QLabel("On tap"), 0, 0)
         self.txt_on_tap = QLineEdit()
-        self.container.addWidget(self.txt_on_tap, 0, 1)
+        # self.container.addWidget(self.txt_on_tap, 0, 1)
+        self.container.addWidget(KeyWidget(), 0, 1)
         self.container.addWidget(QLabel("On hold"), 1, 0)
         self.txt_on_hold = QLineEdit()
-        self.container.addWidget(self.txt_on_hold, 1, 1)
+        self.container.addWidget(KeyWidget(), 1, 1)
         self.container.addWidget(QLabel("On double tap"), 2, 0)
         self.txt_on_double_tap = QLineEdit()
-        self.container.addWidget(self.txt_on_double_tap, 2, 1)
+        self.container.addWidget(KeyWidget(), 2, 1)
         self.container.addWidget(QLabel("On tap + hold"), 3, 0)
         self.txt_on_tap_hold = QLineEdit()
-        self.container.addWidget(self.txt_on_tap_hold, 3, 1)
+        self.container.addWidget(KeyWidget(), 3, 1)
         self.container.addWidget(QLabel("Tapping term (ms)"), 4, 0)
         self.txt_tapping_term = QSpinBox()
         self.txt_tapping_term.setMinimum(0)

@@ -18,6 +18,7 @@ from layout_editor import LayoutEditor
 from macro_recorder import MacroRecorder
 from qmk_settings import QmkSettings
 from rgb_configurator import RGBConfigurator
+from tabbed_keycodes import TabbedKeycodes
 from tap_dance import TapDance
 from unlocker import Unlocker
 from util import tr, find_vial_devices, EXAMPLE_KEYBOARDS
@@ -91,6 +92,10 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.tabs)
         layout.addWidget(self.lbl_no_devices)
         layout.setAlignment(self.lbl_no_devices, Qt.AlignHCenter)
+        self.popup_keycodes = TabbedKeycodes()
+        TabbedKeycodes.set_tray(self.popup_keycodes)
+        layout.addWidget(self.popup_keycodes)
+        self.popup_keycodes.hide()
         w = QWidget()
         w.setLayout(layout)
         self.setCentralWidget(w)
@@ -343,6 +348,7 @@ class MainWindow(QMainWindow):
         msg.exec_()
 
     def on_tab_changed(self, index):
+        TabbedKeycodes.close_tray()
         old_tab = self.current_tab
         new_tab = None
         if index >= 0:

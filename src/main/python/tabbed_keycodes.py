@@ -22,6 +22,7 @@ class TabbedKeycodes(QTabWidget):
         super().__init__(parent)
 
         self.keymap_override = None
+        self.target = None
 
         self.tab_basic = QScrollArea()
         self.tab_iso = QScrollArea()
@@ -116,3 +117,20 @@ class TabbedKeycodes(QTabWidget):
                 label = widget.keycode.label
                 widget.setStyleSheet("QPushButton {}")
             widget.setText(label.replace("&", "&&"))
+
+    @classmethod
+    def set_tray(cls, tray):
+        cls.tray = tray
+
+    @classmethod
+    def open_tray(cls, target):
+        cls.tray.show()
+        if cls.tray.target is not None and cls.tray.target != target:
+            cls.tray.target.deselect()
+        cls.tray.target = target
+
+    @classmethod
+    def close_tray(cls):
+        if cls.tray.target is not None:
+            cls.tray.target.deselect()
+        cls.tray.hide()
