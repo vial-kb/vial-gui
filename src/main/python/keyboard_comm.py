@@ -500,6 +500,7 @@ class Keyboard:
         data["macro"] = self.save_macro()
         data["vial_protocol"] = self.vial_protocol
         data["via_protocol"] = self.via_protocol
+        data["tap_dance"] = self.tap_dance_entries
 
         return json.dumps(data).encode("utf-8")
 
@@ -530,6 +531,10 @@ class Keyboard:
 
         self.set_layout_options(data["layout_options"])
         self.restore_macros(data.get("macro"))
+
+        for x, e in enumerate(data.get("tap_dance", [])):
+            if x < self.tap_dance_count:
+                self.tap_dance_set(x, e)
 
     def restore_macros(self, macros):
         if not isinstance(macros, list):
