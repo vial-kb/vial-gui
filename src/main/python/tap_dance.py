@@ -34,18 +34,17 @@ class TapDanceEntryUI:
 
     def populate_container(self):
         self.container.addWidget(QLabel("On tap"), 0, 0)
-        self.txt_on_tap = QLineEdit()
-        # self.container.addWidget(self.txt_on_tap, 0, 1)
-        self.container.addWidget(KeyWidget(), 0, 1)
+        self.kc_on_tap = KeyWidget()
+        self.container.addWidget(self.kc_on_tap, 0, 1)
         self.container.addWidget(QLabel("On hold"), 1, 0)
-        self.txt_on_hold = QLineEdit()
-        self.container.addWidget(KeyWidget(), 1, 1)
+        self.kc_on_hold = KeyWidget()
+        self.container.addWidget(self.kc_on_hold, 1, 1)
         self.container.addWidget(QLabel("On double tap"), 2, 0)
-        self.txt_on_double_tap = QLineEdit()
-        self.container.addWidget(KeyWidget(), 2, 1)
+        self.kc_on_double_tap = KeyWidget()
+        self.container.addWidget(self.kc_on_double_tap, 2, 1)
         self.container.addWidget(QLabel("On tap + hold"), 3, 0)
-        self.txt_on_tap_hold = QLineEdit()
-        self.container.addWidget(KeyWidget(), 3, 1)
+        self.kc_on_tap_hold = KeyWidget()
+        self.container.addWidget(self.kc_on_tap_hold, 3, 1)
         self.container.addWidget(QLabel("Tapping term (ms)"), 4, 0)
         self.txt_tapping_term = QSpinBox()
         self.txt_tapping_term.setMinimum(0)
@@ -56,18 +55,18 @@ class TapDanceEntryUI:
         return self.w2
 
     def load(self, data):
-        self.txt_on_tap.setText(str(data[0]))
-        self.txt_on_hold.setText(str(data[1]))
-        self.txt_on_double_tap.setText(str(data[2]))
-        self.txt_on_tap_hold.setText(str(data[3]))
+        self.kc_on_tap.set_keycode(data[0])
+        self.kc_on_hold.set_keycode(data[1])
+        self.kc_on_double_tap.set_keycode(data[2])
+        self.kc_on_tap_hold.set_keycode(data[3])
         self.txt_tapping_term.setValue(data[4])
 
     def save(self):
         return (
-            int(self.txt_on_tap.text()),
-            int(self.txt_on_hold.text()),
-            int(self.txt_on_double_tap.text()),
-            int(self.txt_on_tap_hold.text()),
+            self.kc_on_tap.keycode,
+            self.kc_on_hold.keycode,
+            self.kc_on_double_tap.keycode,
+            self.kc_on_tap_hold.keycode,
             self.txt_tapping_term.value()
         )
 
