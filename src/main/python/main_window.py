@@ -21,7 +21,7 @@ from rgb_configurator import RGBConfigurator
 from tabbed_keycodes import TabbedKeycodes
 from tap_dance import TapDance
 from unlocker import Unlocker
-from util import tr, find_vial_devices, EXAMPLE_KEYBOARDS
+from util import tr, find_vial_devices, EXAMPLE_KEYBOARDS, KeycodeDisplay
 from vial_device import VialKeyboard
 from matrix_test import MatrixTest
 
@@ -92,10 +92,10 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.tabs)
         layout.addWidget(self.lbl_no_devices)
         layout.setAlignment(self.lbl_no_devices, Qt.AlignHCenter)
-        self.popup_keycodes = TabbedKeycodes()
-        TabbedKeycodes.set_tray(self.popup_keycodes)
-        layout.addWidget(self.popup_keycodes)
-        self.popup_keycodes.hide()
+        self.tray_keycodes = TabbedKeycodes()
+        self.tray_keycodes.make_tray()
+        layout.addWidget(self.tray_keycodes)
+        self.tray_keycodes.hide()
         w = QWidget()
         w.setLayout(layout)
         self.setCentralWidget(w)
@@ -335,7 +335,7 @@ class MainWindow(QMainWindow):
 
     def change_keyboard_layout(self, index):
         self.settings.setValue("keymap", KEYMAPS[index][0])
-        self.keymap_editor.set_keymap_override(KEYMAPS[index][1])
+        KeycodeDisplay.set_keymap_override(KEYMAPS[index][1])
 
     def get_theme(self):
         return self.settings.value("theme", "Dark")

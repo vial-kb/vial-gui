@@ -23,3 +23,7 @@ class KeyWidget(KeyboardWidget):
             TabbedKeycodes.open_tray(self)
         else:
             TabbedKeycodes.close_tray()
+
+    def on_keycode_changed(self, kc):
+        """ Unlike set_keycode, this handles setting masked keycode inside the mask """
+        print(kc)

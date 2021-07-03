@@ -8,9 +8,8 @@ from constants import KEYCODE_BTN_RATIO
 from flowlayout import FlowLayout
 from keycodes import KEYCODES_BASIC, KEYCODES_ISO, KEYCODES_MACRO, KEYCODES_LAYERS, KEYCODES_QUANTUM, \
     KEYCODES_BACKLIGHT, KEYCODES_MEDIA, KEYCODES_SPECIAL, KEYCODES_SHIFTED, KEYCODES_USER, Keycode
-from keymaps import KEYMAPS
 from square_button import SquareButton
-from util import tr
+from util import tr, KeycodeDisplay
 
 
 class TabbedKeycodes(QTabWidget):
@@ -21,8 +20,8 @@ class TabbedKeycodes(QTabWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        self.keymap_override = None
         self.target = None
+        self.is_tray = False
 
         self.tab_basic = QScrollArea()
         self.tab_iso = QScrollArea()
@@ -74,7 +73,7 @@ class TabbedKeycodes(QTabWidget):
         self.layer_keycode_buttons = []
         self.macro_keycode_buttons = []
         self.user_keycode_buttons = []
-        self.set_keymap_override(KEYMAPS[0][1])
+        KeycodeDisplay.notify_keymap_override(self)
 
     def create_buttons(self, layout, keycodes, wordWrap = False):
         buttons = []
@@ -102,15 +101,14 @@ class TabbedKeycodes(QTabWidget):
         self.widgets += self.layer_keycode_buttons + self.macro_keycode_buttons + self.user_keycode_buttons
         self.relabel_buttons()
 
-    def set_keymap_override(self, override):
-        self.keymap_override = override
+    def on_keymap_override(self):
         self.relabel_buttons()
 
     def relabel_buttons(self):
         for widget in self.widgets:
             qmk_id = widget.keycode.qmk_id
-            if qmk_id in self.keymap_override:
-                label = self.keymap_override[qmk_id]
+            if qmk_id in KeycodeDisplay.keymap_override:
+                label = KeycodeDisplay.keymap_override[qmk_id]
                 highlight_color = QApplication.palette().color(QPalette.Link).getRgb()
                 widget.setStyleSheet("QPushButton {color: rgb"+str(highlight_color)+";}")
             else:
@@ -133,4 +131,19 @@ class TabbedKeycodes(QTabWidget):
     def close_tray(cls):
         if cls.tray.target is not None:
             cls.tray.target.deselect()
+        cls.tray.target = None
         cls.tray.hide()
+
+    def make_tray(self):
+        self.is_tray = True
+        TabbedKeycodes.set_tray(self)
+
+        self.keycode_changed.connect(self.on_tray_keycode_changed)
+        self.anykey.connect(self.on_tray_anykey)
+
+    def on_tray_keycode_changed(self, kc):
+        if self.target is not None:
+            self.target.on_keycode_changed(kc)
+
+    def on_tray_anykey(self):
+        pass
