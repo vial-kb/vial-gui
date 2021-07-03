@@ -201,4 +201,4 @@ class QmkSettings(BasicEditor):
 
     def valid(self):
         return isinstance(self.device, VialKeyboard) and \
-               (self.device.keyboard and self.device.keyboard.vial_protocol >= 3)  # TODO(xyz): protocol bump
+               (self.device.keyboard and self.device.keyboard.vial_protocol >= 4)
