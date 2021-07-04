@@ -7,7 +7,7 @@ from PyQt5.QtGui import QPalette
 from constants import KEYCODE_BTN_RATIO
 from flowlayout import FlowLayout
 from keycodes import KEYCODES_BASIC, KEYCODES_ISO, KEYCODES_MACRO, KEYCODES_LAYERS, KEYCODES_QUANTUM, \
-    KEYCODES_BACKLIGHT, KEYCODES_MEDIA, KEYCODES_SPECIAL, KEYCODES_SHIFTED, KEYCODES_USER, Keycode
+    KEYCODES_BACKLIGHT, KEYCODES_MEDIA, KEYCODES_SPECIAL, KEYCODES_SHIFTED, KEYCODES_USER, Keycode, KEYCODES_TAP_DANCE
 from square_button import SquareButton
 from util import tr, KeycodeDisplay
 
@@ -29,6 +29,7 @@ class TabbedKeycodes(QTabWidget):
         self.tab_quantum = QScrollArea()
         self.tab_backlight = QScrollArea()
         self.tab_media = QScrollArea()
+        self.tab_tap_dance = QScrollArea()
         self.tab_user = QScrollArea()
         self.tab_macro = QScrollArea()
 
@@ -41,12 +42,15 @@ class TabbedKeycodes(QTabWidget):
             (self.tab_quantum, "Quantum", KEYCODES_QUANTUM),
             (self.tab_backlight, "Backlight", KEYCODES_BACKLIGHT),
             (self.tab_media, "App, Media and Mouse", KEYCODES_MEDIA),
+            (self.tab_tap_dance, "Tap Dance", KEYCODES_TAP_DANCE),
             (self.tab_user, "User", KEYCODES_USER),
             (self.tab_macro, "Macro", KEYCODES_MACRO),
         ]:
             layout = FlowLayout()
             if tab == self.tab_layers:
                 self.layout_layers = layout
+            elif tab == self.tab_tap_dance:
+                self.layout_tap_dance = layout
             elif tab == self.tab_macro:
                 self.layout_macro = layout
             elif tab == self.tab_user:
@@ -71,16 +75,17 @@ class TabbedKeycodes(QTabWidget):
             self.addTab(tab, tr("TabbedKeycodes", label))
 
         self.layer_keycode_buttons = []
+        self.tap_dance_keycode_buttons = []
         self.macro_keycode_buttons = []
         self.user_keycode_buttons = []
         KeycodeDisplay.notify_keymap_override(self)
 
-    def create_buttons(self, layout, keycodes, wordWrap = False):
+    def create_buttons(self, layout, keycodes, word_wrap=False):
         buttons = []
 
         for keycode in keycodes:
             btn = SquareButton()
-            btn.setWordWrap(wordWrap)
+            btn.setWordWrap(word_wrap)
             btn.setRelSize(KEYCODE_BTN_RATIO)
             btn.setToolTip(Keycode.tooltip(keycode.code))
             btn.clicked.connect(lambda st, k=keycode: self.keycode_changed.emit(k.code))
@@ -91,14 +96,17 @@ class TabbedKeycodes(QTabWidget):
         return buttons
 
     def recreate_keycode_buttons(self):
-        for btn in self.layer_keycode_buttons + self.macro_keycode_buttons + self.user_keycode_buttons:
+        for btn in self.layer_keycode_buttons + self.tap_dance_keycode_buttons + self.macro_keycode_buttons \
+                   + self.user_keycode_buttons:
             self.widgets.remove(btn)
             btn.hide()
             btn.deleteLater()
         self.layer_keycode_buttons = self.create_buttons(self.layout_layers, KEYCODES_LAYERS)
+        self.tap_dance_keycode_buttons = self.create_buttons(self.layout_tap_dance, KEYCODES_TAP_DANCE)
         self.macro_keycode_buttons = self.create_buttons(self.layout_macro, KEYCODES_MACRO)
-        self.user_keycode_buttons = self.create_buttons(self.layout_user, KEYCODES_USER, wordWrap=True)
-        self.widgets += self.layer_keycode_buttons + self.macro_keycode_buttons + self.user_keycode_buttons
+        self.user_keycode_buttons = self.create_buttons(self.layout_user, KEYCODES_USER, word_wrap=True)
+        self.widgets += self.layer_keycode_buttons + self.tap_dance_keycode_buttons + \
+            self.macro_keycode_buttons + self.user_keycode_buttons
         self.relabel_buttons()
 
     def on_keymap_override(self):
