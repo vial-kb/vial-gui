@@ -9,6 +9,7 @@ import os
 import sys
 from urllib.request import urlopen
 
+from combos import Combos
 from editor_container import EditorContainer
 from firmware_flasher import FirmwareFlasher
 from keyboard_comm import ProtocolError
@@ -61,12 +62,13 @@ class MainWindow(QMainWindow):
         self.firmware_flasher = FirmwareFlasher(self)
         self.macro_recorder = MacroRecorder()
         self.tap_dance = TapDance()
+        self.combos = Combos()
         self.qmk_settings = QmkSettings(self.appctx)
         self.matrix_tester = MatrixTest(self.layout_editor)
         self.rgb_configurator = RGBConfigurator()
 
         self.editors = [(self.keymap_editor, "Keymap"), (self.layout_editor, "Layout"), (self.macro_recorder, "Macros"),
-                        (self.rgb_configurator, "Lighting"), (self.tap_dance, "Tap Dance"),
+                        (self.rgb_configurator, "Lighting"), (self.tap_dance, "Tap Dance"), (self.combos, "Combos"),
                         (self.qmk_settings, "QMK Settings"),
                         (self.matrix_tester, "Matrix tester"), (self.firmware_flasher, "Firmware updater")]
 
@@ -265,7 +267,7 @@ class MainWindow(QMainWindow):
             self.current_device.keyboard.reload()
 
         for e in [self.layout_editor, self.keymap_editor, self.firmware_flasher, self.macro_recorder,
-                  self.tap_dance, self.qmk_settings, self.matrix_tester, self.rgb_configurator]:
+                  self.tap_dance, self.combos, self.qmk_settings, self.matrix_tester, self.rgb_configurator]:
             e.rebuild(self.current_device)
 
     def refresh_tabs(self):
