@@ -32,6 +32,9 @@ class KeyWidget(KeyboardWidget):
         else:
             TabbedKeycodes.close_tray()
 
+    def mouseReleaseEvent(self, ev):
+        ev.accept()
+
     def on_keycode_changed(self, keycode):
         """ Unlike set_keycode, this handles setting masked keycode inside the mask """
 
