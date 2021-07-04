@@ -113,6 +113,7 @@ class KeymapEditor(BasicEditor):
 
             recreate_keyboard_keycodes(self.keyboard)
             self.tabbed_keycodes.recreate_keycode_buttons()
+            TabbedKeycodes.tray.recreate_keycode_buttons()
             self.refresh_layer_display()
         self.container.setEnabled(self.valid())
 
