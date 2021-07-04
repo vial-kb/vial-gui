@@ -515,7 +515,9 @@ class Keyboard:
         data["macro"] = self.save_macro()
         data["vial_protocol"] = self.vial_protocol
         data["via_protocol"] = self.via_protocol
+        # TODO: should store/restore serialized keycodes for these two
         data["tap_dance"] = self.tap_dance_entries
+        data["combo"] = self.combo_entries
 
         return json.dumps(data).encode("utf-8")
 
@@ -550,6 +552,9 @@ class Keyboard:
         for x, e in enumerate(data.get("tap_dance", [])):
             if x < self.tap_dance_count:
                 self.tap_dance_set(x, e)
+        for x, e in enumerate(data.get("combo", [])):
+            if x < self.combo_count:
+                self.combo_set(x, e)
 
     def restore_macros(self, macros):
         if not isinstance(macros, list):
