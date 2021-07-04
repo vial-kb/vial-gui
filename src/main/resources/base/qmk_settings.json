@@ -23,6 +23,12 @@
             ]
         },
         {
+            "name": "Combo",
+            "fields": [
+                { "type": "integer", "title": "Time out period for combos", "qsid": 2, "min": 0, "max": 10000, "width": 2 }
+            ]
+        },
+        {
             "name": "One Shot Keys",
             "fields": [
                 { "type": "integer", "title": "Tapping this number of times holds the key until tapped once again", "qsid": 5, "min": 0, "max": 50, "width": 1 },
