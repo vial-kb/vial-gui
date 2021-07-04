@@ -4,7 +4,8 @@ from PyQt5.QtGui import QPainter, QColor, QPainterPath, QTransform, QBrush, QPol
 from PyQt5.QtWidgets import QWidget, QToolTip, QApplication
 from PyQt5.QtCore import Qt, QSize, QRect, QPointF, pyqtSignal, QEvent, QRectF
 
-from constants import KEY_SIZE_RATIO, KEY_SPACING_RATIO, KEYBOARD_WIDGET_PADDING, KEYBOARD_WIDGET_MASK_PADDING, KEYBOARD_WIDGET_MASK_HEIGHT, KEY_ROUNDNESS
+from constants import KEY_SIZE_RATIO, KEY_SPACING_RATIO, KEYBOARD_WIDGET_PADDING, KEYBOARD_WIDGET_MASK_PADDING,\
+    KEYBOARD_WIDGET_MASK_HEIGHT, KEY_ROUNDNESS
 
 
 class KeyWidget:
@@ -166,6 +167,7 @@ class KeyboardWidget(QWidget):
 
         self.enabled = True
         self.scale = 1
+        self.padding = KEYBOARD_WIDGET_PADDING
 
         self.setMouseTracking(True)
 
@@ -215,7 +217,7 @@ class KeyboardWidget(QWidget):
 
         # place common widgets, that is, ones which are always displayed and require no extra transforms
         for widget in self.common_widgets:
-            widget.update_position(scale_factor, -top_x + KEYBOARD_WIDGET_PADDING, -top_y + KEYBOARD_WIDGET_PADDING)
+            widget.update_position(scale_factor, -top_x + self.padding, -top_y + self.padding)
             self.widgets.append(widget)
 
         # top-left position for specific layout
@@ -236,7 +238,7 @@ class KeyboardWidget(QWidget):
             if opt == self.layout_editor.get_choice(idx):
                 shift_x = layout_x[idx][opt] - layout_x[idx][0]
                 shift_y = layout_y[idx][opt] - layout_y[idx][0]
-                widget.update_position(scale_factor, -shift_x - top_x + KEYBOARD_WIDGET_PADDING, -shift_y - top_y + KEYBOARD_WIDGET_PADDING)
+                widget.update_position(scale_factor, -shift_x - top_x + self.padding, -shift_y - top_y + self.padding)
                 self.widgets.append(widget)
 
     def update_layout(self):
@@ -255,8 +257,8 @@ class KeyboardWidget(QWidget):
             max_w = max(max_w, p.x() * self.scale)
             max_h = max(max_h, p.y() * self.scale)
 
-        self.width = max_w + 2 * KEYBOARD_WIDGET_PADDING
-        self.height = max_h + 2 * KEYBOARD_WIDGET_PADDING
+        self.width = max_w + 2 * self.padding
+        self.height = max_h + 2 * self.padding
 
         self.update()
         self.updateGeometry()

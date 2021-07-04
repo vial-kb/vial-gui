@@ -524,6 +524,8 @@ KEYCODES_MEDIA = [
     K(132, "KC_LSCR", "Locking\nScroll", "Locking Scroll Lock", alias=["KC_LOCKING_SCROLL"]),
 ]
 
+KEYCODES_TAP_DANCE = []
+
 KEYCODES_USER = []
 
 KEYCODES_MACRO = []
@@ -544,8 +546,8 @@ def recreate_keycodes():
 
     KEYCODES.clear()
     KEYCODES.extend(KEYCODES_SPECIAL + KEYCODES_BASIC + KEYCODES_SHIFTED + KEYCODES_ISO + KEYCODES_LAYERS +
-                    KEYCODES_QUANTUM + KEYCODES_BACKLIGHT + KEYCODES_MEDIA + KEYCODES_MACRO + KEYCODES_USER +
-                    KEYCODES_HIDDEN)
+                    KEYCODES_QUANTUM + KEYCODES_BACKLIGHT + KEYCODES_MEDIA + KEYCODES_TAP_DANCE + KEYCODES_MACRO +
+                    KEYCODES_USER + KEYCODES_HIDDEN)
 
 
 def create_user_keycodes():
@@ -607,6 +609,10 @@ def recreate_keyboard_keycodes(keyboard):
     for x in range(keyboard.macro_count):
         lbl = "M{}".format(x)
         KEYCODES_MACRO.append(Keycode(0x5F12 + x, lbl, lbl))
+
+    for x in range(keyboard.tap_dance_count):
+        lbl = "TD({})".format(x)
+        KEYCODES_TAP_DANCE.append(Keycode(QK_TAP_DANCE | x, lbl, lbl))
 
     # Check if custom keycodes are defined in keyboard, and if so add them to user keycodes
     if keyboard.custom_keycodes is not None and len(keyboard.custom_keycodes) > 0:

@@ -18,8 +18,10 @@ from layout_editor import LayoutEditor
 from macro_recorder import MacroRecorder
 from qmk_settings import QmkSettings
 from rgb_configurator import RGBConfigurator
+from tabbed_keycodes import TabbedKeycodes
+from tap_dance import TapDance
 from unlocker import Unlocker
-from util import tr, find_vial_devices, EXAMPLE_KEYBOARDS
+from util import tr, find_vial_devices, EXAMPLE_KEYBOARDS, KeycodeDisplay
 from vial_device import VialKeyboard
 from matrix_test import MatrixTest
 
@@ -58,12 +60,14 @@ class MainWindow(QMainWindow):
         self.keymap_editor = KeymapEditor(self.layout_editor)
         self.firmware_flasher = FirmwareFlasher(self)
         self.macro_recorder = MacroRecorder()
+        self.tap_dance = TapDance()
         self.qmk_settings = QmkSettings(self.appctx)
         self.matrix_tester = MatrixTest(self.layout_editor)
         self.rgb_configurator = RGBConfigurator()
 
         self.editors = [(self.keymap_editor, "Keymap"), (self.layout_editor, "Layout"), (self.macro_recorder, "Macros"),
-                        (self.rgb_configurator, "Lighting"), (self.qmk_settings, "QMK Settings"),
+                        (self.rgb_configurator, "Lighting"), (self.tap_dance, "Tap Dance"),
+                        (self.qmk_settings, "QMK Settings"),
                         (self.matrix_tester, "Matrix tester"), (self.firmware_flasher, "Firmware updater")]
 
         Unlocker.global_layout_editor = self.layout_editor
@@ -88,6 +92,10 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.tabs)
         layout.addWidget(self.lbl_no_devices)
         layout.setAlignment(self.lbl_no_devices, Qt.AlignHCenter)
+        self.tray_keycodes = TabbedKeycodes()
+        self.tray_keycodes.make_tray()
+        layout.addWidget(self.tray_keycodes)
+        self.tray_keycodes.hide()
         w = QWidget()
         w.setLayout(layout)
         self.setCentralWidget(w)
@@ -257,7 +265,7 @@ class MainWindow(QMainWindow):
             self.current_device.keyboard.reload()
 
         for e in [self.layout_editor, self.keymap_editor, self.firmware_flasher, self.macro_recorder,
-                  self.qmk_settings, self.matrix_tester, self.rgb_configurator]:
+                  self.tap_dance, self.qmk_settings, self.matrix_tester, self.rgb_configurator]:
             e.rebuild(self.current_device)
 
     def refresh_tabs(self):
@@ -327,7 +335,7 @@ class MainWindow(QMainWindow):
 
     def change_keyboard_layout(self, index):
         self.settings.setValue("keymap", KEYMAPS[index][0])
-        self.keymap_editor.set_keymap_override(KEYMAPS[index][1])
+        KeycodeDisplay.set_keymap_override(KEYMAPS[index][1])
 
     def get_theme(self):
         return self.settings.value("theme", "Dark")
@@ -340,6 +348,7 @@ class MainWindow(QMainWindow):
         msg.exec_()
 
     def on_tab_changed(self, index):
+        TabbedKeycodes.close_tray()
         old_tab = self.current_tab
         new_tab = None
         if index >= 0:

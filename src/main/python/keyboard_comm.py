@@ -57,6 +57,12 @@ CMD_VIAL_QMK_SETTINGS_GET = 0x0A
 CMD_VIAL_QMK_SETTINGS_SET = 0x0B
 CMD_VIAL_QMK_SETTINGS_RESET = 0x0C
 
+CMD_VIAL_DYNAMIC_ENTRY_OP = 0x0D
+
+DYNAMIC_VIAL_GET_NUMBER_OF_ENTRIES = 0x00
+DYNAMIC_VIAL_TAP_DANCE_GET = 0x01
+DYNAMIC_VIAL_TAP_DANCE_SET = 0x02
+
 # how much of a macro/keymap buffer we can read/write per packet
 BUFFER_FETCH_CHUNK = 28
 
@@ -207,6 +213,7 @@ class Keyboard:
         self.reload_keymap()
         self.reload_macros()
         self.reload_rgb()
+        self.reload_dynamic()
 
     def reload_layers(self):
         """ Get how many layers the keyboard has """
@@ -374,6 +381,22 @@ class Keyboard:
             self.backlight_effect = self.usb_send(
                 self.dev, struct.pack(">BB", CMD_VIA_LIGHTING_GET_VALUE, QMK_BACKLIGHT_EFFECT), retries=20)[2]
 
+    def reload_dynamic(self):
+        if self.vial_protocol < 4:
+            self.tap_dance_count = 0
+            self.tap_dance_entries = []
+            return
+        data = self.usb_send(self.dev, struct.pack("BBB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_DYNAMIC_ENTRY_OP,
+                                                   DYNAMIC_VIAL_GET_NUMBER_OF_ENTRIES), retries=20)
+        self.tap_dance_count = data[0]
+        self.tap_dance_entries = []
+        for x in range(self.tap_dance_count):
+            data = self.usb_send(self.dev, struct.pack("BBBB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_DYNAMIC_ENTRY_OP,
+                                                       DYNAMIC_VIAL_TAP_DANCE_GET, x), retries=20)
+            if data[0] != 0:
+                raise RuntimeError("failed retrieving tapdance entry {} from the device".format(x))
+            self.tap_dance_entries.append(struct.unpack("<HHHHH", data[1:11]))
+
     def set_key(self, layer, row, col, code):
         if code < 0:
             return
@@ -477,6 +500,7 @@ class Keyboard:
         data["macro"] = self.save_macro()
         data["vial_protocol"] = self.vial_protocol
         data["via_protocol"] = self.via_protocol
+        data["tap_dance"] = self.tap_dance_entries
 
         return json.dumps(data).encode("utf-8")
 
@@ -507,6 +531,10 @@ class Keyboard:
 
         self.set_layout_options(data["layout_options"])
         self.restore_macros(data.get("macro"))
+
+        for x, e in enumerate(data.get("tap_dance", [])):
+            if x < self.tap_dance_count:
+                self.tap_dance_set(x, e)
 
     def restore_macros(self, macros):
         if not isinstance(macros, list):
@@ -669,6 +697,17 @@ class Keyboard:
 
     def qmk_settings_reset(self):
         self.usb_send(self.dev, struct.pack("BB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_QMK_SETTINGS_RESET))
+
+    def tap_dance_get(self, idx):
+        return self.tap_dance_entries[idx]
+
+    def tap_dance_set(self, idx, entry):
+        if self.tap_dance_entries[idx] == entry:
+            return
+        self.tap_dance_entries[idx] = entry
+        serialized = struct.pack("<HHHHH", *self.tap_dance_entries[idx])
+        self.usb_send(self.dev, struct.pack("BBBB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_DYNAMIC_ENTRY_OP,
+                                            DYNAMIC_VIAL_TAP_DANCE_SET, idx) + serialized, retries=20)
 
 
 class DummyKeyboard(Keyboard):
