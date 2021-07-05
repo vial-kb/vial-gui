@@ -62,6 +62,8 @@ CMD_VIAL_DYNAMIC_ENTRY_OP = 0x0D
 DYNAMIC_VIAL_GET_NUMBER_OF_ENTRIES = 0x00
 DYNAMIC_VIAL_TAP_DANCE_GET = 0x01
 DYNAMIC_VIAL_TAP_DANCE_SET = 0x02
+DYNAMIC_VIAL_COMBO_GET = 0x03
+DYNAMIC_VIAL_COMBO_SET = 0x04
 
 # how much of a macro/keymap buffer we can read/write per packet
 BUFFER_FETCH_CHUNK = 28
@@ -385,10 +387,14 @@ class Keyboard:
         if self.vial_protocol < 4:
             self.tap_dance_count = 0
             self.tap_dance_entries = []
+            self.combo_count = 0
+            self.combo_entries = []
             return
         data = self.usb_send(self.dev, struct.pack("BBB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_DYNAMIC_ENTRY_OP,
                                                    DYNAMIC_VIAL_GET_NUMBER_OF_ENTRIES), retries=20)
         self.tap_dance_count = data[0]
+        self.combo_count = data[1]
+
         self.tap_dance_entries = []
         for x in range(self.tap_dance_count):
             data = self.usb_send(self.dev, struct.pack("BBBB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_DYNAMIC_ENTRY_OP,
@@ -396,6 +402,15 @@ class Keyboard:
             if data[0] != 0:
                 raise RuntimeError("failed retrieving tapdance entry {} from the device".format(x))
             self.tap_dance_entries.append(struct.unpack("<HHHHH", data[1:11]))
+
+        self.combo_entries = []
+        for x in range(self.combo_count):
+            data = self.usb_send(self.dev, struct.pack("BBBB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_DYNAMIC_ENTRY_OP,
+                                                       DYNAMIC_VIAL_COMBO_GET, x), retries=20)
+
+            if data[0] != 0:
+                raise RuntimeError("failed retrieving combo entry {} from the device".format(x))
+            self.combo_entries.append(struct.unpack("<HHHHH", data[1:11]))
 
     def set_key(self, layer, row, col, code):
         if code < 0:
@@ -500,7 +515,9 @@ class Keyboard:
         data["macro"] = self.save_macro()
         data["vial_protocol"] = self.vial_protocol
         data["via_protocol"] = self.via_protocol
+        # TODO: should store/restore serialized keycodes for these two
         data["tap_dance"] = self.tap_dance_entries
+        data["combo"] = self.combo_entries
 
         return json.dumps(data).encode("utf-8")
 
@@ -535,6 +552,9 @@ class Keyboard:
         for x, e in enumerate(data.get("tap_dance", [])):
             if x < self.tap_dance_count:
                 self.tap_dance_set(x, e)
+        for x, e in enumerate(data.get("combo", [])):
+            if x < self.combo_count:
+                self.combo_set(x, e)
 
     def restore_macros(self, macros):
         if not isinstance(macros, list):
@@ -708,6 +728,17 @@ class Keyboard:
         serialized = struct.pack("<HHHHH", *self.tap_dance_entries[idx])
         self.usb_send(self.dev, struct.pack("BBBB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_DYNAMIC_ENTRY_OP,
                                             DYNAMIC_VIAL_TAP_DANCE_SET, idx) + serialized, retries=20)
+
+    def combo_get(self, idx):
+        return self.combo_entries[idx]
+
+    def combo_set(self, idx, entry):
+        if self.combo_entries[idx] == entry:
+            return
+        self.combo_entries[idx] = entry
+        serialized = struct.pack("<HHHHH", *self.combo_entries[idx])
+        self.usb_send(self.dev, struct.pack("BBBB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_DYNAMIC_ENTRY_OP,
+                                            DYNAMIC_VIAL_COMBO_SET, idx) + serialized, retries=20)
 
 
 class DummyKeyboard(Keyboard):
