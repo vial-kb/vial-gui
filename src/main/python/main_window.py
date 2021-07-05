@@ -194,6 +194,11 @@ class MainWindow(QMainWindow):
         if theme_group.checkedAction() is None:
             theme_group.actions()[0].setChecked(True)
 
+        about_vial_act = QAction(tr("MenuAbout", "About Vial..."), self)
+        about_vial_act.triggered.connect(self.about_vial)
+        self.about_menu = self.menuBar().addMenu(tr("Menu", "About"))
+        self.about_menu.addAction(about_vial_act)
+
     def on_layout_load(self):
         dialog = QFileDialog()
         dialog.setDefaultSuffix("vil")
@@ -362,3 +367,13 @@ class MainWindow(QMainWindow):
             new_tab.editor.activate()
 
         self.current_tab = new_tab
+
+    def about_vial(self):
+        QMessageBox.about(
+            self,
+            "About Vial",
+            'Vial {}<br><br>'
+            'Licensed under the terms of the<br>GNU General Public License (version 2 or later)<br><br>'
+            '<a href="https://get.vial.today/">https://get.vial.today/</a>'
+            .format(self.appctx.build_settings["version"])
+        )
