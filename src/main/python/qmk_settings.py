@@ -106,14 +106,13 @@ class QmkSettings(BasicEditor):
         buttons.addWidget(btn_reset)
         self.addLayout(buttons)
 
-        self.supported_settings = set()
         self.tabs = []
         self.misc_widgets = []
 
     def populate_tab(self, tab, container):
         options = []
         for field in tab["fields"]:
-            if field["qsid"] not in self.supported_settings:
+            if field["qsid"] not in self.keyboard.supported_settings:
                 continue
             if field["type"] == "boolean":
                 options.append(BooleanOption(field, container))
@@ -144,7 +143,7 @@ class QmkSettings(BasicEditor):
             # don't bother creating tabs that would be empty - i.e. at least one qsid in a tab should be supported
             use_tab = False
             for field in tab["fields"]:
-                if field["qsid"] in self.supported_settings:
+                if field["qsid"] in self.keyboard.supported_settings:
                     use_tab = True
                     break
             if not use_tab:
@@ -164,7 +163,6 @@ class QmkSettings(BasicEditor):
             self.tabs.append(self.populate_tab(tab, container))
 
     def reload_settings(self):
-        self.supported_settings = set(self.keyboard.qmk_settings_query())
         self.recreate_gui()
 
         for tab in self.tabs:
@@ -201,4 +199,5 @@ class QmkSettings(BasicEditor):
 
     def valid(self):
         return isinstance(self.device, VialKeyboard) and \
-               (self.device.keyboard and self.device.keyboard.vial_protocol >= 4)
+               (self.device.keyboard and self.device.keyboard.vial_protocol >= 4
+                and len(self.device.keyboard.supported_settings))

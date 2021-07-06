@@ -714,9 +714,6 @@ class Keyboard:
         macros = macros[:self.macro_count]
         return [self.macro_deserialize(x) for x in macros]
 
-    def qmk_settings_query(self):
-        return self.supported_settings
-
     def qmk_settings_get(self, qsid):
         return self.settings[qsid]
 
