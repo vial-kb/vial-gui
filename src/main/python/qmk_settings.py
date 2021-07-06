@@ -3,6 +3,7 @@ import json
 from collections import defaultdict
 
 from PyQt5 import QtCore
+from PyQt5.QtCore import pyqtSignal, QObject
 from PyQt5.QtWidgets import QVBoxLayout, QCheckBox, QGridLayout, QLabel, QWidget, QSizePolicy, QTabWidget, QSpinBox, \
     QHBoxLayout, QPushButton, QMessageBox
 
@@ -11,9 +12,13 @@ from util import tr
 from vial_device import VialKeyboard
 
 
-class GenericOption:
+class GenericOption(QObject):
+
+    changed = pyqtSignal()
 
     def __init__(self, option, container):
+        super().__init__()
+
         self.row = container.rowCount()
         self.option = option
         self.qsid = self.option["qsid"]
@@ -29,6 +34,9 @@ class GenericOption:
         self.lbl.hide()
         self.lbl.deleteLater()
 
+    def on_change(self):
+        self.changed.emit()
+
 
 class BooleanOption(GenericOption):
 
@@ -38,6 +46,7 @@ class BooleanOption(GenericOption):
         self.qsid_bit = self.option["bit"]
 
         self.checkbox = QCheckBox()
+        self.checkbox.stateChanged.connect(self.on_change)
         self.container.addWidget(self.checkbox, self.row, 1)
 
     def reload(self, keyboard):
@@ -66,10 +75,14 @@ class IntegerOption(GenericOption):
         self.spinbox = QSpinBox()
         self.spinbox.setMinimum(option["min"])
         self.spinbox.setMaximum(option["max"])
+        self.spinbox.valueChanged.connect(self.on_change)
         self.container.addWidget(self.spinbox, self.row, 1)
 
     def reload(self, keyboard):
-        self.spinbox.setValue(super().reload(keyboard))
+        value = super().reload(keyboard)
+        self.spinbox.blockSignals(True)
+        self.spinbox.setValue(value)
+        self.spinbox.blockSignals(False)
 
     def value(self):
         return self.spinbox.value()
@@ -90,12 +103,12 @@ class QmkSettings(BasicEditor):
         self.addWidget(self.tabs_widget)
         buttons = QHBoxLayout()
         buttons.addStretch()
-        btn_save = QPushButton(tr("QmkSettings", "Save"))
-        btn_save.clicked.connect(self.save_settings)
-        buttons.addWidget(btn_save)
-        btn_undo = QPushButton(tr("QmkSettings", "Undo"))
-        btn_undo.clicked.connect(self.reload_settings)
-        buttons.addWidget(btn_undo)
+        self.btn_save = QPushButton(tr("QmkSettings", "Save"))
+        self.btn_save.clicked.connect(self.save_settings)
+        buttons.addWidget(self.btn_save)
+        self.btn_undo = QPushButton(tr("QmkSettings", "Undo"))
+        self.btn_undo.clicked.connect(self.reload_settings)
+        buttons.addWidget(self.btn_undo)
         btn_reset = QPushButton(tr("QmkSettings", "Reset"))
         btn_reset.clicked.connect(self.reset_settings)
         buttons.addWidget(btn_reset)
@@ -110,9 +123,13 @@ class QmkSettings(BasicEditor):
             if field["qsid"] not in self.keyboard.supported_settings:
                 continue
             if field["type"] == "boolean":
-                options.append(BooleanOption(field, container))
+                opt = BooleanOption(field, container)
+                options.append(opt)
+                opt.changed.connect(self.on_change)
             elif field["type"] == "integer":
-                options.append(IntegerOption(field, container))
+                opt = IntegerOption(field, container)
+                options.append(opt)
+                opt.changed.connect(self.on_change)
             else:
                 raise RuntimeError("unsupported field type: {}".format(field))
         return options
@@ -162,17 +179,32 @@ class QmkSettings(BasicEditor):
             for field in tab:
                 field.reload(self.keyboard)
 
+        self.on_change()
+
+    def on_change(self):
+        changed = False
+        qsid_values = self.prepare_settings()
+        for qsid, value in qsid_values.items():
+            if self.keyboard.settings[qsid] != value:
+                changed = True
+        self.btn_save.setEnabled(changed)
+        self.btn_undo.setEnabled(changed)
+
     def rebuild(self, device):
         super().rebuild(device)
         if self.valid():
             self.keyboard = device.keyboard
             self.reload_settings()
 
-    def save_settings(self):
+    def prepare_settings(self):
         qsid_values = defaultdict(int)
         for tab in self.tabs:
             for field in tab:
                 qsid_values[field.qsid] |= field.value()
+        return qsid_values
+
+    def save_settings(self):
+        qsid_values = self.prepare_settings()
         for qsid, value in qsid_values.items():
             self.keyboard.qmk_settings_set(qsid, value)
 
