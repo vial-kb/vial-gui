@@ -215,6 +215,7 @@ class Keyboard:
         self.reload_keymap()
         self.reload_macros()
         self.reload_rgb()
+        self.reload_settings()
         self.reload_dynamic()
 
     def reload_layers(self):
@@ -382,6 +383,29 @@ class Keyboard:
                 self.dev, struct.pack(">BB", CMD_VIA_LIGHTING_GET_VALUE, QMK_BACKLIGHT_BRIGHTNESS), retries=20)[2]
             self.backlight_effect = self.usb_send(
                 self.dev, struct.pack(">BB", CMD_VIA_LIGHTING_GET_VALUE, QMK_BACKLIGHT_EFFECT), retries=20)[2]
+
+    def reload_settings(self):
+        self.settings = dict()
+        self.supported_settings = set()
+        if self.vial_protocol < 4:
+            return
+        cur = 0
+        while cur != 0xFFFF:
+            data = self.usb_send(self.dev, struct.pack("<BBH", CMD_VIA_VIAL_PREFIX, CMD_VIAL_QMK_SETTINGS_QUERY, cur),
+                                 retries=20)
+            for x in range(0, len(data), 2):
+                qsid = int.from_bytes(data[x:x+2], byteorder="little")
+                cur = max(cur, qsid)
+                if qsid != 0xFFFF:
+                    self.supported_settings.add(qsid)
+
+        for qsid in self.supported_settings:
+            data = self.usb_send(self.dev, struct.pack("<BBH", CMD_VIA_VIAL_PREFIX, CMD_VIAL_QMK_SETTINGS_GET, qsid),
+                                 retries=20)
+            if data[0] != 0:
+                self.settings[qsid] = b""
+            else:
+                self.settings[qsid] = data[1:]
 
     def reload_dynamic(self):
         if self.vial_protocol < 4:
@@ -691,26 +715,13 @@ class Keyboard:
         return [self.macro_deserialize(x) for x in macros]
 
     def qmk_settings_query(self):
-        cur = 0
-        supported_settings = []
-        while cur != 0xFFFF:
-            data = self.usb_send(self.dev, struct.pack("<BBH", CMD_VIA_VIAL_PREFIX, CMD_VIAL_QMK_SETTINGS_QUERY, cur),
-                                 retries=20)
-            for x in range(0, len(data), 2):
-                qsid = int.from_bytes(data[x:x+2], byteorder="little")
-                cur = max(cur, qsid)
-                if qsid != 0xFFFF:
-                    supported_settings.append(qsid)
-        return supported_settings
+        return self.supported_settings
 
     def qmk_settings_get(self, qsid):
-        data = self.usb_send(self.dev, struct.pack("<BBH", CMD_VIA_VIAL_PREFIX, CMD_VIAL_QMK_SETTINGS_GET, qsid),
-                             retries=20)
-        if data[0] != 0:
-            return b""
-        return data[1:]
+        return self.settings[qsid]
 
     def qmk_settings_set(self, qsid, value):
+        self.settings[qsid] = value
         data = self.usb_send(self.dev, struct.pack("<BBH", CMD_VIA_VIAL_PREFIX, CMD_VIAL_QMK_SETTINGS_SET, qsid) + value,
                              retries=20)
         return data[0]
