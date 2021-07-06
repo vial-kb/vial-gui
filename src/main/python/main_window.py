@@ -63,7 +63,8 @@ class MainWindow(QMainWindow):
         self.macro_recorder = MacroRecorder()
         self.tap_dance = TapDance()
         self.combos = Combos()
-        self.qmk_settings = QmkSettings(self.appctx)
+        QmkSettings.initialize(appctx)
+        self.qmk_settings = QmkSettings()
         self.matrix_tester = MatrixTest(self.layout_editor)
         self.rgb_configurator = RGBConfigurator()
 

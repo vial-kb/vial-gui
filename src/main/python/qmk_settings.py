@@ -23,10 +23,7 @@ class GenericOption:
         self.container.addWidget(self.lbl, self.row, 0)
 
     def reload(self, keyboard):
-        data = keyboard.qmk_settings_get(self.qsid)
-        if not data:
-            raise RuntimeError("failed to retrieve setting {} from keyboard".format(self.option))
-        return data
+        return keyboard.settings.get(self.qsid)
 
     def delete(self):
         self.lbl.hide()
@@ -86,9 +83,8 @@ class IntegerOption(GenericOption):
 
 class QmkSettings(BasicEditor):
 
-    def __init__(self, appctx):
+    def __init__(self):
         super().__init__()
-        self.appctx = appctx
         self.keyboard = None
 
         self.tabs_widget = QTabWidget()
@@ -135,11 +131,8 @@ class QmkSettings(BasicEditor):
         while self.tabs_widget.count() > 0:
             self.tabs_widget.removeTab(0)
 
-        with open(self.appctx.get_resource("qmk_settings.json"), "r") as inf:
-            settings = json.load(inf)
-
         # create new GUI
-        for tab in settings["tabs"]:
+        for tab in self.settings_defs["tabs"]:
             # don't bother creating tabs that would be empty - i.e. at least one qsid in a tab should be supported
             use_tab = False
             for field in tab["fields"]:
@@ -163,6 +156,7 @@ class QmkSettings(BasicEditor):
             self.tabs.append(self.populate_tab(tab, container))
 
     def reload_settings(self):
+        self.keyboard.reload_settings()
         self.recreate_gui()
 
         for tab in self.tabs:
@@ -201,3 +195,22 @@ class QmkSettings(BasicEditor):
         return isinstance(self.device, VialKeyboard) and \
                (self.device.keyboard and self.device.keyboard.vial_protocol >= 4
                 and len(self.device.keyboard.supported_settings))
+
+    @classmethod
+    def initialize(cls, appctx):
+        cls.settings_widths = dict()
+        with open(appctx.get_resource("qmk_settings.json"), "r") as inf:
+            cls.settings_defs = json.load(inf)
+        for tab in cls.settings_defs["tabs"]:
+            for field in tab["fields"]:
+                if field["type"] == "boolean":
+                    width = 1
+                elif field["type"] == "integer":
+                    width = field["width"]
+                else:
+                    raise RuntimeError("unsupported field type: {}".format(field))
+                cls.settings_widths[field["qsid"]] = width
+
+    @classmethod
+    def setting_width(cls, qsid):
+        return cls.settings_widths.get(qsid)
