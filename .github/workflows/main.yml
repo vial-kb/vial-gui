@@ -31,7 +31,7 @@ jobs:
       run: |
         source venv/bin/activate
         pyinstaller misc/Vial.spec
-        find -name libgdk-3.so.0 | xargs rm
+        rm ./dist/Vial/{libgdk-3.so.0,libfontconfig.so.1}
         deactivate
         cp src/main/icons/linux/1024.png dist/Vial/Vial.png
         cp misc/Vial.desktop dist/Vial/
