@@ -541,9 +541,29 @@ class Keyboard:
         data["macro"] = self.save_macro()
         data["vial_protocol"] = self.vial_protocol
         data["via_protocol"] = self.via_protocol
-        # TODO: should store/restore serialized keycodes for these two
-        data["tap_dance"] = self.tap_dance_entries
-        data["combo"] = self.combo_entries
+
+        tap_dance = []
+        for entry in self.tap_dance_entries:
+            tap_dance.append((
+                Keycode.serialize(entry[0]),
+                Keycode.serialize(entry[1]),
+                Keycode.serialize(entry[2]),
+                Keycode.serialize(entry[3]),
+                entry[4]
+            ))
+        data["tap_dance"] = tap_dance
+
+        combo = []
+        for entry in self.combo_entries:
+            combo.append((
+                Keycode.serialize(entry[0]),
+                Keycode.serialize(entry[1]),
+                Keycode.serialize(entry[2]),
+                Keycode.serialize(entry[3]),
+                Keycode.serialize(entry[4]),
+            ))
+        data["combo"] = combo
+
         data["settings"] = self.settings
 
         return json.dumps(data).encode("utf-8")
@@ -578,9 +598,14 @@ class Keyboard:
 
         for x, e in enumerate(data.get("tap_dance", [])):
             if x < self.tap_dance_count:
+                e = (Keycode.deserialize(e[0]), Keycode.deserialize(e[1]), Keycode.deserialize(e[2]),
+                     Keycode.deserialize(e[3]), e[4])
                 self.tap_dance_set(x, e)
+
         for x, e in enumerate(data.get("combo", [])):
             if x < self.combo_count:
+                e = (Keycode.deserialize(e[0]), Keycode.deserialize(e[1]), Keycode.deserialize(e[2]),
+                     Keycode.deserialize(e[3]), Keycode.deserialize(e[4]))
                 self.combo_set(x, e)
 
         for qsid, value in data.get("settings", dict()).items():
