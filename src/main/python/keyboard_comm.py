@@ -1,5 +1,4 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
-import base64
 import struct
 import json
 import lzma
@@ -545,6 +544,7 @@ class Keyboard:
         # TODO: should store/restore serialized keycodes for these two
         data["tap_dance"] = self.tap_dance_entries
         data["combo"] = self.combo_entries
+        data["settings"] = self.settings
 
         return json.dumps(data).encode("utf-8")
 
@@ -582,6 +582,13 @@ class Keyboard:
         for x, e in enumerate(data.get("combo", [])):
             if x < self.combo_count:
                 self.combo_set(x, e)
+
+        for qsid, value in data.get("settings", dict()).items():
+            from qmk_settings import QmkSettings
+
+            qsid = int(qsid)
+            if QmkSettings.is_qsid_supported(qsid):
+                self.qmk_settings_set(qsid, value)
 
     def restore_macros(self, macros):
         if not isinstance(macros, list):
