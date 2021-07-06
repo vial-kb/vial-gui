@@ -184,9 +184,19 @@ class QmkSettings(BasicEditor):
     def on_change(self):
         changed = False
         qsid_values = self.prepare_settings()
-        for qsid, value in qsid_values.items():
-            if self.keyboard.settings[qsid] != value:
-                changed = True
+
+        for x, tab in enumerate(self.tabs):
+            tab_changed = False
+            for opt in tab:
+                if qsid_values[opt.qsid] != self.keyboard.settings[opt.qsid]:
+                    changed = True
+                    tab_changed = True
+            title = self.tabs_widget.tabText(x).rstrip("*")
+            if tab_changed:
+                self.tabs_widget.setTabText(x, title + "*")
+            else:
+                self.tabs_widget.setTabText(x, title)
+
         self.btn_save.setEnabled(changed)
         self.btn_undo.setEnabled(changed)
 
@@ -207,6 +217,7 @@ class QmkSettings(BasicEditor):
         qsid_values = self.prepare_settings()
         for qsid, value in qsid_values.items():
             self.keyboard.qmk_settings_set(qsid, value)
+        self.on_change()
 
     def reset_settings(self):
         if QMessageBox.question(self.widget(), "",
