@@ -10,14 +10,14 @@ jobs:
     - uses: actions/checkout@v2
     - uses: actions/setup-python@v1
       with:
-        python-version: '3.6.x'
+        python-version: '3.9.x'
 
     - name: Install dependencies
       run: |
-        sudo apt-get install libusb-1.0-0-dev libudev-dev ruby ruby-dev rubygems build-essential desktop-file-utils
-        wget https://github.com/AppImage/pkg2appimage/archive/38603d92359a48189c35debad9005e8e902e6070.zip
-        unzip *.zip
-        sudo gem install --no-document fpm
+        sudo apt-get install libusb-1.0-0-dev libudev-dev build-essential desktop-file-utils
+        # TODO: hash check
+        wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+        chmod +x linuxdeploy-x86_64.AppImage
 
     - name: Setup venv
       run: |
@@ -28,17 +28,19 @@ jobs:
     - name: Build
       run: |
         source venv/bin/activate
-        fbs freeze
+        pyinstaller misc/Vial.spec
         find -name libgdk-3.so.0 | xargs rm
-        fbs installer
         deactivate
-        ./pkg2appimage-*/pkg2appimage misc/Vial.yml
-        mv out/Vial-*.AppImage out/Vial-x86_64.AppImage
+        cp src/main/icons/linux/1024.png dist/Vial/Vial.png
+        cp misc/Vial.desktop dist/Vial/
+        cp misc/AppRun dist/Vial/
+        ./linuxdeploy-x86_64.AppImage --appdir dist/Vial --output appimage
+        mv Vial-*-x86_64.AppImage Vial-x86_64.AppImage
 
     - uses: actions/upload-artifact@v1
       with:
         name: vial-linux
-        path: out/Vial-x86_64.AppImage
+        path: Vial-x86_64.AppImage
 
   build-mac:
     runs-on: macos-10.15
@@ -47,7 +49,7 @@ jobs:
     - uses: actions/checkout@v2
     - uses: actions/setup-python@v1
       with:
-        python-version: '3.6.x'
+        python-version: '3.9.x'
 
     - name: Setup venv
       run: |
@@ -73,7 +75,7 @@ jobs:
     - uses: actions/checkout@v2
     - uses: actions/setup-python@v1
       with:
-        python-version: '3.6.x'
+        python-version: '3.9.x'
 
     - name: Setup venv
       run: |
