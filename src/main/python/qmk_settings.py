@@ -41,8 +41,8 @@ class BooleanOption(GenericOption):
         self.container.addWidget(self.checkbox, self.row, 1)
 
     def reload(self, keyboard):
-        data = super().reload(keyboard)
-        checked = data[0] & (1 << self.qsid_bit)
+        value = super().reload(keyboard)
+        checked = value & (1 << self.qsid_bit)
 
         self.checkbox.blockSignals(True)
         self.checkbox.setChecked(checked != 0)
@@ -69,11 +69,10 @@ class IntegerOption(GenericOption):
         self.container.addWidget(self.spinbox, self.row, 1)
 
     def reload(self, keyboard):
-        data = super().reload(keyboard)[0:self.option["width"]]
-        self.spinbox.setValue(int.from_bytes(data, byteorder="little"))
+        self.spinbox.setValue(super().reload(keyboard))
 
     def value(self):
-        return self.spinbox.value().to_bytes(self.option["width"], byteorder="little")
+        return self.spinbox.value()
 
     def delete(self):
         super().delete()
@@ -173,15 +172,8 @@ class QmkSettings(BasicEditor):
         qsid_values = defaultdict(int)
         for tab in self.tabs:
             for field in tab:
-                # hack for boolean options - we pack several booleans into a single byte
-                if isinstance(field, BooleanOption):
-                    qsid_values[field.qsid] |= field.value()
-                else:
-                    qsid_values[field.qsid] = field.value()
-
+                qsid_values[field.qsid] |= field.value()
         for qsid, value in qsid_values.items():
-            if isinstance(value, int):
-                value = value.to_bytes(1, byteorder="little")
             self.keyboard.qmk_settings_set(qsid, value)
 
     def reset_settings(self):
@@ -198,19 +190,38 @@ class QmkSettings(BasicEditor):
 
     @classmethod
     def initialize(cls, appctx):
-        cls.settings_widths = dict()
+        cls.qsid_fields = defaultdict(list)
         with open(appctx.get_resource("qmk_settings.json"), "r") as inf:
             cls.settings_defs = json.load(inf)
         for tab in cls.settings_defs["tabs"]:
             for field in tab["fields"]:
-                if field["type"] == "boolean":
-                    width = 1
-                elif field["type"] == "integer":
-                    width = field["width"]
-                else:
-                    raise RuntimeError("unsupported field type: {}".format(field))
-                cls.settings_widths[field["qsid"]] = width
+                cls.qsid_fields[field["qsid"]].append(field)
 
     @classmethod
-    def setting_width(cls, qsid):
-        return cls.settings_widths.get(qsid)
+    def is_qsid_supported(cls, qsid):
+        """ Return whether this qsid is supported by the settings editor """
+        return qsid in cls.qsid_fields
+
+    @classmethod
+    def qsid_serialize(cls, qsid, data):
+        """ Serialize from internal representation into binary that can be sent to the firmware """
+        fields = cls.qsid_fields[qsid]
+        if fields[0]["type"] == "boolean":
+            assert isinstance(data, int)
+            return data.to_bytes(1, byteorder="little")
+        elif fields[0]["type"] == "integer":
+            assert isinstance(data, int)
+            assert len(fields) == 1
+            return data.to_bytes(fields[0]["width"], byteorder="little")
+
+    @classmethod
+    def qsid_deserialize(cls, qsid, data):
+        """ Deserialize from binary received from firmware into internal representation """
+        fields = cls.qsid_fields[qsid]
+        if fields[0]["type"] == "boolean":
+            return data[0]
+        elif fields[0]["type"] == "integer":
+            assert len(fields) == 1
+            return int.from_bytes(data[0:fields[0]["width"]], byteorder="little")
+        else:
+            raise RuntimeError("unsupported field")

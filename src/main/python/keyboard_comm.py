@@ -401,16 +401,14 @@ class Keyboard:
 
         for qsid in self.supported_settings:
             from qmk_settings import QmkSettings
-            width = QmkSettings.setting_width(qsid)
-            if width is None:
+
+            if not QmkSettings.is_qsid_supported(qsid):
                 continue
 
             data = self.usb_send(self.dev, struct.pack("<BBH", CMD_VIA_VIAL_PREFIX, CMD_VIAL_QMK_SETTINGS_GET, qsid),
                                  retries=20)
-            if data[0] != 0:
-                self.settings[qsid] = None
-            else:
-                self.settings[qsid] = data[1:1+width]
+            if data[0] == 0:
+                self.settings[qsid] = QmkSettings.qsid_deserialize(qsid, data[1:])
 
     def reload_dynamic(self):
         if self.vial_protocol < 4:
@@ -720,8 +718,10 @@ class Keyboard:
         return [self.macro_deserialize(x) for x in macros]
 
     def qmk_settings_set(self, qsid, value):
+        from qmk_settings import QmkSettings
         self.settings[qsid] = value
-        data = self.usb_send(self.dev, struct.pack("<BBH", CMD_VIA_VIAL_PREFIX, CMD_VIAL_QMK_SETTINGS_SET, qsid) + value,
+        data = self.usb_send(self.dev, struct.pack("<BBH", CMD_VIA_VIAL_PREFIX, CMD_VIAL_QMK_SETTINGS_SET, qsid)
+                             + QmkSettings.qsid_serialize(qsid, value),
                              retries=20)
         return data[0]
 
