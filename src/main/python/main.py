@@ -10,9 +10,7 @@ import traceback
 
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import pyqtSignal
-
-from fbs_runtime.application_context import cached_property
-from fbs_runtime.application_context.PyQt5 import ApplicationContext
+from PyQt5.QtWidgets import QApplication
 
 import sys
 
@@ -76,10 +74,9 @@ if __name__ == '__main__':
 
         linux_keystroke_recorder()
     else:
-        appctxt = VialApplicationContext()       # 1. Instantiate ApplicationContext
+        app = QApplication(sys.argv)
         init_logger()
         qt_exception_hook = UncaughtHook()
         window = MainWindow(appctxt)
         window.show()
-        exit_code = appctxt.app.exec_()      # 2. Invoke appctxt.app.exec_()
-        sys.exit(exit_code)
+        sys.exit(app.exec_())
