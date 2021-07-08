@@ -41,6 +41,10 @@ QMK_RGBLIGHT_EFFECT = 0x81
 QMK_RGBLIGHT_EFFECT_SPEED = 0x82
 QMK_RGBLIGHT_COLOR = 0x83
 
+VIALRGB_GET_MODE = 0x40
+
+VIALRGB_SET_MODE = 0x40
+
 CMD_VIAL_GET_KEYBOARD_ID = 0x00
 CMD_VIAL_GET_SIZE = 0x01
 CMD_VIAL_GET_DEFINITION = 0x02
@@ -194,10 +198,13 @@ class Keyboard:
         self.vibl = False
         self.custom_keycodes = None
 
-        self.lighting_qmk_rgblight = self.lighting_qmk_backlight = False
+        self.lighting_qmk_rgblight = self.lighting_qmk_backlight = self.lighting_vialrgb = False
         self.underglow_brightness = self.underglow_effect = self.underglow_effect_speed = -1
         self.backlight_brightness = self.backlight_effect = -1
         self.underglow_color = (0, 0)
+        # vialrgb
+        self.rgb_mode = self.rgb_speed = -1
+        self.rgb_hsv = (0, 0, 0)
 
         self.via_protocol = self.vial_protocol = self.keyboard_id = -1
 
@@ -364,6 +371,7 @@ class Keyboard:
         if "lighting" in self.definition:
             self.lighting_qmk_rgblight = self.definition["lighting"] in ["qmk_rgblight", "qmk_backlight_rgblight"]
             self.lighting_qmk_backlight = self.definition["lighting"] in ["qmk_backlight", "qmk_backlight_rgblight"]
+            self.lighting_vialrgb = self.definition["lighting"] == "vialrgb"
 
         if self.lighting_qmk_rgblight:
             self.underglow_brightness = self.usb_send(
@@ -382,6 +390,12 @@ class Keyboard:
                 self.dev, struct.pack(">BB", CMD_VIA_LIGHTING_GET_VALUE, QMK_BACKLIGHT_BRIGHTNESS), retries=20)[2]
             self.backlight_effect = self.usb_send(
                 self.dev, struct.pack(">BB", CMD_VIA_LIGHTING_GET_VALUE, QMK_BACKLIGHT_EFFECT), retries=20)[2]
+
+        if self.lighting_vialrgb:
+            data = self.usb_send(self.dev, struct.pack("BB", CMD_VIA_LIGHTING_GET_VALUE, VIALRGB_GET_MODE))[2:]
+            self.rgb_mode = data[0]
+            self.rgb_speed = data[1]
+            self.rgb_hsv = (data[2], data[3], data[4])
 
     def reload_settings(self):
         self.settings = dict()
@@ -781,6 +795,15 @@ class Keyboard:
         serialized = struct.pack("<HHHHH", *self.combo_entries[idx])
         self.usb_send(self.dev, struct.pack("BBBB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_DYNAMIC_ENTRY_OP,
                                             DYNAMIC_VIAL_COMBO_SET, idx) + serialized, retries=20)
+
+    def _vialrgb_set_mode(self):
+        self.usb_send(self.dev, struct.pack("BBBBBBB", CMD_VIA_LIGHTING_SET_VALUE, VIALRGB_SET_MODE,
+                                            self.rgb_mode, self.rgb_speed,
+                                            self.rgb_hsv[0], self.rgb_hsv[1], self.rgb_hsv[2]))
+
+    def set_vialrgb_brightness(self, value):
+        self.rgb_hsv = (self.rgb_hsv[0], self.rgb_hsv[1], value)
+        self._vialrgb_set_mode()
 
 
 class DummyKeyboard(Keyboard):

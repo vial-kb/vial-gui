@@ -240,6 +240,50 @@ class QmkBacklightHandler(BasicHandler):
         self.device.keyboard.set_qmk_backlight_effect(int(checked))
 
 
+class VialRGBHandler(BasicHandler):
+
+    def __init__(self, container):
+        super().__init__(container)
+
+        row = container.rowCount()
+
+        self.lbl_rgb_brightness = QLabel(tr("RGBConfigurator", "RGB Brightness"))
+        container.addWidget(self.lbl_rgb_brightness, row + 1, 0)
+        self.rgb_brightness = QSlider(QtCore.Qt.Horizontal)
+        self.rgb_brightness.setMinimum(0)
+        self.rgb_brightness.setMaximum(255)
+        self.rgb_brightness.valueChanged.connect(self.on_rgb_brightness_changed)
+        container.addWidget(self.rgb_brightness, row + 1, 1)
+
+        self.widgets = [self.lbl_rgb_brightness, self.rgb_brightness]
+
+    def on_rgb_brightness_changed(self, value):
+        self.device.keyboard.set_vialrgb_brightness(value)
+
+    def show(self):
+        for w in self.widgets:
+            w.show()
+
+    def hide(self):
+        for w in self.widgets:
+            w.hide()
+
+    def block_signals(self):
+        for w in self.widgets:
+            w.blockSignals(True)
+
+    def unblock_signals(self):
+        for w in self.widgets:
+            w.blockSignals(False)
+
+    def update_from_keyboard(self):
+        print("hsv", self.device.keyboard.rgb_hsv)
+        self.rgb_brightness.setValue(self.device.keyboard.rgb_hsv[2])
+
+    def valid(self):
+        return isinstance(self.device, VialKeyboard) and self.device.keyboard.lighting_vialrgb
+
+
 class RGBConfigurator(BasicEditor):
 
     def __init__(self):
@@ -258,7 +302,9 @@ class RGBConfigurator(BasicEditor):
         self.handler_backlight.update.connect(self.update_from_keyboard)
         self.handler_rgblight = QmkRgblightHandler(self.container)
         self.handler_rgblight.update.connect(self.update_from_keyboard)
-        self.handlers = [self.handler_backlight, self.handler_rgblight]
+        self.handler_vialrgb = VialRGBHandler(self.container)
+        self.handler_vialrgb.update.connect(self.update_from_keyboard)
+        self.handlers = [self.handler_backlight, self.handler_rgblight, self.handler_vialrgb]
 
         self.addStretch()
         buttons = QHBoxLayout()
@@ -273,7 +319,8 @@ class RGBConfigurator(BasicEditor):
 
     def valid(self):
         return isinstance(self.device, VialKeyboard) and \
-               (self.device.keyboard.lighting_qmk_rgblight or self.device.keyboard.lighting_qmk_backlight)
+               (self.device.keyboard.lighting_qmk_rgblight or self.device.keyboard.lighting_qmk_backlight
+                or self.device.keyboard.lighting_vialrgb)
 
     def block_signals(self):
         for h in self.handlers:
