@@ -10,6 +10,16 @@
             ]
         },
         {
+            "name": "Tap-Hold",
+            "fields": [
+                { "type": "integer", "title": "Tapping Term", "qsid": 7, "min": 0, "max": 10000, "width": 2 },
+                { "type": "boolean", "title": "Permissive Hold", "qsid": 8, "bit": 0 },
+                { "type": "boolean", "title": "Ignore Mod Tap Interrupt", "qsid": 8, "bit": 1 },
+                { "type": "boolean", "title": "Tapping Force Hold", "qsid": 8, "bit": 2 },
+                { "type": "boolean", "title": "Retro Tapping", "qsid": 8, "bit": 3 }
+            ]
+        },
+        {
             "name": "Auto Shift",
             "fields": [
                 { "type": "boolean", "title": "Enable", "qsid": 3, "bit": 0 },
