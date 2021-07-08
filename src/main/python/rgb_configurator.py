@@ -66,26 +66,32 @@ class BasicHandler(QObject):
 
     def __init__(self, container):
         super().__init__()
-        self.device = None
+        self.device = self.keyboard = None
+        self.widgets = []
 
     def set_device(self, device):
         self.device = device
         if self.valid():
+            self.keyboard = self.device
             self.show()
         else:
             self.hide()
 
     def show(self):
-        raise NotImplementedError
+        for w in self.widgets:
+            w.show()
 
     def hide(self):
-        raise NotImplementedError
+        for w in self.widgets:
+            w.hide()
 
     def block_signals(self):
-        raise NotImplementedError
+        for w in self.widgets:
+            w.blockSignals(True)
 
     def unblock_signals(self):
-        raise NotImplementedError
+        for w in self.widgets:
+            w.blockSignals(False)
 
     def update_from_keyboard(self):
         raise NotImplementedError
@@ -124,31 +130,8 @@ class QmkRgblightHandler(BasicHandler):
 
         self.underglow_effect.currentIndexChanged.connect(self.on_underglow_effect_changed)
 
-    def show(self):
-        self.lbl_underglow_effect.show()
-        self.underglow_effect.show()
-        self.lbl_underglow_brightness.show()
-        self.underglow_brightness.show()
-        self.lbl_underglow_color.show()
-        self.underglow_color.show()
-
-    def hide(self):
-        self.lbl_underglow_effect.hide()
-        self.underglow_effect.hide()
-        self.lbl_underglow_brightness.hide()
-        self.underglow_brightness.hide()
-        self.lbl_underglow_color.hide()
-        self.underglow_color.hide()
-
-    def block_signals(self):
-        self.underglow_brightness.blockSignals(True)
-        self.underglow_effect.blockSignals(True)
-        self.underglow_color.blockSignals(True)
-
-    def unblock_signals(self):
-        self.underglow_brightness.blockSignals(False)
-        self.underglow_effect.blockSignals(False)
-        self.underglow_color.blockSignals(False)
+        self.widgets = [self.lbl_underglow_effect, self.underglow_effect, self.lbl_underglow_brightness,
+                        self.underglow_brightness, self.lbl_underglow_color, self.underglow_color]
 
     def update_from_keyboard(self):
         self.underglow_brightness.setValue(self.device.keyboard.underglow_brightness)
@@ -206,25 +189,8 @@ class QmkBacklightHandler(BasicHandler):
         self.backlight_breathing.stateChanged.connect(self.on_backlight_breathing_changed)
         container.addWidget(self.backlight_breathing, row + 1, 1)
 
-    def show(self):
-        self.lbl_backlight_brightness.show()
-        self.backlight_brightness.show()
-        self.lbl_backlight_breathing.show()
-        self.backlight_breathing.show()
-
-    def hide(self):
-        self.lbl_backlight_brightness.hide()
-        self.backlight_brightness.hide()
-        self.lbl_backlight_breathing.hide()
-        self.backlight_breathing.hide()
-
-    def block_signals(self):
-        self.backlight_brightness.blockSignals(True)
-        self.backlight_breathing.blockSignals(True)
-
-    def unblock_signals(self):
-        self.backlight_brightness.blockSignals(False)
-        self.backlight_breathing.blockSignals(False)
+        self.widgets = [self.lbl_backlight_brightness, self.backlight_brightness, self.lbl_backlight_breathing,
+                        self.backlight_breathing]
 
     def update_from_keyboard(self):
         self.backlight_brightness.setValue(self.device.keyboard.backlight_brightness)
@@ -259,22 +225,6 @@ class VialRGBHandler(BasicHandler):
 
     def on_rgb_brightness_changed(self, value):
         self.device.keyboard.set_vialrgb_brightness(value)
-
-    def show(self):
-        for w in self.widgets:
-            w.show()
-
-    def hide(self):
-        for w in self.widgets:
-            w.hide()
-
-    def block_signals(self):
-        for w in self.widgets:
-            w.blockSignals(True)
-
-    def unblock_signals(self):
-        for w in self.widgets:
-            w.blockSignals(False)
 
     def update_from_keyboard(self):
         print("hsv", self.device.keyboard.rgb_hsv)
