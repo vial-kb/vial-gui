@@ -41,9 +41,10 @@ QMK_RGBLIGHT_EFFECT = 0x81
 QMK_RGBLIGHT_EFFECT_SPEED = 0x82
 QMK_RGBLIGHT_COLOR = 0x83
 
-VIALRGB_GET_MODE = 0x40
+VIALRGB_GET_INFO = 0x40
+VIALRGB_GET_MODE = 0x41
 
-VIALRGB_SET_MODE = 0x40
+VIALRGB_SET_MODE = 0x41
 
 CMD_VIAL_GET_KEYBOARD_ID = 0x00
 CMD_VIAL_GET_SIZE = 0x01
@@ -199,11 +200,14 @@ class Keyboard:
         self.custom_keycodes = None
 
         self.lighting_qmk_rgblight = self.lighting_qmk_backlight = self.lighting_vialrgb = False
+
+        # underglow
         self.underglow_brightness = self.underglow_effect = self.underglow_effect_speed = -1
-        self.backlight_brightness = self.backlight_effect = -1
         self.underglow_color = (0, 0)
+        # backlight
+        self.backlight_brightness = self.backlight_effect = -1
         # vialrgb
-        self.rgb_mode = self.rgb_speed = -1
+        self.rgb_mode = self.rgb_speed = self.rgb_version = self.rgb_maximum_brightness = -1
         self.rgb_hsv = (0, 0, 0)
 
         self.via_protocol = self.vial_protocol = self.keyboard_id = -1
@@ -392,7 +396,15 @@ class Keyboard:
                 self.dev, struct.pack(">BB", CMD_VIA_LIGHTING_GET_VALUE, QMK_BACKLIGHT_EFFECT), retries=20)[2]
 
         if self.lighting_vialrgb:
-            data = self.usb_send(self.dev, struct.pack("BB", CMD_VIA_LIGHTING_GET_VALUE, VIALRGB_GET_MODE))[2:]
+            data = self.usb_send(self.dev, struct.pack("BB", CMD_VIA_LIGHTING_GET_VALUE, VIALRGB_GET_INFO),
+                                 retries=20)[2:]
+            self.rgb_version = data[0] | (data[1] << 8)
+            if self.rgb_version != 1:
+                raise RuntimeError("Unsupported VialRGB protocol, update your Vial version to latest")
+            self.rgb_maximum_brightness = data[2]
+
+            data = self.usb_send(self.dev, struct.pack("BB", CMD_VIA_LIGHTING_GET_VALUE, VIALRGB_GET_MODE),
+                                 retries=20)[2:]
             self.rgb_mode = data[0]
             self.rgb_speed = data[1]
             self.rgb_hsv = (data[2], data[3], data[4])

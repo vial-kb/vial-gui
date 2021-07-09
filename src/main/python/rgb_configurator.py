@@ -263,7 +263,8 @@ class VialRGBHandler(BasicHandler):
                                1.0)
 
     def update_from_keyboard(self):
-        self.rgb_brightness.setValue(self.device.keyboard.rgb_hsv[2])
+        self.rgb_brightness.setMaximum(self.keyboard.rgb_maximum_brightness)
+        self.rgb_brightness.setValue(self.keyboard.rgb_hsv[2])
         self.rgb_color.setStyleSheet("QWidget { background-color: %s}" % self.current_color().name())
 
     def valid(self):
