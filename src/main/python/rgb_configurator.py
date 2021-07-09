@@ -278,26 +278,37 @@ class VialRGBHandler(BasicHandler):
         container.addWidget(self.rgb_effect, row, 1)
 
         self.lbl_rgb_color = QLabel(tr("RGBConfigurator", "RGB Color"))
-        container.addWidget(self.lbl_rgb_color, row + 2, 0)
+        container.addWidget(self.lbl_rgb_color, row + 1, 0)
         self.rgb_color = ClickableLabel(" ")
         self.rgb_color.clicked.connect(self.on_rgb_color)
-        container.addWidget(self.rgb_color, row + 2, 1)
+        container.addWidget(self.rgb_color, row + 1, 1)
 
         self.lbl_rgb_brightness = QLabel(tr("RGBConfigurator", "RGB Brightness"))
-        container.addWidget(self.lbl_rgb_brightness, row + 1, 0)
+        container.addWidget(self.lbl_rgb_brightness, row + 2, 0)
         self.rgb_brightness = QSlider(QtCore.Qt.Horizontal)
         self.rgb_brightness.setMinimum(0)
         self.rgb_brightness.setMaximum(255)
         self.rgb_brightness.valueChanged.connect(self.on_rgb_brightness_changed)
-        container.addWidget(self.rgb_brightness, row + 1, 1)
+        container.addWidget(self.rgb_brightness, row + 2, 1)
+
+        self.lbl_rgb_speed = QLabel(tr("RGBConfigurator", "RGB Speed"))
+        container.addWidget(self.lbl_rgb_speed, row + 3, 0)
+        self.rgb_speed = QSlider(QtCore.Qt.Horizontal)
+        self.rgb_speed.setMinimum(0)
+        self.rgb_speed.setMaximum(255)
+        self.rgb_speed.valueChanged.connect(self.on_rgb_speed_changed)
+        container.addWidget(self.rgb_speed, row + 3, 1)
 
         self.widgets = [self.lbl_rgb_effect, self.rgb_effect, self.lbl_rgb_brightness, self.rgb_brightness,
-                        self.lbl_rgb_color, self.rgb_color]
+                        self.lbl_rgb_color, self.rgb_color, self.lbl_rgb_speed, self.rgb_speed]
 
         self.effects = []
 
     def on_rgb_brightness_changed(self, value):
         self.keyboard.set_vialrgb_brightness(value)
+
+    def on_rgb_speed_changed(self, value):
+        self.keyboard.set_vialrgb_speed(value)
 
     def on_rgb_effect_changed(self, index):
         self.keyboard.set_vialrgb_mode(self.effects[index].idx)
@@ -336,6 +347,7 @@ class VialRGBHandler(BasicHandler):
                 break
         self.rgb_brightness.setMaximum(self.keyboard.rgb_maximum_brightness)
         self.rgb_brightness.setValue(self.keyboard.rgb_hsv[2])
+        self.rgb_speed.setValue(self.keyboard.rgb_speed)
         self.rgb_color.setStyleSheet("QWidget { background-color: %s}" % self.current_color().name())
 
     def valid(self):
