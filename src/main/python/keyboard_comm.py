@@ -427,9 +427,9 @@ class Keyboard:
         if self.lighting_vialrgb:
             data = self.usb_send(self.dev, struct.pack("BB", CMD_VIA_LIGHTING_GET_VALUE, VIALRGB_GET_MODE),
                                  retries=20)[2:]
-            self.rgb_mode = data[0]
-            self.rgb_speed = data[1]
-            self.rgb_hsv = (data[2], data[3], data[4])
+            self.rgb_mode = int.from_bytes(data[0:2], byteorder="little")
+            self.rgb_speed = data[2]
+            self.rgb_hsv = (data[3], data[4], data[5])
 
     def reload_settings(self):
         self.settings = dict()
@@ -831,7 +831,7 @@ class Keyboard:
                                             DYNAMIC_VIAL_COMBO_SET, idx) + serialized, retries=20)
 
     def _vialrgb_set_mode(self):
-        self.usb_send(self.dev, struct.pack("BBBBBBB", CMD_VIA_LIGHTING_SET_VALUE, VIALRGB_SET_MODE,
+        self.usb_send(self.dev, struct.pack("BBHBBBB", CMD_VIA_LIGHTING_SET_VALUE, VIALRGB_SET_MODE,
                                             self.rgb_mode, self.rgb_speed,
                                             self.rgb_hsv[0], self.rgb_hsv[1], self.rgb_hsv[2]))
 
