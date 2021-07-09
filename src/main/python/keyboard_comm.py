@@ -805,6 +805,14 @@ class Keyboard:
         self.rgb_hsv = (self.rgb_hsv[0], self.rgb_hsv[1], value)
         self._vialrgb_set_mode()
 
+    def set_vialrgb_mode(self, value):
+        self.rgb_mode = value
+        self._vialrgb_set_mode()
+
+    def set_vialrgb_color(self, h, s, v):
+        self.rgb_hsv = (h, s, v)
+        self._vialrgb_set_mode()
+
 
 class DummyKeyboard(Keyboard):
 

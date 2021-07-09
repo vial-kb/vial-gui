@@ -72,7 +72,7 @@ class BasicHandler(QObject):
     def set_device(self, device):
         self.device = device
         if self.valid():
-            self.keyboard = self.device
+            self.keyboard = self.device.keyboard
             self.show()
         else:
             self.hide()
@@ -213,6 +213,22 @@ class VialRGBHandler(BasicHandler):
 
         row = container.rowCount()
 
+        self.lbl_rgb_effect = QLabel(tr("RGBConfigurator", "RGB Effect"))
+        container.addWidget(self.lbl_rgb_effect, row, 0)
+        self.rgb_effect = QComboBox()
+        self.rgb_effect.addItem("0")
+        self.rgb_effect.addItem("1")
+        self.rgb_effect.addItem("2")
+        self.rgb_effect.addItem("3")
+        self.rgb_effect.currentIndexChanged.connect(self.on_rgb_effect_changed)
+        container.addWidget(self.rgb_effect, row, 1)
+
+        self.lbl_rgb_color = QLabel(tr("RGBConfigurator", "RGB Color"))
+        container.addWidget(self.lbl_rgb_color, row + 2, 0)
+        self.rgb_color = ClickableLabel(" ")
+        self.rgb_color.clicked.connect(self.on_rgb_color)
+        container.addWidget(self.rgb_color, row + 2, 1)
+
         self.lbl_rgb_brightness = QLabel(tr("RGBConfigurator", "RGB Brightness"))
         container.addWidget(self.lbl_rgb_brightness, row + 1, 0)
         self.rgb_brightness = QSlider(QtCore.Qt.Horizontal)
@@ -221,14 +237,34 @@ class VialRGBHandler(BasicHandler):
         self.rgb_brightness.valueChanged.connect(self.on_rgb_brightness_changed)
         container.addWidget(self.rgb_brightness, row + 1, 1)
 
-        self.widgets = [self.lbl_rgb_brightness, self.rgb_brightness]
+        self.widgets = [self.lbl_rgb_effect, self.rgb_effect, self.lbl_rgb_brightness, self.rgb_brightness,
+                        self.lbl_rgb_color, self.rgb_color]
 
     def on_rgb_brightness_changed(self, value):
-        self.device.keyboard.set_vialrgb_brightness(value)
+        self.keyboard.set_vialrgb_brightness(value)
+
+    def on_rgb_effect_changed(self, value):
+        self.keyboard.set_vialrgb_mode(value)
+
+    def on_rgb_color(self):
+        color = QColorDialog.getColor(self.current_color())
+        if not color.isValid():
+            return
+        self.rgb_color.setStyleSheet("QWidget { background-color: %s}" % color.name())
+        h, s, v, a = color.getHsvF()
+        if h < 0:
+            h = 0
+        self.device.keyboard.set_vialrgb_color(int(255 * h), int(255 * s), int(255 * v))
+        self.update.emit()
+
+    def current_color(self):
+        return QColor.fromHsvF(self.device.keyboard.rgb_hsv[0] / 255.0,
+                               self.device.keyboard.rgb_hsv[1] / 255.0,
+                               1.0)
 
     def update_from_keyboard(self):
-        print("hsv", self.device.keyboard.rgb_hsv)
         self.rgb_brightness.setValue(self.device.keyboard.rgb_hsv[2])
+        self.rgb_color.setStyleSheet("QWidget { background-color: %s}" % self.current_color().name())
 
     def valid(self):
         return isinstance(self.device, VialKeyboard) and self.device.keyboard.lighting_vialrgb
