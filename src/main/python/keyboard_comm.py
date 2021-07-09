@@ -400,7 +400,8 @@ class Keyboard:
                                  retries=20)[2:]
             self.rgb_version = data[0] | (data[1] << 8)
             if self.rgb_version != 1:
-                raise RuntimeError("Unsupported VialRGB protocol, update your Vial version to latest")
+                raise RuntimeError("Unsupported VialRGB protocol ({}), update your Vial version to latest"
+                                   .format(self.rgb_version))
             self.rgb_maximum_brightness = data[2]
 
             data = self.usb_send(self.dev, struct.pack("BB", CMD_VIA_LIGHTING_GET_VALUE, VIALRGB_GET_MODE),
