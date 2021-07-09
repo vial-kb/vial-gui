@@ -397,7 +397,8 @@ class Keyboard:
             self.rgb_supported_effects = {0}
             max_effect = 0
             while max_effect < 0xFFFF:
-                data = self.usb_send(self.dev, struct.pack("BB", CMD_VIA_LIGHTING_GET_VALUE, VIALRGB_GET_SUPPORTED))[2:]
+                data = self.usb_send(self.dev, struct.pack("<BBH", CMD_VIA_LIGHTING_GET_VALUE, VIALRGB_GET_SUPPORTED,
+                                                           max_effect))[2:]
                 for x in range(0, len(data), 2):
                     value = int.from_bytes(data[x:x+2], byteorder="little")
                     if value != 0xFFFF:
