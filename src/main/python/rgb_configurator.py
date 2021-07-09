@@ -60,6 +60,21 @@ QMK_RGBLIGHT_EFFECTS = [
 ]
 
 
+class VialRGBEffect:
+
+    def __init__(self, idx, name):
+        self.idx = idx
+        self.name = name
+
+
+VIALRGB_EFFECTS = [
+    VialRGBEffect(0, "Disable"),
+    VialRGBEffect(1, "Direct Control"),
+    VialRGBEffect(2, "Solid Color"),
+    VialRGBEffect(3, "Alphas and Mods"),
+]
+
+
 class BasicHandler(QObject):
 
     update = pyqtSignal()
@@ -240,11 +255,13 @@ class VialRGBHandler(BasicHandler):
         self.widgets = [self.lbl_rgb_effect, self.rgb_effect, self.lbl_rgb_brightness, self.rgb_brightness,
                         self.lbl_rgb_color, self.rgb_color]
 
+        self.effects = []
+
     def on_rgb_brightness_changed(self, value):
         self.keyboard.set_vialrgb_brightness(value)
 
-    def on_rgb_effect_changed(self, value):
-        self.keyboard.set_vialrgb_mode(value)
+    def on_rgb_effect_changed(self, index):
+        self.keyboard.set_vialrgb_mode(self.effects[index].idx)
 
     def on_rgb_color(self):
         color = QColorDialog.getColor(self.current_color())
@@ -262,7 +279,22 @@ class VialRGBHandler(BasicHandler):
                                self.keyboard.rgb_hsv[1] / 255.0,
                                1.0)
 
+    def rebuild_effects(self):
+        self.effects = []
+        for effect in VIALRGB_EFFECTS:
+            if effect.idx in self.keyboard.rgb_supported_effects:
+                self.effects.append(effect)
+
+        self.rgb_effect.clear()
+        for effect in self.effects:
+            self.rgb_effect.addItem(effect.name)
+
     def update_from_keyboard(self):
+        self.rebuild_effects()
+        for x, effect in enumerate(self.effects):
+            if effect.idx == self.keyboard.rgb_mode:
+                self.rgb_effect.setCurrentIndex(x)
+                break
         self.rgb_brightness.setMaximum(self.keyboard.rgb_maximum_brightness)
         self.rgb_brightness.setValue(self.keyboard.rgb_hsv[2])
         self.rgb_color.setStyleSheet("QWidget { background-color: %s}" % self.current_color().name())
