@@ -254,12 +254,12 @@ class VialRGBHandler(BasicHandler):
         h, s, v, a = color.getHsvF()
         if h < 0:
             h = 0
-        self.device.keyboard.set_vialrgb_color(int(255 * h), int(255 * s), int(255 * v))
+        self.keyboard.set_vialrgb_color(int(255 * h), int(255 * s), self.keyboard.rgb_hsv[2])
         self.update.emit()
 
     def current_color(self):
-        return QColor.fromHsvF(self.device.keyboard.rgb_hsv[0] / 255.0,
-                               self.device.keyboard.rgb_hsv[1] / 255.0,
+        return QColor.fromHsvF(self.keyboard.rgb_hsv[0] / 255.0,
+                               self.keyboard.rgb_hsv[1] / 255.0,
                                1.0)
 
     def update_from_keyboard(self):
