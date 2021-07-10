@@ -172,6 +172,9 @@ class KeymapEditor(BasicEditor):
     def set_key(self, keycode):
         """ Change currently selected key to provided keycode """
 
+        if self.container.active_key is None:
+            return
+
         if isinstance(self.container.active_key, EncoderWidget):
             self.set_key_encoder(keycode)
         else:
