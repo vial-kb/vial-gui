@@ -41,6 +41,12 @@ QMK_RGBLIGHT_EFFECT = 0x81
 QMK_RGBLIGHT_EFFECT_SPEED = 0x82
 QMK_RGBLIGHT_COLOR = 0x83
 
+VIALRGB_GET_INFO = 0x40
+VIALRGB_GET_MODE = 0x41
+VIALRGB_GET_SUPPORTED = 0x42
+
+VIALRGB_SET_MODE = 0x41
+
 CMD_VIAL_GET_KEYBOARD_ID = 0x00
 CMD_VIAL_GET_SIZE = 0x01
 CMD_VIAL_GET_DEFINITION = 0x02
@@ -194,10 +200,17 @@ class Keyboard:
         self.vibl = False
         self.custom_keycodes = None
 
-        self.lighting_qmk_rgblight = self.lighting_qmk_backlight = False
+        self.lighting_qmk_rgblight = self.lighting_qmk_backlight = self.lighting_vialrgb = False
+
+        # underglow
         self.underglow_brightness = self.underglow_effect = self.underglow_effect_speed = -1
-        self.backlight_brightness = self.backlight_effect = -1
         self.underglow_color = (0, 0)
+        # backlight
+        self.backlight_brightness = self.backlight_effect = -1
+        # vialrgb
+        self.rgb_mode = self.rgb_speed = self.rgb_version = self.rgb_maximum_brightness = -1
+        self.rgb_hsv = (0, 0, 0)
+        self.rgb_supported_effects = set()
 
         self.via_protocol = self.vial_protocol = self.keyboard_id = -1
 
@@ -213,6 +226,7 @@ class Keyboard:
         self.reload_layers()
         self.reload_keymap()
         self.reload_macros()
+        self.reload_persistent_rgb()
         self.reload_rgb()
         self.reload_settings()
         self.reload_dynamic()
@@ -360,11 +374,38 @@ class Keyboard:
             macros = self.macro.split(b"\x00") + [b""] * self.macro_count
             self.macro = b"\x00".join(macros[:self.macro_count]) + b"\x00"
 
-    def reload_rgb(self):
+    def reload_persistent_rgb(self):
+        """
+            Reload RGB properties which are slow, and do not change while keyboard is plugged in
+            e.g. VialRGB supported effects list
+        """
+
         if "lighting" in self.definition:
             self.lighting_qmk_rgblight = self.definition["lighting"] in ["qmk_rgblight", "qmk_backlight_rgblight"]
             self.lighting_qmk_backlight = self.definition["lighting"] in ["qmk_backlight", "qmk_backlight_rgblight"]
+            self.lighting_vialrgb = self.definition["lighting"] == "vialrgb"
 
+        if self.lighting_vialrgb:
+            data = self.usb_send(self.dev, struct.pack("BB", CMD_VIA_LIGHTING_GET_VALUE, VIALRGB_GET_INFO),
+                                 retries=20)[2:]
+            self.rgb_version = data[0] | (data[1] << 8)
+            if self.rgb_version != 1:
+                raise RuntimeError("Unsupported VialRGB protocol ({}), update your Vial version to latest"
+                                   .format(self.rgb_version))
+            self.rgb_maximum_brightness = data[2]
+
+            self.rgb_supported_effects = {0}
+            max_effect = 0
+            while max_effect < 0xFFFF:
+                data = self.usb_send(self.dev, struct.pack("<BBH", CMD_VIA_LIGHTING_GET_VALUE, VIALRGB_GET_SUPPORTED,
+                                                           max_effect))[2:]
+                for x in range(0, len(data), 2):
+                    value = int.from_bytes(data[x:x+2], byteorder="little")
+                    if value != 0xFFFF:
+                        self.rgb_supported_effects.add(value)
+                    max_effect = max(max_effect, value)
+
+    def reload_rgb(self):
         if self.lighting_qmk_rgblight:
             self.underglow_brightness = self.usb_send(
                 self.dev, struct.pack(">BB", CMD_VIA_LIGHTING_GET_VALUE, QMK_RGBLIGHT_BRIGHTNESS), retries=20)[2]
@@ -382,6 +423,13 @@ class Keyboard:
                 self.dev, struct.pack(">BB", CMD_VIA_LIGHTING_GET_VALUE, QMK_BACKLIGHT_BRIGHTNESS), retries=20)[2]
             self.backlight_effect = self.usb_send(
                 self.dev, struct.pack(">BB", CMD_VIA_LIGHTING_GET_VALUE, QMK_BACKLIGHT_EFFECT), retries=20)[2]
+
+        if self.lighting_vialrgb:
+            data = self.usb_send(self.dev, struct.pack("BB", CMD_VIA_LIGHTING_GET_VALUE, VIALRGB_GET_MODE),
+                                 retries=20)[2:]
+            self.rgb_mode = int.from_bytes(data[0:2], byteorder="little")
+            self.rgb_speed = data[2]
+            self.rgb_hsv = (data[3], data[4], data[5])
 
     def reload_settings(self):
         self.settings = dict()
@@ -781,6 +829,27 @@ class Keyboard:
         serialized = struct.pack("<HHHHH", *self.combo_entries[idx])
         self.usb_send(self.dev, struct.pack("BBBB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_DYNAMIC_ENTRY_OP,
                                             DYNAMIC_VIAL_COMBO_SET, idx) + serialized, retries=20)
+
+    def _vialrgb_set_mode(self):
+        self.usb_send(self.dev, struct.pack("BBHBBBB", CMD_VIA_LIGHTING_SET_VALUE, VIALRGB_SET_MODE,
+                                            self.rgb_mode, self.rgb_speed,
+                                            self.rgb_hsv[0], self.rgb_hsv[1], self.rgb_hsv[2]))
+
+    def set_vialrgb_brightness(self, value):
+        self.rgb_hsv = (self.rgb_hsv[0], self.rgb_hsv[1], value)
+        self._vialrgb_set_mode()
+
+    def set_vialrgb_speed(self, value):
+        self.rgb_speed = value
+        self._vialrgb_set_mode()
+
+    def set_vialrgb_mode(self, value):
+        self.rgb_mode = value
+        self._vialrgb_set_mode()
+
+    def set_vialrgb_color(self, h, s, v):
+        self.rgb_hsv = (h, s, v)
+        self._vialrgb_set_mode()
 
 
 class DummyKeyboard(Keyboard):
