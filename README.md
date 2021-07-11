@@ -4,7 +4,7 @@
 
 ### Please visit [get.vial.today](https://get.vial.today/) to get started with Vial
 
-Vial is an open-source cross-platform (Windows, Linux and Mac) GUI and a QMK fork for configuring your keyboard in real time, similar to VIA.
+Vial is an open-source cross-platform (Windows, Linux and Mac) GUI and a QMK fork for configuring your keyboard in real time.
 
 
 ![](https://get.vial.today/img/vial-win-1.png)
