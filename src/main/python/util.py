@@ -28,6 +28,7 @@ EXAMPLE_KEYBOARDS = [
     0xD4A36200603E3007,  # vial_stm32f103_vibl
     0x32F62BC2EEF2237B,  # vial_atmega32u4
     0x38CEA320F23046A5,  # vial_stm32f072
+    0xBED2D31EC59A0BD8,  # vial_stm32f401
 ]
 
 
