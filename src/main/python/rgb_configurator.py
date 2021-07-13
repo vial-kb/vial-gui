@@ -188,6 +188,9 @@ class QmkRgblightHandler(BasicHandler):
                         self.underglow_brightness, self.lbl_underglow_color, self.underglow_color]
 
     def update_from_keyboard(self):
+        if not self.valid():
+            return
+
         self.underglow_brightness.setValue(self.device.keyboard.underglow_brightness)
         self.underglow_effect.setCurrentIndex(self.device.keyboard.underglow_effect)
         self.underglow_color.setStyleSheet("QWidget { background-color: %s}" % self.current_color().name())
@@ -247,6 +250,9 @@ class QmkBacklightHandler(BasicHandler):
                         self.backlight_breathing]
 
     def update_from_keyboard(self):
+        if not self.valid():
+            return
+
         self.backlight_brightness.setValue(self.device.keyboard.backlight_brightness)
         self.backlight_breathing.setChecked(self.device.keyboard.backlight_effect == 1)
 
@@ -340,6 +346,9 @@ class VialRGBHandler(BasicHandler):
             self.rgb_effect.addItem(effect.name)
 
     def update_from_keyboard(self):
+        if not self.valid():
+            return
+
         self.rebuild_effects()
         for x, effect in enumerate(self.effects):
             if effect.idx == self.keyboard.rgb_mode:
