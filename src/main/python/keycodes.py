@@ -610,6 +610,7 @@ def recreate_keyboard_keycodes(keyboard):
         lbl = "M{}".format(x)
         KEYCODES_MACRO.append(Keycode(0x5F12 + x, lbl, lbl))
 
+    KEYCODES_TAP_DANCE.clear()
     for x in range(keyboard.tap_dance_count):
         lbl = "TD({})".format(x)
         KEYCODES_TAP_DANCE.append(Keycode(QK_TAP_DANCE | x, lbl, lbl))
