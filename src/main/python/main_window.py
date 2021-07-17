@@ -85,7 +85,7 @@ class MainWindow(QMainWindow):
         if sys.platform.startswith("linux"):
             no_devices += '<br><br>On Linux you need to set up a custom udev rule for keyboards to be detected. ' \
                           'Follow the instructions linked below:<br>' \
-                          '<a href="https://get.vial.today/getting-started/linux-udev.html">https://get.vial.today/getting-started/linux-udev.html</a>'
+                          '<a href="https://get.vial.today/manual/linux-udev.html">https://get.vial.today/manual/linux-udev.html</a>'
         self.lbl_no_devices = QLabel(tr("MainWindow", no_devices))
         self.lbl_no_devices.setTextFormat(Qt.RichText)
         self.lbl_no_devices.setAlignment(Qt.AlignCenter)
