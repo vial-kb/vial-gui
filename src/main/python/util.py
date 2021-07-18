@@ -5,9 +5,12 @@ import time
 from logging.handlers import RotatingFileHandler
 
 from PyQt5.QtCore import QCoreApplication, QStandardPaths
+from PyQt5.QtGui import QPalette
+from PyQt5.QtWidgets import QApplication
 
 from hidproxy import hid
-
+from keycodes import Keycode
+from keymaps import KEYMAPS
 
 tr = QCoreApplication.translate
 
@@ -25,6 +28,7 @@ EXAMPLE_KEYBOARDS = [
     0xD4A36200603E3007,  # vial_stm32f103_vibl
     0x32F62BC2EEF2237B,  # vial_atmega32u4
     0x38CEA320F23046A5,  # vial_stm32f072
+    0xBED2D31EC59A0BD8,  # vial_stm32f401
 ]
 
 
@@ -147,3 +151,50 @@ def init_logger():
     handler = RotatingFileHandler(path, maxBytes=5 * 1024 * 1024, backupCount=5)
     handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(module)s:%(lineno)d - %(message)s"))
     logging.getLogger().addHandler(handler)
+
+
+class KeycodeDisplay:
+
+    keymap_override = KEYMAPS[0][1]
+    clients = []
+
+    @classmethod
+    def get_label(cls, code):
+        """ Get label for a specific keycode """
+        if cls.code_is_overriden(code):
+            return cls.keymap_override[Keycode.find_outer_keycode(code).qmk_id]
+        return Keycode.label(code)
+
+    @classmethod
+    def code_is_overriden(cls, code):
+        """ Check whether a country-specific keymap overrides a code """
+        key = Keycode.find_outer_keycode(code)
+        return key is not None and key.qmk_id in cls.keymap_override
+
+    @classmethod
+    def display_keycode(cls, widget, code):
+        text = cls.get_label(code)
+        tooltip = Keycode.tooltip(code)
+        mask = Keycode.is_mask(code)
+        mask_text = cls.get_label(code & 0xFF)
+        if mask:
+            text = text.split("\n")[0]
+        widget.masked = mask
+        widget.setText(text)
+        widget.setMaskText(mask_text)
+        widget.setToolTip(tooltip)
+        if cls.code_is_overriden(code):
+            widget.setColor(QApplication.palette().color(QPalette.Link))
+        else:
+            widget.setColor(None)
+
+    @classmethod
+    def set_keymap_override(cls, override):
+        cls.keymap_override = override
+        for client in cls.clients:
+            client.on_keymap_override()
+
+    @classmethod
+    def notify_keymap_override(cls, client):
+        cls.clients.append(client)
+        client.on_keymap_override()

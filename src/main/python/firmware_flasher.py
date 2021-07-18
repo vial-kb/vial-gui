@@ -156,8 +156,10 @@ class FirmwareFlasher(BasicEditor):
 
         if isinstance(self.device, VialBootloader):
             self.log("Valid Vial Bootloader device at {}".format(self.device.desc["path"].decode("utf-8")))
+            self.chk_restore_keymap.hide()
         elif isinstance(self.device, VialKeyboard):
             self.log("Vial keyboard detected")
+            self.chk_restore_keymap.show()
 
     def valid(self):
         return isinstance(self.device, VialBootloader) or\

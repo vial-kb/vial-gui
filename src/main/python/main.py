@@ -64,7 +64,7 @@ if __name__ == '__main__':
         appctxt = ApplicationContext()       # 1. Instantiate ApplicationContext
         init_logger()
         qt_exception_hook = UncaughtHook()
-        window = MainWindow()
+        window = MainWindow(appctxt)
         window.resize(WINDOW_WIDTH, WINDOW_HEIGHT)
         window.show()
         exit_code = appctxt.app.exec_()      # 2. Invoke appctxt.app.exec_()

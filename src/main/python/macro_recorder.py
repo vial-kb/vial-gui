@@ -181,6 +181,7 @@ class MacroRecorder(BasicEditor):
     def on_revert(self):
         self.keyboard.reload_macros()
         self.deserialize(self.keyboard.macro)
+        self.on_change()
 
     def on_save(self):
         Unlocker.unlock(self.device.keyboard)
