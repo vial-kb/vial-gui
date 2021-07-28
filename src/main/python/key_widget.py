@@ -47,9 +47,9 @@ class KeyWidget(KeyboardWidget):
     def on_anykey(self):
         if self.active_key is None:
             return
-        dlg = AnyKeycodeDialog(self.keycode)
+        dlg = AnyKeycodeDialog((self.keycode & 0xFF) if self.active_mask else self.keycode)
         if dlg.exec_() and dlg.value >= 0:
-            self.set_keycode(dlg.value)
+            self.on_keycode_changed(dlg.value)
 
     def set_keycode(self, kc):
         if kc == self.keycode:

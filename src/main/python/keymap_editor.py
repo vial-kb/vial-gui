@@ -138,6 +138,8 @@ class KeymapEditor(BasicEditor):
         if self.container.active_key is None:
             return
         current_code = self.code_for_widget(self.container.active_key)
+        if self.container.active_mask:
+            current_code &= 0xFF
         dlg = AnyKeycodeDialog(current_code)
         if dlg.exec_() and dlg.value >= 0:
             self.on_keycode_changed(dlg.value)
