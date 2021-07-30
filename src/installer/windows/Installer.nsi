@@ -83,6 +83,10 @@ Section
 
 SectionEnd
 
+Function .onVerifyInstDir
+  StrCpy $InstDir "$InstDir\${app_name}"
+FunctionEnd
+
 ;--------------------------------
 ;Uninstaller Section
 
