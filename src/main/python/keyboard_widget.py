@@ -203,21 +203,13 @@ class KeyboardWidget(QWidget):
                 self.widgets_for_layout.append(cls(key, scale_factor))
 
     def place_widgets(self):
-        top_x = top_y = 1e6
         scale_factor = self.fontMetrics().height()
 
         self.widgets = []
 
-        # find the global top-left position, all the keys will be shifted to the left/up by that position
-        for widget in self.common_widgets:
-            widget.update_position(scale_factor)
-            p = widget.polygon.boundingRect().topLeft()
-            top_x = min(top_x, p.x())
-            top_y = min(top_y, p.y())
-
         # place common widgets, that is, ones which are always displayed and require no extra transforms
         for widget in self.common_widgets:
-            widget.update_position(scale_factor, -top_x + self.padding, -top_y + self.padding)
+            widget.update_position(scale_factor)
             self.widgets.append(widget)
 
         # top-left position for specific layout
@@ -238,8 +230,20 @@ class KeyboardWidget(QWidget):
             if opt == self.layout_editor.get_choice(idx):
                 shift_x = layout_x[idx][opt] - layout_x[idx][0]
                 shift_y = layout_y[idx][opt] - layout_y[idx][0]
-                widget.update_position(scale_factor, -shift_x - top_x + self.padding, -shift_y - top_y + self.padding)
+                widget.update_position(scale_factor, -shift_x, -shift_y)
                 self.widgets.append(widget)
+
+        # at this point some widgets on left side might be cutoff, or there may be too much empty space
+        # calculate top left position of visible widgets and shift everything around
+        top_x = top_y = 1e6
+        for widget in self.widgets:
+            if not widget.desc.decal:
+                p = widget.polygon.boundingRect().topLeft()
+                top_x = min(top_x, p.x())
+                top_y = min(top_y, p.y())
+        for widget in self.widgets:
+            widget.update_position(widget.scale, widget.shift_x - top_x + self.padding,
+                                   widget.shift_y - top_y + self.padding)
 
     def update_layout(self):
         """ Updates self.widgets for the currently active layout """
