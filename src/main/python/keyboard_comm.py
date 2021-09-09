@@ -88,6 +88,9 @@ def macro_deserialize_v1(data):
     data = bytearray(data)
     while len(data) > 0:
         if data[0] in [SS_TAP_CODE, SS_DOWN_CODE, SS_UP_CODE]:
+            if len(data) < 2:
+                break
+
             # append to previous *_CODE if it's the same type, otherwise create a new entry
             if len(sequence) > 0 and isinstance(sequence[-1], list) and sequence[-1][0] == data[0]:
                 sequence[-1][1].append(data[1])
@@ -129,7 +132,13 @@ def macro_deserialize_v2(data):
     data = bytearray(data)
     while len(data) > 0:
         if data[0] == SS_QMK_PREFIX:
+            if len(data) < 2:
+                break
+
             if data[1] in [SS_TAP_CODE, SS_DOWN_CODE, SS_UP_CODE]:
+                if len(data) < 3:
+                    break
+
                 # append to previous *_CODE if it's the same type, otherwise create a new entry
                 if len(sequence) > 0 and isinstance(sequence[-1], list) and sequence[-1][0] == data[1]:
                     sequence[-1][1].append(data[2])
@@ -139,12 +148,19 @@ def macro_deserialize_v2(data):
                 for x in range(3):
                     data.pop(0)
             elif data[1] == SS_DELAY_CODE:
+                if len(data) < 4:
+                    break
+
                 # decode the delay
                 delay = (data[2] - 1) + (data[3] - 1) * 255
                 sequence.append([SS_DELAY_CODE, delay])
 
                 for x in range(4):
                     data.pop(0)
+            else:
+                # it is clearly malformed, just skip this byte and hope for the best
+                data.pop(0)
+                data.pop(0)
         else:
             # append to previous string if it is a string, otherwise create a new entry
             ch = chr(data[0])
