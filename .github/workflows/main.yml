@@ -72,7 +72,7 @@ jobs:
     - name: Build
       run: |
         source venv/bin/activate
-        fbs freeze
+        pyinstaller misc/Vial.spec
         hdiutil create -volname Vial -srcfolder "target/Vial.app" -ov -format UDZO vial-mac.dmg
 
     - uses: actions/upload-artifact@v3
@@ -104,7 +104,7 @@ jobs:
     - name: Build
       run: |
         . .\venv\Scripts\activate.ps1
-        fbs freeze
+        pyinstaller misc/Vial.spec
         Compress-Archive -Path "target\Vial" -DestinationPath vial-win.zip
 
     - uses: actions/upload-artifact@v3
@@ -115,8 +115,7 @@ jobs:
     - name: Create installer
       run: |
         $env:Path += ";C:\Program Files (x86)\NSIS"
-        . .\venv\Scripts\activate.ps1
-        fbs installer
+        makensis src/installer/windows/Installer.nsi
 
     - uses: actions/upload-artifact@v3
       with:
