@@ -99,7 +99,7 @@ jobs:
       run: |
         . .\venv\Scripts\activate.ps1
         pyinstaller misc/Vial.spec
-        Compress-Archive -Path "target\Vial" -DestinationPath vial-win.zip
+        Compress-Archive -Path "build/Vial" -DestinationPath vial-win.zip
 
     - uses: actions/upload-artifact@v4
       with:
@@ -109,7 +109,8 @@ jobs:
     - name: Create installer
       run: |
         $env:Path += ";C:\Program Files (x86)\NSIS"
-        makensis src/installer/windows/Installer.nsi
+        cd build/Vial
+        makensis ../../src/installer/windows/Installer.nsi
 
     - uses: actions/upload-artifact@v4
       with:
