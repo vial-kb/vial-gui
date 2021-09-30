@@ -7,6 +7,7 @@ from key_widget import KeyWidget
 from tabbed_keycodes import TabbedKeycodes
 from vial_device import VialKeyboard
 from basic_editor import BasicEditor
+from widgets.tab_widget_keycodes import TabWidgetWithKeycodes
 
 
 class ComboEntryUI(QObject):
@@ -71,12 +72,6 @@ class ComboEntryUI(QObject):
         self.key_changed.emit()
 
 
-class CustomTabWidget(QTabWidget):
-
-    def mouseReleaseEvent(self, ev):
-        TabbedKeycodes.close_tray()
-
-
 class Combos(BasicEditor):
 
     def __init__(self):
@@ -85,7 +80,7 @@ class Combos(BasicEditor):
 
         self.combo_entries = []
         self.combo_entries_available = []
-        self.tabs = CustomTabWidget()
+        self.tabs = TabWidgetWithKeycodes()
         for x in range(128):
             entry = ComboEntryUI(x)
             entry.key_changed.connect(self.on_key_changed)
