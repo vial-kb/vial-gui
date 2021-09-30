@@ -385,6 +385,8 @@ class Keyboard:
                 sz = min(BUFFER_FETCH_CHUNK, self.macro_memory - x)
                 data = self.usb_send(self.dev, struct.pack(">BHB", CMD_VIA_MACRO_GET_BUFFER, x, sz), retries=20)
                 self.macro += data[4:4+sz]
+                if self.macro.count(b"\x00") > self.macro_count:
+                    break
             # macros are stored as NUL-separated strings, so let's clean up the buffer
             # ensuring we only get macro_count strings after we split by NUL
             macros = self.macro.split(b"\x00") + [b""] * self.macro_count
