@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
-from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtCore import Qt, pyqtSignal, QObject
 from PyQt5.QtWidgets import QTabWidget, QWidget, QScrollArea, QApplication
 from PyQt5.QtGui import QPalette
 
@@ -10,6 +10,65 @@ from keycodes import KEYCODES_BASIC, KEYCODES_ISO, KEYCODES_MACRO, KEYCODES_LAYE
     KEYCODES_BACKLIGHT, KEYCODES_MEDIA, KEYCODES_SPECIAL, KEYCODES_SHIFTED, KEYCODES_USER, Keycode, KEYCODES_TAP_DANCE
 from square_button import SquareButton
 from util import tr, KeycodeDisplay
+
+
+class Tab(QObject):
+
+    keycode_changed = pyqtSignal(int)
+
+    def __init__(self, label, keycodes, word_wrap=False, prefix_buttons=None):
+        super().__init__()
+
+        self.label = label
+        self.keycodes = keycodes
+        self.word_wrap = word_wrap
+
+        self.container = QScrollArea()
+        self.layout = FlowLayout()
+        if prefix_buttons:
+            for btn in prefix_buttons:
+                self.layout.addWidget(btn)
+
+        self.container.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+        self.container.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.container.setWidgetResizable(True)
+
+        w = QWidget()
+        w.setLayout(self.layout)
+        self.container.setWidget(w)
+
+        self.buttons = []
+
+    def recreate_buttons(self):
+        for btn in self.buttons:
+            btn.hide()
+            btn.deleteLater()
+        self.buttons = []
+
+        for keycode in self.keycodes:
+            btn = SquareButton()
+            btn.setWordWrap(self.word_wrap)
+            btn.setRelSize(KEYCODE_BTN_RATIO)
+            btn.setToolTip(Keycode.tooltip(keycode.code))
+            btn.clicked.connect(lambda st, k=keycode: self.keycode_changed.emit(k.code))
+            btn.keycode = keycode
+            self.layout.addWidget(btn)
+            self.buttons.append(btn)
+
+        self.relabel_buttons()
+        self.container.setVisible(len(self.buttons) > 0)
+
+    def relabel_buttons(self):
+        for widget in self.buttons:
+            qmk_id = widget.keycode.qmk_id
+            if qmk_id in KeycodeDisplay.keymap_override:
+                label = KeycodeDisplay.keymap_override[qmk_id]
+                highlight_color = QApplication.palette().color(QPalette.Link).getRgb()
+                widget.setStyleSheet("QPushButton {color: rgb%s;}" % str(highlight_color))
+            else:
+                label = widget.keycode.label
+                widget.setStyleSheet("QPushButton {}")
+            widget.setText(label.replace("&", "&&"))
 
 
 class TabbedKeycodes(QTabWidget):
@@ -23,106 +82,42 @@ class TabbedKeycodes(QTabWidget):
         self.target = None
         self.is_tray = False
 
-        self.tab_basic = QScrollArea()
-        self.tab_iso = QScrollArea()
-        self.tab_layers = QScrollArea()
-        self.tab_quantum = QScrollArea()
-        self.tab_backlight = QScrollArea()
-        self.tab_media = QScrollArea()
-        self.tab_tap_dance = QScrollArea()
-        self.tab_user = QScrollArea()
-        self.tab_macro = QScrollArea()
+        # create the "Any" keycode button
+        any_btn = SquareButton()
+        any_btn.setText("Any")
+        any_btn.setRelSize(KEYCODE_BTN_RATIO)
+        any_btn.clicked.connect(lambda: self.anykey.emit())
 
-        self.widgets = []
+        self.tabs = [
+            Tab("Basic", KEYCODES_SPECIAL + KEYCODES_BASIC + KEYCODES_SHIFTED, prefix_buttons=[any_btn]),
+            Tab("ISO/JIS", KEYCODES_ISO),
+            Tab("Layers", KEYCODES_LAYERS),
+            Tab("Quantum", KEYCODES_QUANTUM),
+            Tab("Backlight", KEYCODES_BACKLIGHT),
+            Tab("App, Media and Mouse", KEYCODES_MEDIA),
+            Tab("Tap Dance", KEYCODES_TAP_DANCE),
+            Tab("User", KEYCODES_USER),
+            Tab("Macro", KEYCODES_MACRO),
+        ]
 
-        for (tab, label, keycodes) in [
-            (self.tab_basic, "Basic", KEYCODES_SPECIAL + KEYCODES_BASIC + KEYCODES_SHIFTED),
-            (self.tab_iso, "ISO/JIS", KEYCODES_ISO),
-            (self.tab_layers, "Layers", KEYCODES_LAYERS),
-            (self.tab_quantum, "Quantum", KEYCODES_QUANTUM),
-            (self.tab_backlight, "Backlight", KEYCODES_BACKLIGHT),
-            (self.tab_media, "App, Media and Mouse", KEYCODES_MEDIA),
-            (self.tab_tap_dance, "Tap Dance", KEYCODES_TAP_DANCE),
-            (self.tab_user, "User", KEYCODES_USER),
-            (self.tab_macro, "Macro", KEYCODES_MACRO),
-        ]:
-            layout = FlowLayout()
-            if tab == self.tab_layers:
-                self.layout_layers = layout
-            elif tab == self.tab_tap_dance:
-                self.layout_tap_dance = layout
-            elif tab == self.tab_macro:
-                self.layout_macro = layout
-            elif tab == self.tab_user:
-                self.layout_user = layout
-            elif tab == self.tab_basic:
-                # create the "Any" keycode button
-                btn = SquareButton()
-                btn.setText("Any")
-                btn.setRelSize(KEYCODE_BTN_RATIO)
-                btn.clicked.connect(lambda: self.anykey.emit())
-                layout.addWidget(btn)
+        for tab in self.tabs:
+            tab.keycode_changed.connect(lambda kc: self.keycode_changed.emit(kc))
 
-            self.widgets += self.create_buttons(layout, keycodes)
-
-            tab.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
-            tab.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-            tab.setWidgetResizable(True)
-
-            w = QWidget()
-            w.setLayout(layout)
-            tab.setWidget(w)
-            self.addTab(tab, tr("TabbedKeycodes", label))
-
-        self.layer_keycode_buttons = []
-        self.tap_dance_keycode_buttons = []
-        self.macro_keycode_buttons = []
-        self.user_keycode_buttons = []
+        self.recreate_keycode_buttons()
         KeycodeDisplay.notify_keymap_override(self)
 
-    def create_buttons(self, layout, keycodes, word_wrap=False):
-        buttons = []
-
-        for keycode in keycodes:
-            btn = SquareButton()
-            btn.setWordWrap(word_wrap)
-            btn.setRelSize(KEYCODE_BTN_RATIO)
-            btn.setToolTip(Keycode.tooltip(keycode.code))
-            btn.clicked.connect(lambda st, k=keycode: self.keycode_changed.emit(k.code))
-            btn.keycode = keycode
-            layout.addWidget(btn)
-            buttons.append(btn)
-
-        return buttons
-
     def recreate_keycode_buttons(self):
-        for btn in self.layer_keycode_buttons + self.tap_dance_keycode_buttons + self.macro_keycode_buttons \
-                   + self.user_keycode_buttons:
-            self.widgets.remove(btn)
-            btn.hide()
-            btn.deleteLater()
-        self.layer_keycode_buttons = self.create_buttons(self.layout_layers, KEYCODES_LAYERS)
-        self.tap_dance_keycode_buttons = self.create_buttons(self.layout_tap_dance, KEYCODES_TAP_DANCE)
-        self.macro_keycode_buttons = self.create_buttons(self.layout_macro, KEYCODES_MACRO)
-        self.user_keycode_buttons = self.create_buttons(self.layout_user, KEYCODES_USER, word_wrap=True)
-        self.widgets += self.layer_keycode_buttons + self.tap_dance_keycode_buttons + \
-            self.macro_keycode_buttons + self.user_keycode_buttons
-        self.relabel_buttons()
+        while self.count() > 0:
+            self.removeTab(0)
+
+        for tab in self.tabs:
+            tab.recreate_buttons()
+            if tab.buttons:
+                self.addTab(tab.container, tr("TabbedKeycodes", tab.label))
 
     def on_keymap_override(self):
-        self.relabel_buttons()
-
-    def relabel_buttons(self):
-        for widget in self.widgets:
-            qmk_id = widget.keycode.qmk_id
-            if qmk_id in KeycodeDisplay.keymap_override:
-                label = KeycodeDisplay.keymap_override[qmk_id]
-                highlight_color = QApplication.palette().color(QPalette.Link).getRgb()
-                widget.setStyleSheet("QPushButton {color: rgb"+str(highlight_color)+";}")
-            else:
-                label = widget.keycode.label
-                widget.setStyleSheet("QPushButton {}")
-            widget.setText(label.replace("&", "&&"))
+        for tab in self.tabs:
+            tab.relabel_buttons()
 
     @classmethod
     def set_tray(cls, tray):
