@@ -70,6 +70,8 @@ DYNAMIC_VIAL_TAP_DANCE_GET = 0x01
 DYNAMIC_VIAL_TAP_DANCE_SET = 0x02
 DYNAMIC_VIAL_COMBO_GET = 0x03
 DYNAMIC_VIAL_COMBO_SET = 0x04
+DYNAMIC_VIAL_KEY_OVERRIDE_GET = 0x05
+DYNAMIC_VIAL_KEY_OVERRIDE_SET = 0x06
 
 # how much of a macro/keymap buffer we can read/write per packet
 BUFFER_FETCH_CHUNK = 28
@@ -480,34 +482,40 @@ class Keyboard:
             if data[0] == 0:
                 self.settings[qsid] = QmkSettings.qsid_deserialize(qsid, data[1:])
 
+    def _retrieve_dynamic_entries(self, cmd, count, fmt):
+        out = []
+        for x in range(count):
+            data = self.usb_send(
+                self.dev,
+                struct.pack("BBBB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_DYNAMIC_ENTRY_OP, cmd, x),
+                retries=20
+            )
+            if data[0] != 0:
+                raise RuntimeError("failed retrieving dynamic={} entry {} from the device".format(cmd, x))
+            out.append(struct.unpack(fmt, data[1:1 + struct.calcsize(fmt)]))
+        return out
+
     def reload_dynamic(self):
         if self.vial_protocol < 4:
             self.tap_dance_count = 0
             self.tap_dance_entries = []
             self.combo_count = 0
             self.combo_entries = []
+            self.key_override_count = 0
+            self.key_override_entries = []
             return
         data = self.usb_send(self.dev, struct.pack("BBB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_DYNAMIC_ENTRY_OP,
                                                    DYNAMIC_VIAL_GET_NUMBER_OF_ENTRIES), retries=20)
         self.tap_dance_count = data[0]
         self.combo_count = data[1]
+        self.key_override_count = data[2]
 
-        self.tap_dance_entries = []
-        for x in range(self.tap_dance_count):
-            data = self.usb_send(self.dev, struct.pack("BBBB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_DYNAMIC_ENTRY_OP,
-                                                       DYNAMIC_VIAL_TAP_DANCE_GET, x), retries=20)
-            if data[0] != 0:
-                raise RuntimeError("failed retrieving tapdance entry {} from the device".format(x))
-            self.tap_dance_entries.append(struct.unpack("<HHHHH", data[1:11]))
-
-        self.combo_entries = []
-        for x in range(self.combo_count):
-            data = self.usb_send(self.dev, struct.pack("BBBB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_DYNAMIC_ENTRY_OP,
-                                                       DYNAMIC_VIAL_COMBO_GET, x), retries=20)
-
-            if data[0] != 0:
-                raise RuntimeError("failed retrieving combo entry {} from the device".format(x))
-            self.combo_entries.append(struct.unpack("<HHHHH", data[1:11]))
+        self.tap_dance_entries = self._retrieve_dynamic_entries(DYNAMIC_VIAL_TAP_DANCE_GET,
+                                                                self.tap_dance_count, "<HHHHH")
+        self.combo_entries = self._retrieve_dynamic_entries(DYNAMIC_VIAL_COMBO_GET,
+                                                            self.combo_count, "<HHHHH")
+        self.key_override_entries = self._retrieve_dynamic_entries(DYNAMIC_VIAL_KEY_OVERRIDE_GET,
+                                                                   self.key_override_count, "<HHHBBBB")
 
     def set_key(self, layer, row, col, code):
         if code < 0:
