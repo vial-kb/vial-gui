@@ -9,6 +9,7 @@ import os
 import sys
 from urllib.request import urlopen
 
+from autorefresh import Autorefresh
 from combos import Combos
 from constants import WINDOW_WIDTH, WINDOW_HEIGHT
 from editor_container import EditorContainer
@@ -123,6 +124,8 @@ class MainWindow(QMainWindow):
 
         # make sure initial state is valid
         self.on_click_refresh()
+
+        self.autorefresh = Autorefresh(self)
 
     def init_menu(self):
         layout_load_act = QAction(tr("MenuFile", "Load saved layout..."), self)
