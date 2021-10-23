@@ -3,16 +3,36 @@ from PyQt5.QtCore import QTimer
 from util import find_vial_devices
 
 
+class AutorefreshLocker:
+
+    def __init__(self, autorefresh):
+        self.autorefresh = autorefresh
+
+    def __enter__(self):
+        self.autorefresh._lock()
+
+    def __exit__(self):
+        self.autorefresh._unlock()
+
+
 class Autorefresh:
+
+    instance = None
 
     def __init__(self, mainwindow):
         self.mainwindow = mainwindow
+        self.locked = False
 
         self.timer = QTimer()
         self.timer.timeout.connect(self.update)
         self.timer.start(1000)
 
+        Autorefresh.instance = self
+
     def update(self, check_protocol=False):
+        if self.locked:
+            return
+
         devices = find_vial_devices(self.mainwindow.via_stack_json, self.mainwindow.sideload_vid,
                                     self.mainwindow.sideload_pid, quiet=True, check_protocol=check_protocol)
 
@@ -42,3 +62,13 @@ class Autorefresh:
 
         if not old_found:
             self.mainwindow.on_device_selected()
+
+    def _lock(self):
+        self.locked = True
+
+    def _unlock(self):
+        self.locked = False
+
+    @classmethod
+    def lock(cls):
+        return AutorefreshLocker(cls.instance)

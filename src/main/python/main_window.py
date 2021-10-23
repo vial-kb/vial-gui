@@ -328,11 +328,13 @@ class MainWindow(QMainWindow):
             self.on_click_refresh()
 
     def lock_ui(self):
+        self.autorefresh._lock()
         self.tabs.setEnabled(False)
         self.combobox_devices.setEnabled(False)
         self.btn_refresh_devices.setEnabled(False)
 
     def unlock_ui(self):
+        self.autorefresh._unlock()
         self.tabs.setEnabled(True)
         self.combobox_devices.setEnabled(True)
         self.btn_refresh_devices.setEnabled(True)
