@@ -58,7 +58,19 @@ class MacroTab(QVBoxLayout):
         self.btn_tap_enter.setToolButtonStyle(Qt.ToolButtonTextOnly)
         self.btn_tap_enter.clicked.connect(self.on_tap_enter)
 
+        self.btn_save_file = QToolButton()
+        self.btn_save_file.setText(tr("MacroRecorder", "Save to"))
+        self.btn_save_file.setToolButtonStyle(Qt.ToolButtonTextOnly)
+        self.btn_save_file.clicked.connect(self.on_save_file)
+
+        self.btn_load_file = QToolButton()
+        self.btn_load_file.setText(tr("MacroRecorder", "Load from"))
+        self.btn_load_file.setToolButtonStyle(Qt.ToolButtonTextOnly)
+        self.btn_load_file.clicked.connect(self.on_load_file)
+
         layout_buttons = QHBoxLayout()
+        layout_buttons.addWidget(self.btn_save_file)
+        layout_buttons.addWidget(self.btn_load_file)
         layout_buttons.addStretch()
         layout_buttons.addWidget(self.btn_add)
         layout_buttons.addWidget(self.btn_tap_enter)
