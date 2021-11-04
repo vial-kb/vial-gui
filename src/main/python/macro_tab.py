@@ -142,7 +142,7 @@ class MacroTab(QVBoxLayout):
         out.append([act.save() for act in self.actions()])
         out = json.dumps(out)
 
-        # TODO implement showing 'out' in a textbox window, with button to copy to clipboard or load from file
+        # TODO implement showing 'out' in a textbox window, with button to copy to clipboard or save to file
 
         # open Save dialog
         dialog = QFileDialog()
@@ -157,6 +157,8 @@ class MacroTab(QVBoxLayout):
 
     def on_import_macro(self):
 
+        # TODO implement opening a textbox window, with button to paste from clipboard or load from file
+
         # open Open dialog
         dialog = QFileDialog()
         dialog.setDefaultSuffix("vim")
@@ -170,7 +172,7 @@ class MacroTab(QVBoxLayout):
                 macro_load = json.loads(data.decode("utf-8"))[0]
 
                 # ensure a list exists
-                if not isinstance(macro, list):
+                if not isinstance(macro_load, list):
                     return
 
                 # associate action types with tags from the macro json
