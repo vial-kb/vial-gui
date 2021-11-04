@@ -4,7 +4,7 @@ import json
 
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import QPushButton, QGridLayout, QHBoxLayout, QToolButton, QVBoxLayout, \
-    QTabWidget, QWidget, QLabel, QMenu, QScrollArea, QFrame, QFileDialog, QDialog
+    QTabWidget, QWidget, QLabel, QMenu, QScrollArea, QFrame, QFileDialog, QDialog, QMessageBox
 
 from basic_editor import BasicEditor
 from keycodes import Keycode
@@ -59,19 +59,19 @@ class MacroTab(QVBoxLayout):
         self.btn_tap_enter.setToolButtonStyle(Qt.ToolButtonTextOnly)
         self.btn_tap_enter.clicked.connect(self.on_tap_enter)
 
-        self.btn_save_file = QToolButton()
-        self.btn_save_file.setText(tr("MacroRecorder", "Save to"))
-        self.btn_save_file.setToolButtonStyle(Qt.ToolButtonTextOnly)
-        self.btn_save_file.clicked.connect(self.on_save_file)
+        self.btn_export_macro = QToolButton()
+        self.btn_export_macro.setText(tr("MacroRecorder", "Export macro"))
+        self.btn_export_macro.setToolButtonStyle(Qt.ToolButtonTextOnly)
+        self.btn_export_macro.clicked.connect(self.on_export_macro)
 
-        self.btn_load_file = QToolButton()
-        self.btn_load_file.setText(tr("MacroRecorder", "Load from"))
-        self.btn_load_file.setToolButtonStyle(Qt.ToolButtonTextOnly)
-        self.btn_load_file.clicked.connect(self.on_load_file)
+        self.btn_import_macro = QToolButton()
+        self.btn_import_macro.setText(tr("MacroRecorder", "Import macro"))
+        self.btn_import_macro.setToolButtonStyle(Qt.ToolButtonTextOnly)
+        self.btn_import_macro.clicked.connect(self.on_import_macro)
 
         layout_buttons = QHBoxLayout()
-        layout_buttons.addWidget(self.btn_save_file)
-        layout_buttons.addWidget(self.btn_load_file)
+        layout_buttons.addWidget(self.btn_export_macro)
+        layout_buttons.addWidget(self.btn_import_macro)
         layout_buttons.addStretch()
         layout_buttons.addWidget(self.btn_add)
         layout_buttons.addWidget(self.btn_tap_enter)
@@ -135,29 +135,45 @@ class MacroTab(QVBoxLayout):
         self.lines[other].insert(other)
         self.changed.emit()
 
-    def on_save_file(self):
+    def on_export_macro(self):
+
+        # serialize all actions in this tab to a json
+        out = []
+        out.append([act.save() for act in self.actions()])
+        out = json.dumps(out)
+
+        # TODO implement showing 'out' in a textbox window, with button to copy to clipboard or load from file
+
+        # open Save dialog
         dialog = QFileDialog()
         dialog.setDefaultSuffix("vim")
         dialog.setAcceptMode(QFileDialog.AcceptSave)
         dialog.setNameFilters(["Vial macro (*.vim)"])
+
+        #write serialized macro json to file
         if dialog.exec_() == QDialog.Accepted:
             with open(dialog.selectedFiles()[0], "wb") as outf:
-                out = []
-                out.append([act.save() for act in self.actions()])
-                outf.write(json.dumps(out).encode("utf-8"))
-        return
+                outf.write(out.encode("utf-8"))
 
-    def on_load_file(self):
+    def on_import_macro(self):
+
+        # open Open dialog
         dialog = QFileDialog()
         dialog.setDefaultSuffix("vim")
         dialog.setAcceptMode(QFileDialog.AcceptOpen)
         dialog.setNameFilters(["Vial macro (*.vim)"])
+
+        # read serialized macro json from file
         if dialog.exec_() == QDialog.Accepted:
             with open(dialog.selectedFiles()[0], "rb") as inf:
                 data = inf.read()
-                macro = json.loads(data.decode("utf-8"))[0]
+                macro_load = json.loads(data.decode("utf-8"))[0]
+
+                # ensure a list exists
                 if not isinstance(macro, list):
                     return
+
+                # associate action types with tags from the macro json
                 tag_to_action = {
                     "down": ActionDown,
                     "up": ActionUp,
@@ -165,21 +181,24 @@ class MacroTab(QVBoxLayout):
                     "text": ActionText,
                     "delay": ActionDelay,
                 }
-                tag_to_cls = {
+                tag_to_actionUI = {
                     "down": ActionDownUI,
                     "up": ActionUpUI,
                     "tap": ActionTapUI,
                     "text": ActionTextUI,
                     "delay": ActionDelayUI,
                 }
+
+                # clear the actions from this tab
                 self.clear()
-                for act in macro:
+
+                # add each action from the json to this tab
+                for act in macro_load:
                     if act[0] in tag_to_action:
                         obj = tag_to_action[act[0]]()
-                        cls = tag_to_cls[act[0]]
+                        actionUI = tag_to_actionUI[act[0]]
                         obj.restore(act)
-                        self.add_action(cls(self.container, obj))
-        return
+                        self.add_action(actionUI(self.container, obj))
 
     def on_change(self):
         self.changed.emit()
@@ -191,16 +210,16 @@ class MacroTab(QVBoxLayout):
         self.btn_record.hide()
         self.btn_add.hide()
         self.btn_tap_enter.hide()
-        self.btn_save_file.hide()
-        self.btn_load_file.hide()
+        self.btn_export_macro.hide()
+        self.btn_import_macro.hide()
         self.btn_record_stop.show()
 
     def post_record(self):
         self.btn_record.show()
         self.btn_add.show()
         self.btn_tap_enter.show()
-        self.btn_save_file.show()
-        self.btn_load_file.show()
+        self.btn_export_macro.show()
+        self.btn_import_macro.show()
         self.btn_record_stop.hide()
 
     def actions(self):
