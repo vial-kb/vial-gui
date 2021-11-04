@@ -134,6 +134,12 @@ class MacroTab(QVBoxLayout):
         self.lines[other].insert(other)
         self.changed.emit()
 
+    def on_save_file(self):
+        return
+
+    def on_load_file(self):
+        return
+
     def on_change(self):
         self.changed.emit()
 
