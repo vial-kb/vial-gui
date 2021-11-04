@@ -1,15 +1,16 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 import sys
+import json
 
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import QPushButton, QGridLayout, QHBoxLayout, QToolButton, QVBoxLayout, \
-    QTabWidget, QWidget, QLabel, QMenu, QScrollArea, QFrame
+    QTabWidget, QWidget, QLabel, QMenu, QScrollArea, QFrame, QFileDialog, QDialog
 
 from basic_editor import BasicEditor
 from keycodes import Keycode
 from macro_action import ActionText, ActionTap, ActionDown, ActionUp, ActionDelay, SS_TAP_CODE, SS_DOWN_CODE, \
     SS_UP_CODE, SS_DELAY_CODE, SS_QMK_PREFIX
-from macro_action_ui import ActionTextUI, ActionTapUI
+from macro_action_ui import ActionTextUI, ActionDownUI, ActionUpUI, ActionTapUI, ActionDelayUI
 from macro_key import KeyString, KeyDown, KeyUp, KeyTap
 from macro_line import MacroLine
 from macro_optimizer import macro_optimize
@@ -135,9 +136,49 @@ class MacroTab(QVBoxLayout):
         self.changed.emit()
 
     def on_save_file(self):
+        dialog = QFileDialog()
+        dialog.setDefaultSuffix("vim")
+        dialog.setAcceptMode(QFileDialog.AcceptSave)
+        dialog.setNameFilters(["Vial macro (*.vim)"])
+        if dialog.exec_() == QDialog.Accepted:
+            with open(dialog.selectedFiles()[0], "wb") as outf:
+                out = []
+                out.append([act.save() for act in self.actions()])
+                outf.write(json.dumps(out).encode("utf-8"))
         return
 
     def on_load_file(self):
+        dialog = QFileDialog()
+        dialog.setDefaultSuffix("vim")
+        dialog.setAcceptMode(QFileDialog.AcceptOpen)
+        dialog.setNameFilters(["Vial macro (*.vim)"])
+        if dialog.exec_() == QDialog.Accepted:
+            with open(dialog.selectedFiles()[0], "rb") as inf:
+                data = inf.read()
+                macro = json.loads(data.decode("utf-8"))[0]
+                if not isinstance(macro, list):
+                    return
+                tag_to_action = {
+                    "down": ActionDown,
+                    "up": ActionUp,
+                    "tap": ActionTap,
+                    "text": ActionText,
+                    "delay": ActionDelay,
+                }
+                tag_to_cls = {
+                    "down": ActionDownUI,
+                    "up": ActionUpUI,
+                    "tap": ActionTapUI,
+                    "text": ActionTextUI,
+                    "delay": ActionDelayUI,
+                }
+                self.clear()
+                for act in macro:
+                    if act[0] in tag_to_action:
+                        obj = tag_to_action[act[0]]()
+                        cls = tag_to_cls[act[0]]
+                        obj.restore(act)
+                        self.add_action(cls(self.container, obj))
         return
 
     def on_change(self):
@@ -150,12 +191,16 @@ class MacroTab(QVBoxLayout):
         self.btn_record.hide()
         self.btn_add.hide()
         self.btn_tap_enter.hide()
+        self.btn_save_file.hide()
+        self.btn_load_file.hide()
         self.btn_record_stop.show()
 
     def post_record(self):
         self.btn_record.show()
         self.btn_add.show()
         self.btn_tap_enter.show()
+        self.btn_save_file.show()
+        self.btn_load_file.show()
         self.btn_record_stop.hide()
 
     def actions(self):
