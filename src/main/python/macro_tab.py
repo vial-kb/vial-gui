@@ -138,10 +138,11 @@ class MacroTab(QVBoxLayout):
         macro_text = json.dumps(macro_text[0])
 
         textbox = TextboxWindow(macro_text, "vim", "Vial macro")
-        
+
         if textbox.exec():
             macro_text = textbox.getText()
             macro_load = json.loads(macro_text)
+            
             # ensure a list exists
             if not isinstance(macro_load, list):
                 return
@@ -183,16 +184,14 @@ class MacroTab(QVBoxLayout):
         self.btn_record.hide()
         self.btn_add.hide()
         self.btn_tap_enter.hide()
-        self.btn_export_macro.hide()
-        self.btn_import_macro.hide()
+        self.btn_text_window.hide()
         self.btn_record_stop.show()
 
     def post_record(self):
         self.btn_record.show()
         self.btn_add.show()
         self.btn_tap_enter.show()
-        self.btn_export_macro.show()
-        self.btn_import_macro.show()
+        self.btn_text_window.show()
         self.btn_record_stop.hide()
 
     def actions(self):

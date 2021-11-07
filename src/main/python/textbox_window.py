@@ -1,12 +1,9 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
-import time
-
-from PyQt5.QtCore import QCoreApplication, Qt
+from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QDialog, QDialogButtonBox, \
     QPlainTextEdit, QToolButton, QFileDialog, QWidget
 
 from util import tr
-
 
 class TextboxWindow(QDialog):
 
