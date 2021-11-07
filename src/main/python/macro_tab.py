@@ -141,8 +141,10 @@ class MacroTab(QVBoxLayout):
 
         if textbox.exec():
             macro_text = textbox.getText()
+            if len(macro_text) < 6:
+                macro_text = "[]"
             macro_load = json.loads(macro_text)
-            
+
             # ensure a list exists
             if not isinstance(macro_load, list):
                 return
