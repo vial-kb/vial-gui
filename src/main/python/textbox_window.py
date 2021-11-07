@@ -18,6 +18,8 @@ class TextboxWindow(QDialog):
         self.file_type = file_type
         self.encoding = encoding
 
+        self.control_held = False
+
         self.setWindowFlags(self.windowFlags() & ~Qt.WindowContextHelpButtonHint)
 
         vbox = QVBoxLayout()
@@ -106,11 +108,19 @@ class TextboxWindow(QDialog):
         if ev.key() == Qt.Key_Escape:
             self.reject()
 
-        if ev.key() == Qt.Key_I:
-            self.on_import()
+        if ev.key() == Qt.Key_Control:
+            self.control_held = True
 
-        if ev.key() == Qt.Key_O:
-            self.on_export()
+        if self.control_held:
+            if ev.key() == Qt.Key_I:
+                self.on_import()
 
-        if ev.key() == Qt.Key_S:
-            self.on_apply()
+            if ev.key() == Qt.Key_O:
+                self.on_export()
+
+            if ev.key() == Qt.Key_S:
+                self.on_apply()
+
+    def keyReleaseEvent(self, ev):
+        if ev.key() == Qt.Key_Control:
+            self.control_held = False
