@@ -17,6 +17,7 @@ from macro_optimizer import macro_optimize
 from unlocker import Unlocker
 from util import tr
 from vial_device import VialKeyboard
+from macro_text_window import MacroTextWindow
 
 
 class MacroTab(QVBoxLayout):
@@ -69,7 +70,13 @@ class MacroTab(QVBoxLayout):
         self.btn_import_macro.setToolButtonStyle(Qt.ToolButtonTextOnly)
         self.btn_import_macro.clicked.connect(self.on_import_macro)
 
+        self.btn_text_window = QToolButton()
+        self.btn_text_window.setText(tr("MacroRecorder", "Edit / Copy / Paste"))
+        self.btn_text_window.setToolButtonStyle(Qt.ToolButtonTextOnly)
+        self.btn_text_window.clicked.connect(self.on_text_window)
+
         layout_buttons = QHBoxLayout()
+        layout_buttons.addWidget(self.btn_text_window)
         layout_buttons.addWidget(self.btn_export_macro)
         layout_buttons.addWidget(self.btn_import_macro)
         layout_buttons.addStretch()
@@ -134,6 +141,15 @@ class MacroTab(QVBoxLayout):
         self.lines[index].insert(index)
         self.lines[other].insert(other)
         self.changed.emit()
+
+    def on_text_window(self):
+
+        # serialize all actions in this tab to a json
+        out = []
+        out.append([act.save() for act in self.actions()])
+        out = json.dumps(out)
+
+        MacroTextWindow.show(out)
 
     def on_export_macro(self):
 
