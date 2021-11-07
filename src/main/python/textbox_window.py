@@ -61,17 +61,20 @@ class TextboxWindow(QDialog):
         self.btn_import.setToolButtonStyle(Qt.ToolButtonTextOnly)
         self.btn_import.clicked.connect(self.on_import)
 
+        top_buttons = QHBoxLayout()
+        top_buttons.addWidget(self.btn_import)
+        top_buttons.addWidget(self.btn_export)
+        top_buttons.addStretch()
+        top_buttons.addWidget(self.btn_select_all)
+
         bottom_buttons = QHBoxLayout()
-        bottom_buttons.addWidget(self.btn_import)
-        bottom_buttons.addWidget(self.btn_export)
-        bottom_buttons.addStretch()
-        bottom_buttons.addWidget(self.btn_select_all)
         bottom_buttons.addWidget(self.btn_copy)
         bottom_buttons.addWidget(self.btn_paste)
         bottom_buttons.addStretch()
         bottom_buttons.addWidget(self.btn_save_exit)
         bottom_buttons.addWidget(self.btn_cancel)
 
+        vbox.addLayout(top_buttons)
         vbox.addWidget(self.macrotext, stretch=1)
         vbox.addLayout(bottom_buttons)
 
