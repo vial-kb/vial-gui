@@ -112,14 +112,11 @@ class TextboxWindow(QDialog):
             self.control_held = True
 
         if self.control_held:
-            if ev.key() == Qt.Key_I:
+            if ev.key() == Qt.Key_O:
                 self.on_import()
 
-            if ev.key() == Qt.Key_O:
-                self.on_export()
-
             if ev.key() == Qt.Key_S:
-                self.on_apply()
+                self.on_export()
 
     def keyReleaseEvent(self, ev):
         if ev.key() == Qt.Key_Control:
