@@ -31,6 +31,16 @@ class TextboxWindow(QDialog):
         self.btn_save_exit.setToolButtonStyle(Qt.ToolButtonTextOnly)
         self.btn_save_exit.clicked.connect(self.on_save_exit)
 
+        self.btn_cancel = QToolButton()
+        self.btn_cancel.setText(tr("TextboxWindow", "Cancel"))
+        self.btn_cancel.setToolButtonStyle(Qt.ToolButtonTextOnly)
+        self.btn_cancel.clicked.connect(self.on_cancel)
+
+        self.btn_select_all = QToolButton()
+        self.btn_select_all.setText(tr("TextboxWindow", "Select All"))
+        self.btn_select_all.setToolButtonStyle(Qt.ToolButtonTextOnly)
+        self.btn_select_all.clicked.connect(self.on_select_all)
+
         self.btn_copy = QToolButton()
         self.btn_copy.setText(tr("TextboxWindow", "Copy"))
         self.btn_copy.setToolButtonStyle(Qt.ToolButtonTextOnly)
@@ -55,9 +65,12 @@ class TextboxWindow(QDialog):
         bottom_buttons.addWidget(self.btn_import)
         bottom_buttons.addWidget(self.btn_export)
         bottom_buttons.addStretch()
+        bottom_buttons.addWidget(self.btn_select_all)
         bottom_buttons.addWidget(self.btn_copy)
         bottom_buttons.addWidget(self.btn_paste)
+        bottom_buttons.addStretch()
         bottom_buttons.addWidget(self.btn_save_exit)
+        bottom_buttons.addWidget(self.btn_cancel)
 
         vbox.addWidget(self.macrotext, stretch=1)
         vbox.addLayout(bottom_buttons)
@@ -65,16 +78,18 @@ class TextboxWindow(QDialog):
         self.setLayout(vbox)
         self.setWindowFlags(self.windowFlags())
 
-    @classmethod
-    def show(cls, text="", file_extension="txt", file_type="Text file", encoding="utf-8"):
-
-        dlg = cls(text, file_extension, file_type, encoding)
-        return bool(dlg.exec_())
-
     def on_save_exit(self):
         self.accept()
         return
-        
+
+    def on_cancel(self):
+        self.reject()
+        return
+
+    def on_select_all(self):
+        self.macrotext.selectAll()
+        return
+
     def on_copy(self):
         self.macrotext.copy()
         return

@@ -137,8 +137,8 @@ class MacroTab(QVBoxLayout):
         macro_text.append([act.save() for act in self.actions()])
         macro_text = json.dumps(macro_text[0])
 
-        textbox = TextboxWindow(macro_text, "vim", "Vial macro", "utf-8")
-
+        textbox = TextboxWindow(macro_text, "vim", "Vial macro")
+        
         if textbox.exec():
             macro_text = textbox.getText()
             macro_load = json.loads(macro_text)
