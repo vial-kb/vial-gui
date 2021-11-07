@@ -17,7 +17,7 @@ from macro_optimizer import macro_optimize
 from unlocker import Unlocker
 from util import tr
 from vial_device import VialKeyboard
-from macro_text_window import MacroTextWindow
+from textbox_window import TextboxWindow
 
 
 class MacroTab(QVBoxLayout):
@@ -147,16 +147,16 @@ class MacroTab(QVBoxLayout):
         # serialize all actions in this tab to a json
         out = []
         out.append([act.save() for act in self.actions()])
-        out = json.dumps(out)
+        out = json.dumps(out[0])
 
-        MacroTextWindow.show(out)
+        TextboxWindow.show(out, "vim", "Vial macro", "utf-8")
 
     def on_export_macro(self):
 
         # serialize all actions in this tab to a json
         out = []
         out.append([act.save() for act in self.actions()])
-        out = json.dumps(out)
+        out = json.dumps(out[0])
 
         # TODO implement showing 'out' in a textbox window, with button to copy to clipboard or save to file
 
@@ -185,7 +185,7 @@ class MacroTab(QVBoxLayout):
         if dialog.exec_() == QDialog.Accepted:
             with open(dialog.selectedFiles()[0], "rb") as inf:
                 data = inf.read()
-                macro_load = json.loads(data.decode("utf-8"))[0]
+                macro_load = json.loads(data.decode("utf-8"))
 
                 # ensure a list exists
                 if not isinstance(macro_load, list):
