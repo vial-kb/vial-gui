@@ -60,25 +60,13 @@ class MacroTab(QVBoxLayout):
         self.btn_tap_enter.setToolButtonStyle(Qt.ToolButtonTextOnly)
         self.btn_tap_enter.clicked.connect(self.on_tap_enter)
 
-        self.btn_export_macro = QToolButton()
-        self.btn_export_macro.setText(tr("MacroRecorder", "Export macro"))
-        self.btn_export_macro.setToolButtonStyle(Qt.ToolButtonTextOnly)
-        self.btn_export_macro.clicked.connect(self.on_export_macro)
-
-        self.btn_import_macro = QToolButton()
-        self.btn_import_macro.setText(tr("MacroRecorder", "Import macro"))
-        self.btn_import_macro.setToolButtonStyle(Qt.ToolButtonTextOnly)
-        self.btn_import_macro.clicked.connect(self.on_import_macro)
-
         self.btn_text_window = QToolButton()
-        self.btn_text_window.setText(tr("MacroRecorder", "Edit / Copy / Paste"))
+        self.btn_text_window.setText(tr("MacroRecorder", "Open Text Editor..."))
         self.btn_text_window.setToolButtonStyle(Qt.ToolButtonTextOnly)
         self.btn_text_window.clicked.connect(self.on_text_window)
 
         layout_buttons = QHBoxLayout()
         layout_buttons.addWidget(self.btn_text_window)
-        layout_buttons.addWidget(self.btn_export_macro)
-        layout_buttons.addWidget(self.btn_import_macro)
         layout_buttons.addStretch()
         layout_buttons.addWidget(self.btn_add)
         layout_buttons.addWidget(self.btn_tap_enter)
@@ -145,78 +133,45 @@ class MacroTab(QVBoxLayout):
     def on_text_window(self):
 
         # serialize all actions in this tab to a json
-        out = []
-        out.append([act.save() for act in self.actions()])
-        out = json.dumps(out[0])
+        macro_text = []
+        macro_text.append([act.save() for act in self.actions()])
+        macro_text = json.dumps(macro_text[0])
 
-        TextboxWindow.show(out, "vim", "Vial macro", "utf-8")
+        textbox = TextboxWindow(macro_text, "vim", "Vial macro", "utf-8")
 
-    def on_export_macro(self):
+        if textbox.exec():
+            macro_text = textbox.getText()
+            macro_load = json.loads(macro_text)
+            # ensure a list exists
+            if not isinstance(macro_load, list):
+                return
 
-        # serialize all actions in this tab to a json
-        out = []
-        out.append([act.save() for act in self.actions()])
-        out = json.dumps(out[0])
+            # associate action types with tags from the macro json
+            tag_to_action = {
+                "down": ActionDown,
+                "up": ActionUp,
+                "tap": ActionTap,
+                "text": ActionText,
+                "delay": ActionDelay,
+            }
+            tag_to_actionUI = {
+                "down": ActionDownUI,
+                "up": ActionUpUI,
+                "tap": ActionTapUI,
+                "text": ActionTextUI,
+                "delay": ActionDelayUI,
+            }
 
-        # TODO implement showing 'out' in a textbox window, with button to copy to clipboard or save to file
+            # clear the actions from this tab
+            self.clear()
 
-        # open Save dialog
-        dialog = QFileDialog()
-        dialog.setDefaultSuffix("vim")
-        dialog.setAcceptMode(QFileDialog.AcceptSave)
-        dialog.setNameFilters(["Vial macro (*.vim)"])
-
-        #write serialized macro json to file
-        if dialog.exec_() == QDialog.Accepted:
-            with open(dialog.selectedFiles()[0], "wb") as outf:
-                outf.write(out.encode("utf-8"))
-
-    def on_import_macro(self):
-
-        # TODO implement opening a textbox window, with button to paste from clipboard or load from file
-
-        # open Open dialog
-        dialog = QFileDialog()
-        dialog.setDefaultSuffix("vim")
-        dialog.setAcceptMode(QFileDialog.AcceptOpen)
-        dialog.setNameFilters(["Vial macro (*.vim)"])
-
-        # read serialized macro json from file
-        if dialog.exec_() == QDialog.Accepted:
-            with open(dialog.selectedFiles()[0], "rb") as inf:
-                data = inf.read()
-                macro_load = json.loads(data.decode("utf-8"))
-
-                # ensure a list exists
-                if not isinstance(macro_load, list):
-                    return
-
-                # associate action types with tags from the macro json
-                tag_to_action = {
-                    "down": ActionDown,
-                    "up": ActionUp,
-                    "tap": ActionTap,
-                    "text": ActionText,
-                    "delay": ActionDelay,
-                }
-                tag_to_actionUI = {
-                    "down": ActionDownUI,
-                    "up": ActionUpUI,
-                    "tap": ActionTapUI,
-                    "text": ActionTextUI,
-                    "delay": ActionDelayUI,
-                }
-
-                # clear the actions from this tab
-                self.clear()
-
-                # add each action from the json to this tab
-                for act in macro_load:
-                    if act[0] in tag_to_action:
-                        obj = tag_to_action[act[0]]()
-                        actionUI = tag_to_actionUI[act[0]]
-                        obj.restore(act)
-                        self.add_action(actionUI(self.container, obj))
+            # add each action from the json to this tab
+            for act in macro_load:
+                if act[0] in tag_to_action:
+                    obj = tag_to_action[act[0]]()
+                    actionUI = tag_to_actionUI[act[0]]
+                    obj.restore(act)
+                    self.add_action(actionUI(self.container, obj))
 
     def on_change(self):
         self.changed.emit()

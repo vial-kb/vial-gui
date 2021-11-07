@@ -13,7 +13,7 @@ class TextboxWindow(QDialog):
     def __init__(self, text="", file_extension="txt", file_type="Text file", encoding="utf-8"):
         super().__init__()
 
-        text = text
+        self.text = text
         self.file_extension = file_extension
         self.file_type = file_type
         self.encoding = encoding
@@ -72,6 +72,7 @@ class TextboxWindow(QDialog):
         return bool(dlg.exec_())
 
     def on_save_exit(self):
+        self.accept()
         return
         
     def on_copy(self):
@@ -88,7 +89,6 @@ class TextboxWindow(QDialog):
         dialog.setAcceptMode(QFileDialog.AcceptSave)
         dialog.setNameFilters(["{} (*.{})".format(self.file_type, self.file_extension)])
 
-        #write serialized macro json to file
         if dialog.exec_() == QDialog.Accepted:
             with open(dialog.selectedFiles()[0], "wb") as outf:
                 outf.write(self.macrotext.toPlainText().encode(self.encoding))
@@ -100,8 +100,10 @@ class TextboxWindow(QDialog):
         dialog.setAcceptMode(QFileDialog.AcceptOpen)
         dialog.setNameFilters(["{} (*.{})".format(self.file_type, self.file_extension)])
 
-        # read serialized macro json from file
         if dialog.exec_() == QDialog.Accepted:
             with open(dialog.selectedFiles()[0], "rb") as inf:
                 self.macrotext.setPlainText(inf.read().decode(self.encoding))
         return
+
+    def getText(self):
+        return self.macrotext.toPlainText()
