@@ -5,22 +5,13 @@ from PyQt5.QtWidgets import QPushButton, QHBoxLayout, QTabWidget, QWidget, QLabe
 
 from basic_editor import BasicEditor
 from macro_action import ActionText, ActionTap, ActionDown, ActionUp, ActionDelay
-from macro_action_ui import ActionTextUI, ActionUpUI, ActionDownUI, ActionTapUI, ActionDelayUI
+from macro_action_ui import ui_action
 from macro_key import KeyString, KeyDown, KeyUp, KeyTap
 from macro_optimizer import macro_optimize
 from macro_tab import MacroTab
 from unlocker import Unlocker
 from util import tr
 from vial_device import VialKeyboard
-
-
-ui_action = {
-    ActionText: ActionTextUI,
-    ActionUp: ActionUpUI,
-    ActionDown: ActionDownUI,
-    ActionTap: ActionTapUI,
-    ActionDelay: ActionDelayUI,
-}
 
 
 class MacroRecorder(BasicEditor):

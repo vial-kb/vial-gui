@@ -8,13 +8,10 @@ from PyQt5.QtWidgets import QPushButton, QGridLayout, QHBoxLayout, QToolButton, 
 
 from basic_editor import BasicEditor
 from keycodes import Keycode
-from macro_action import ActionText, ActionTap, ActionDown, ActionUp, ActionDelay, SS_TAP_CODE, SS_DOWN_CODE, \
-    SS_UP_CODE, SS_DELAY_CODE, SS_QMK_PREFIX
-from macro_action_ui import ActionTextUI, ActionDownUI, ActionUpUI, ActionTapUI, ActionDelayUI
-from macro_key import KeyString, KeyDown, KeyUp, KeyTap
+from macro_action import ActionTap
+from macro_action_ui import ActionTextUI, ActionTapUI, ui_action, tag_to_action
 from macro_line import MacroLine
 from macro_optimizer import macro_optimize
-from unlocker import Unlocker
 from util import tr
 from vial_device import VialKeyboard
 from textbox_window import TextboxWindow
@@ -149,22 +146,6 @@ class MacroTab(QVBoxLayout):
             if not isinstance(macro_load, list):
                 return
 
-            # associate action types with tags from the macro json
-            tag_to_action = {
-                "down": ActionDown,
-                "up": ActionUp,
-                "tap": ActionTap,
-                "text": ActionText,
-                "delay": ActionDelay,
-            }
-            tag_to_actionUI = {
-                "down": ActionDownUI,
-                "up": ActionUpUI,
-                "tap": ActionTapUI,
-                "text": ActionTextUI,
-                "delay": ActionDelayUI,
-            }
-
             # clear the actions from this tab
             self.clear()
 
@@ -172,7 +153,7 @@ class MacroTab(QVBoxLayout):
             for act in macro_load:
                 if act[0] in tag_to_action:
                     obj = tag_to_action[act[0]]()
-                    actionUI = tag_to_actionUI[act[0]]
+                    actionUI = ui_action[type(obj)]
                     obj.restore(act)
                     self.add_action(actionUI(self.container, obj))
 
