@@ -8,6 +8,7 @@ from keycodes import RESET_KEYCODE, Keycode
 from kle_serial import Serial as KleSerial
 from macro_action import SS_TAP_CODE, SS_DOWN_CODE, SS_UP_CODE, ActionText, ActionTap, ActionDown, ActionUp, \
     SS_QMK_PREFIX, SS_DELAY_CODE, ActionDelay
+from macro_action_ui import tag_to_action
 from unlocker import Unlocker
 from util import MSG_LEN, hid_send, chunks
 
@@ -684,13 +685,7 @@ class Keyboard:
     def restore_macros(self, macros):
         if not isinstance(macros, list):
             return
-        tag_to_action = {
-            "down": ActionDown,
-            "up": ActionUp,
-            "tap": ActionTap,
-            "text": ActionText,
-            "delay": ActionDelay,
-        }
+        
         full_macro = []
         for macro in macros:
             actions = []
