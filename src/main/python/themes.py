@@ -104,6 +104,26 @@ themes = [
         (QPalette.Disabled, QPalette.Text): "#d9d9d9",
         (QPalette.Disabled, QPalette.Light): "#fabcad",
     }),
+    ("Dracula", {
+        QPalette.Window: "#282a36",
+        QPalette.WindowText: "#f8f8f2",
+        QPalette.Base: "#282a36",
+        QPalette.AlternateBase: "#44475a",
+        QPalette.ToolTipBase: "#6272a4",
+        QPalette.ToolTipText: "#f8f8f2",
+        QPalette.Text: "#f8f8f2",
+        QPalette.Button: "#282a36",
+        QPalette.ButtonText: "#f8f8f2",
+        QPalette.BrightText: "#8be9fd",
+        QPalette.Link: "#8be9fd",
+        QPalette.Highlight: "#8be9fd",
+        QPalette.HighlightedText: "#f8f8f2",
+        (QPalette.Active, QPalette.Button): "#282a36",
+        (QPalette.Disabled, QPalette.ButtonText): "#f8f8f2",
+        (QPalette.Disabled, QPalette.WindowText): "#f8f8f2",
+        (QPalette.Disabled, QPalette.Text): "#f8f8f2",
+        (QPalette.Disabled, QPalette.Light): "#8be9fd",
+    }),
 ]
 
 palettes = dict()
