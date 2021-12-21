@@ -8,6 +8,7 @@ class FakeKeyboard:
     layers = 4
     macro_count = 16
     custom_keycodes = None
+    tap_dance_count = 0
 
 
 class TestKeycode(unittest.TestCase):

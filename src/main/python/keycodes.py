@@ -416,6 +416,32 @@ KEYCODES_QUANTUM = [
       "Set the master half of a split keyboard as the left hand (for EE_HANDS)", alias=["EH_LEFT"]),
     K(23810, "MAGIC_EE_HANDS_RIGHT", "EEH\nRight",
       "Set the master half of a split keyboard as the right hand (for EE_HANDS)", alias=["EH_RGHT"]),
+
+    K(0x5C1D, "AU_ON", "Audio\nON", "Audio mode on"),
+    K(0x5C1E, "AU_OFF", "Audio\nOFF", "Audio mode off"),
+    K(0x5C1F, "AU_TOG", "Audio\nToggle", "Toggles Audio mode"),
+    K(0x5C20, "CLICKY_TOGGLE", "Clicky\nToggle", "Toggles Audio clicky mode", alias=["CK_TOGG"]),
+    K(0x5C23, "CLICKY_UP", "Clicky\nUp", "Increases frequency of the clicks", alias=["CK_UP"]),
+    K(0x5C24, "CLICKY_DOWN", "Clicky\nDown", "Decreases frequency of the clicks", alias=["CK_DOWN"]),
+    K(0x5C25, "CLICKY_RESET", "Clicky\nReset", "Resets frequency to default", alias=["CK_RST"]),
+    K(0x5C26, "MU_ON", "Music\nOn", "Turns on Music Mode"),
+    K(0x5C27, "MU_OFF", "Music\nOff", "Turns off Music Mode"),
+    K(0x5C28, "MU_TOG", "Music\nToggle", "Toggles Music Mode"),
+    K(0x5C29, "MU_MOD", "Music\nCycle", "Cycles through the music modes"),
+
+    K(0x5CE6, "HPT_ON", "Haptic\nOn", "Turn haptic feedback on"),
+    K(0x5CE7, "HPT_OFF", "Haptic\nOff", "Turn haptic feedback off"),
+    K(0x5CE8, "HPT_TOG", "Haptic\nToggle", "Toggle haptic feedback on/off"),
+    K(0x5CE9, "HPT_RST", "Haptic\nReset", "Reset haptic feedback config to default"),
+    K(0x5CEA, "HPT_FBK", "Haptic\nFeed\nback", "Toggle feedback to occur on keypress, release or both"),
+    K(0x5CEB, "HPT_BUZ", "Haptic\nBuzz", "Toggle solenoid buzz on/off"),
+    K(0x5CEC, "HPT_MODI", "Haptic\nNext", "Go to next DRV2605L waveform"),
+    K(0x5CED, "HPT_MODD", "Haptic\nPrev", "Go to previous DRV2605L waveform"),
+    K(0x5CEE, "HPT_CONT", "Haptic\nCont.", "Toggle continuous haptic mode on/off"),
+    K(0x5CEF, "HPT_CONI", "Haptic\n+", "Increase DRV2605L continous haptic strength"),
+    K(0x5CF0, "HPT_COND", "Haptic\n-", "Decrease DRV2605L continous haptic strength"),
+    K(0x5CF1, "HPT_DWLI", "Haptic\nDwell+", "Increase Solenoid dwell time"),
+    K(0x5CF2, "HPT_DWLD", "Haptic\nDwell-", "Decrease Solenoid dwell time"),
 ]
 
 KEYCODES_BACKLIGHT = [
@@ -496,6 +522,8 @@ KEYCODES_MEDIA = [
     K(168, "KC_MUTE", "Mute", "Mute Audio", alias=["KC_AUDIO_MUTE"]),
     K(170, "KC_VOLD", "Vol -", "Volume Down", alias=["KC_AUDIO_VOL_DOWN"]),
     K(169, "KC_VOLU", "Vol +", "Volume Up", alias=["KC_AUDIO_VOL_UP"]),
+    K(129, "KC__VOLDOWN", "Vol -\nAlt", "Volume Down Alternate"),
+    K(128, "KC__VOLUP", "Vol +\nAlt", "Volume Up Alternate"),
     K(173, "KC_MSTP", "Media\nStop", alias=["KC_MEDIA_STOP"]),
     K(174, "KC_MPLY", "Media\nPlay", "Play/Pause", alias=["KC_MEDIA_PLAY_PAUSE"]),
     K(188, "KC_MRWD", "Prev\nTrack\n(macOS)", "Previous Track / Rewind (macOS)", alias=["KC_MEDIA_REWIND"]),
@@ -524,6 +552,8 @@ KEYCODES_MEDIA = [
     K(132, "KC_LSCR", "Locking\nScroll", "Locking Scroll Lock", alias=["KC_LOCKING_SCROLL"]),
 ]
 
+KEYCODES_TAP_DANCE = []
+
 KEYCODES_USER = []
 
 KEYCODES_MACRO = []
@@ -544,8 +574,8 @@ def recreate_keycodes():
 
     KEYCODES.clear()
     KEYCODES.extend(KEYCODES_SPECIAL + KEYCODES_BASIC + KEYCODES_SHIFTED + KEYCODES_ISO + KEYCODES_LAYERS +
-                    KEYCODES_QUANTUM + KEYCODES_BACKLIGHT + KEYCODES_MEDIA + KEYCODES_MACRO + KEYCODES_USER +
-                    KEYCODES_HIDDEN)
+                    KEYCODES_QUANTUM + KEYCODES_BACKLIGHT + KEYCODES_MEDIA + KEYCODES_TAP_DANCE + KEYCODES_MACRO +
+                    KEYCODES_USER + KEYCODES_HIDDEN)
 
 
 def create_user_keycodes():
@@ -607,6 +637,11 @@ def recreate_keyboard_keycodes(keyboard):
     for x in range(keyboard.macro_count):
         lbl = "M{}".format(x)
         KEYCODES_MACRO.append(Keycode(0x5F12 + x, lbl, lbl))
+
+    KEYCODES_TAP_DANCE.clear()
+    for x in range(keyboard.tap_dance_count):
+        lbl = "TD({})".format(x)
+        KEYCODES_TAP_DANCE.append(Keycode(QK_TAP_DANCE | x, lbl, lbl))
 
     # Check if custom keycodes are defined in keyboard, and if so add them to user keycodes
     if keyboard.custom_keycodes is not None and len(keyboard.custom_keycodes) > 0:

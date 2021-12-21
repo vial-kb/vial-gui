@@ -85,7 +85,7 @@ def RCS_T(kc): return MT(MOD_RCTL | MOD_RSFT, kc)
 functions = {
     "LCTL": LCTL, "LSFT": LSFT, "LALT": LALT, "LGUI": LGUI, "LOPT": LALT, "LCMD": LGUI, "LWIN": LGUI,
     "RCTL": RCTL, "RSFT": RSFT, "RALT": RALT, "RGUI": RGUI, "ALGR": RALT, "ROPT": RALT, "RCMD": RGUI, "RWIN": RGUI,
-    "HYPR": HYPR, "MEH": MEH, "LCAG": LCAG, "SGUI": SGUI, "SCMD": SGUI, "SWIN": SGUI,
+    "HYPR": HYPR, "MEH": MEH, "LCAG": LCAG, "SGUI": SGUI, "SCMD": SGUI, "SWIN": SGUI, "LSG": SGUI,
     "C_S": C_S,
     "LCA": LCA, "LSA": LSA, "RSA": RSA, "RCS": RCS, "SAGR": RSA,
     "C": LCTL, "S": LSFT, "A": LALT, "G": LGUI,
@@ -97,6 +97,7 @@ functions = {
     "GUI_T": LGUI_T, "CMD_T": LGUI_T, "WIN_T": LGUI_T,
     "C_S_T": C_S_T, "MEH_T": MEH_T,
     "LCAG_T": LCAG_T, "RCAG_T": RCAG_T, "HYPR_T": HYPR_T, "SGUI_T": SGUI_T, "SCMD_T": SGUI_T, "SWIN_T": SGUI_T,
+    "LSG_T": SGUI_T,
     "LCA_T": LCA_T, "LSA_T": LSA_T, "RSA_T": RSA_T, "RCS_T": RCS_T, "SAGR_T": RSA_T, "ALL_T": HYPR_T,
     "TD": TD,
 }

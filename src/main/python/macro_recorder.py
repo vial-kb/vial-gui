@@ -5,22 +5,13 @@ from PyQt5.QtWidgets import QPushButton, QHBoxLayout, QTabWidget, QWidget, QLabe
 
 from basic_editor import BasicEditor
 from macro_action import ActionText, ActionTap, ActionDown, ActionUp, ActionDelay
-from macro_action_ui import ActionTextUI, ActionUpUI, ActionDownUI, ActionTapUI, ActionDelayUI
+from macro_action_ui import ui_action
 from macro_key import KeyString, KeyDown, KeyUp, KeyTap
 from macro_optimizer import macro_optimize
 from macro_tab import MacroTab
 from unlocker import Unlocker
 from util import tr
 from vial_device import VialKeyboard
-
-
-ui_action = {
-    ActionText: ActionTextUI,
-    ActionUp: ActionUpUI,
-    ActionDown: ActionDownUI,
-    ActionTap: ActionTapUI,
-    ActionDelay: ActionDelayUI,
-}
 
 
 class MacroRecorder(BasicEditor):
@@ -90,8 +81,8 @@ class MacroRecorder(BasicEditor):
         self.keyboard = self.device.keyboard
 
         # only show the number of macro editors that keyboard supports
-        for x in range(self.tabs.count()):
-            self.tabs.removeTab(x)
+        while self.tabs.count() > 0:
+            self.tabs.removeTab(0)
         for x, w in enumerate(self.macro_tab_w[:self.keyboard.macro_count]):
             self.tabs.addTab(w, "")
 
@@ -181,6 +172,7 @@ class MacroRecorder(BasicEditor):
     def on_revert(self):
         self.keyboard.reload_macros()
         self.deserialize(self.keyboard.macro)
+        self.on_change()
 
     def on_save(self):
         Unlocker.unlock(self.device.keyboard)

@@ -1,8 +1,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 import json
 
-from PyQt5.QtGui import QPalette
-from PyQt5.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QMessageBox, QApplication
+from PyQt5.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QMessageBox
 from PyQt5.QtCore import Qt
 
 from any_keycode_dialog import AnyKeycodeDialog
@@ -12,7 +11,7 @@ from keycodes import recreate_keyboard_keycodes, Keycode
 from keymaps import KEYMAPS
 from square_button import SquareButton
 from tabbed_keycodes import TabbedKeycodes
-from util import tr
+from util import tr, KeycodeDisplay
 from vial_device import VialKeyboard
 
 
@@ -24,12 +23,14 @@ class KeymapEditor(BasicEditor):
         self.layout_editor = layout_editor
 
         self.layout_layers = QHBoxLayout()
+        self.layout_size = QVBoxLayout()
         layer_label = QLabel(tr("KeymapEditor", "Layer"))
 
         layout_labels_container = QHBoxLayout()
         layout_labels_container.addWidget(layer_label)
         layout_labels_container.addLayout(self.layout_layers)
         layout_labels_container.addStretch()
+        layout_labels_container.addLayout(self.layout_size)
 
         # contains the actual keyboard
         self.container = KeyboardWidget(layout_editor)
@@ -46,8 +47,6 @@ class KeymapEditor(BasicEditor):
 
         layout_editor.changed.connect(self.on_layout_changed)
 
-        self.keymap_override = KEYMAPS[0][1]
-
         self.container.anykey.connect(self.on_any_keycode)
 
         self.tabbed_keycodes = TabbedKeycodes()
@@ -58,6 +57,7 @@ class KeymapEditor(BasicEditor):
         self.addWidget(self.tabbed_keycodes)
 
         self.device = None
+        KeycodeDisplay.notify_keymap_override(self)
 
     def on_container_clicked(self):
         """ Called when a mouse click event is bubbled up to the editor's container """
@@ -83,6 +83,20 @@ class KeymapEditor(BasicEditor):
             btn.clicked.connect(lambda state, idx=x: self.switch_layer(idx))
             self.layout_layers.addWidget(btn)
             self.layer_buttons.append(btn)
+        for x in range(0,2):
+            btn = SquareButton("-") if x else SquareButton("+")
+            btn.setFocusPolicy(Qt.NoFocus)
+            btn.setCheckable(False)
+            btn.clicked.connect(lambda state, idx=x: self.adjust_size(idx))
+            self.layout_size.addWidget(btn)
+            self.layer_buttons.append(btn)
+
+    def adjust_size(self, minus):
+        if minus:
+            self.container.set_scale(self.container.get_scale() - 0.1)
+        else:
+            self.container.set_scale(self.container.get_scale() + 0.1)
+        self.refresh_layer_display()
 
     def rebuild(self, device):
         super().rebuild(device)
@@ -99,6 +113,7 @@ class KeymapEditor(BasicEditor):
 
             recreate_keyboard_keycodes(self.keyboard)
             self.tabbed_keycodes.recreate_keycode_buttons()
+            TabbedKeycodes.tray.recreate_keycode_buttons()
             self.refresh_layer_display()
         self.container.setEnabled(self.valid())
 
@@ -119,29 +134,15 @@ class KeymapEditor(BasicEditor):
         self.keyboard.restore_layout(data)
         self.refresh_layer_display()
 
-    def set_keymap_override(self, override):
-        self.keymap_override = override
-        self.refresh_layer_display()
-        self.tabbed_keycodes.set_keymap_override(override)
-
     def on_any_keycode(self):
         if self.container.active_key is None:
             return
         current_code = self.code_for_widget(self.container.active_key)
+        if self.container.active_mask:
+            current_code &= 0xFF
         dlg = AnyKeycodeDialog(current_code)
         if dlg.exec_() and dlg.value >= 0:
             self.on_keycode_changed(dlg.value)
-
-    def code_is_overriden(self, code):
-        """ Check whether a country-specific keymap overrides a code """
-        key = Keycode.find_outer_keycode(code)
-        return key is not None and key.qmk_id in self.keymap_override
-
-    def get_label(self, code):
-        """ Get label for a specific keycode """
-        if self.code_is_overriden(code):
-            return self.keymap_override[Keycode.find_outer_keycode(code).qmk_id]
-        return Keycode.label(code)
 
     def code_for_widget(self, widget):
         if widget.desc.row is not None:
@@ -161,20 +162,7 @@ class KeymapEditor(BasicEditor):
 
         for widget in self.container.widgets:
             code = self.code_for_widget(widget)
-            text = self.get_label(code)
-            tooltip = Keycode.tooltip(code)
-            mask = Keycode.is_mask(code)
-            mask_text = self.get_label(code & 0xFF)
-            if mask:
-                text = text.split("\n")[0]
-            widget.masked = mask
-            widget.setText(text)
-            widget.setMaskText(mask_text)
-            widget.setToolTip(tooltip)
-            if self.code_is_overriden(code):
-                widget.setColor(QApplication.palette().color(QPalette.Link))
-            else:
-                widget.setColor(None)
+            KeycodeDisplay.display_keycode(widget, code)
         self.container.update()
         self.container.updateGeometry()
 
@@ -185,6 +173,9 @@ class KeymapEditor(BasicEditor):
 
     def set_key(self, keycode):
         """ Change currently selected key to provided keycode """
+
+        if self.container.active_key is None:
+            return
 
         if isinstance(self.container.active_key, EncoderWidget):
             self.set_key_encoder(keycode)
@@ -229,3 +220,6 @@ class KeymapEditor(BasicEditor):
 
         self.refresh_layer_display()
         self.keyboard.set_layout_options(self.layout_editor.pack())
+
+    def on_keymap_override(self):
+        self.refresh_layer_display()

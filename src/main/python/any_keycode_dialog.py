@@ -31,6 +31,7 @@ class AnyKeycodeDialog(QDialog):
         if isinstance(ser, int):
             ser = hex(ser)
         self.txt_entry.setText(ser)
+        self.txt_entry.selectAll()
         self.on_change()
 
     def on_change(self):

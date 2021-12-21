@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 jobs:
   build-linux:
-    runs-on: ubuntu-16.04
+    runs-on: ubuntu-18.04
 
     steps:
     - uses: actions/checkout@v2
@@ -83,7 +83,7 @@ jobs:
 
     - name: Install NSIS
       run: |
-        Invoke-WebRequest "https://sourceforge.net/projects/nsis/files/NSIS%203/3.06.1/nsis-3.06.1-setup.exe/download" -UserAgent "wget" -OutFile nsis-3.06.1-setup.exe
+        Invoke-WebRequest "https://github.com/vial-kb/vial-deps/releases/download/v1/nsis-3.06.1-setup.exe" -UserAgent "wget" -OutFile nsis-3.06.1-setup.exe
         if ((Get-FileHash nsis-3.06.1-setup.exe -Algorithm sha256).Hash -ne "f60488a676308079bfdf6845dc7114cfd4bbff47b66be4db827b89bb8d7fdc52") { Write-Error 'SHA256 mismatch' }
         Start-Process -FilePath "nsis-3.06.1-setup.exe" -ArgumentList "/S", "/D=C:\Program Files (x86)\NSIS" -NoNewWindow -Wait
 

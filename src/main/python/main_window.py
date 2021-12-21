@@ -6,8 +6,10 @@ from PyQt5.QtWidgets import QWidget, QComboBox, QToolButton, QHBoxLayout, QVBoxL
 
 import json
 import os
+import sys
 from urllib.request import urlopen
 
+from combos import Combos
 from editor_container import EditorContainer
 from firmware_flasher import FirmwareFlasher
 from keyboard_comm import ProtocolError
@@ -15,9 +17,12 @@ from keymap_editor import KeymapEditor
 from keymaps import KEYMAPS
 from layout_editor import LayoutEditor
 from macro_recorder import MacroRecorder
+from qmk_settings import QmkSettings
 from rgb_configurator import RGBConfigurator
+from tabbed_keycodes import TabbedKeycodes
+from tap_dance import TapDance
 from unlocker import Unlocker
-from util import tr, find_vial_devices, EXAMPLE_KEYBOARDS
+from util import tr, find_vial_devices, EXAMPLE_KEYBOARDS, KeycodeDisplay
 from vial_device import VialKeyboard
 from matrix_test import MatrixTest
 
@@ -26,8 +31,9 @@ import themes
 
 class MainWindow(QMainWindow):
 
-    def __init__(self):
+    def __init__(self, appctx):
         super().__init__()
+        self.appctx = appctx
 
         self.settings = QSettings("Vial", "Vial")
         themes.set_theme(self.get_theme())
@@ -55,12 +61,17 @@ class MainWindow(QMainWindow):
         self.keymap_editor = KeymapEditor(self.layout_editor)
         self.firmware_flasher = FirmwareFlasher(self)
         self.macro_recorder = MacroRecorder()
+        self.tap_dance = TapDance()
+        self.combos = Combos()
+        QmkSettings.initialize(appctx)
+        self.qmk_settings = QmkSettings()
         self.matrix_tester = MatrixTest(self.layout_editor)
         self.rgb_configurator = RGBConfigurator()
 
         self.editors = [(self.keymap_editor, "Keymap"), (self.layout_editor, "Layout"), (self.macro_recorder, "Macros"),
-                        (self.rgb_configurator, "Lighting"), (self.matrix_tester, "Matrix tester"),
-                        (self.firmware_flasher, "Firmware updater")]
+                        (self.rgb_configurator, "Lighting"), (self.tap_dance, "Tap Dance"), (self.combos, "Combos"),
+                        (self.qmk_settings, "QMK Settings"),
+                        (self.matrix_tester, "Matrix tester"), (self.firmware_flasher, "Firmware updater")]
 
         Unlocker.global_layout_editor = self.layout_editor
 
@@ -69,10 +80,14 @@ class MainWindow(QMainWindow):
         self.tabs.currentChanged.connect(self.on_tab_changed)
         self.refresh_tabs()
 
-        self.lbl_no_devices = QLabel(tr("MainWindow", 'No devices detected. Connect a Vial-compatible device and press '
-                                                      '"Refresh"\n'
-                                                      'or select "File" → "Download VIA definitions" in order to enable'
-                                                      ' support for VIA keyboards.'))
+        no_devices = 'No devices detected. Connect a Vial-compatible device and press "Refresh"<br>' \
+                     'or select "File" → "Download VIA definitions" in order to enable support for VIA keyboards.'
+        if sys.platform.startswith("linux"):
+            no_devices += '<br><br>On Linux you need to set up a custom udev rule for keyboards to be detected. ' \
+                          'Follow the instructions linked below:<br>' \
+                          '<a href="https://get.vial.today/manual/linux-udev.html">https://get.vial.today/manual/linux-udev.html</a>'
+        self.lbl_no_devices = QLabel(tr("MainWindow", no_devices))
+        self.lbl_no_devices.setTextFormat(Qt.RichText)
         self.lbl_no_devices.setAlignment(Qt.AlignCenter)
 
         layout = QVBoxLayout()
@@ -80,6 +95,10 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.tabs)
         layout.addWidget(self.lbl_no_devices)
         layout.setAlignment(self.lbl_no_devices, Qt.AlignHCenter)
+        self.tray_keycodes = TabbedKeycodes()
+        self.tray_keycodes.make_tray()
+        layout.addWidget(self.tray_keycodes)
+        self.tray_keycodes.hide()
         w = QWidget()
         w.setLayout(layout)
         self.setCentralWidget(w)
@@ -176,6 +195,11 @@ class MainWindow(QMainWindow):
         if theme_group.checkedAction() is None:
             theme_group.actions()[0].setChecked(True)
 
+        about_vial_act = QAction(tr("MenuAbout", "About Vial..."), self)
+        about_vial_act.triggered.connect(self.about_vial)
+        self.about_menu = self.menuBar().addMenu(tr("Menu", "About"))
+        self.about_menu.addAction(about_vial_act)
+
     def on_layout_load(self):
         dialog = QFileDialog()
         dialog.setDefaultSuffix("vil")
@@ -249,7 +273,7 @@ class MainWindow(QMainWindow):
             self.current_device.keyboard.reload()
 
         for e in [self.layout_editor, self.keymap_editor, self.firmware_flasher, self.macro_recorder,
-                  self.matrix_tester, self.rgb_configurator]:
+                  self.tap_dance, self.combos, self.qmk_settings, self.matrix_tester, self.rgb_configurator]:
             e.rebuild(self.current_device)
 
     def refresh_tabs(self):
@@ -319,7 +343,7 @@ class MainWindow(QMainWindow):
 
     def change_keyboard_layout(self, index):
         self.settings.setValue("keymap", KEYMAPS[index][0])
-        self.keymap_editor.set_keymap_override(KEYMAPS[index][1])
+        KeycodeDisplay.set_keymap_override(KEYMAPS[index][1])
 
     def get_theme(self):
         return self.settings.value("theme", "Dark")
@@ -332,6 +356,7 @@ class MainWindow(QMainWindow):
         msg.exec_()
 
     def on_tab_changed(self, index):
+        TabbedKeycodes.close_tray()
         old_tab = self.current_tab
         new_tab = None
         if index >= 0:
@@ -343,3 +368,13 @@ class MainWindow(QMainWindow):
             new_tab.editor.activate()
 
         self.current_tab = new_tab
+
+    def about_vial(self):
+        QMessageBox.about(
+            self,
+            "About Vial",
+            'Vial {}<br><br>'
+            'Licensed under the terms of the<br>GNU General Public License (version 2 or later)<br><br>'
+            '<a href="https://get.vial.today/">https://get.vial.today/</a>'
+            .format(self.appctx.build_settings["version"])
+        )

@@ -4,7 +4,8 @@ from PyQt5.QtGui import QPainter, QColor, QPainterPath, QTransform, QBrush, QPol
 from PyQt5.QtWidgets import QWidget, QToolTip, QApplication
 from PyQt5.QtCore import Qt, QSize, QRect, QPointF, pyqtSignal, QEvent, QRectF
 
-from constants import KEY_SIZE_RATIO, KEY_SPACING_RATIO, KEYBOARD_WIDGET_PADDING, KEYBOARD_WIDGET_MASK_PADDING, KEYBOARD_WIDGET_MASK_HEIGHT
+from constants import KEY_SIZE_RATIO, KEY_SPACING_RATIO, KEYBOARD_WIDGET_PADDING, KEYBOARD_WIDGET_MASK_PADDING,\
+    KEYBOARD_WIDGET_MASK_HEIGHT, KEY_ROUNDNESS
 
 
 class KeyWidget:
@@ -90,12 +91,13 @@ class KeyWidget:
 
     def calculate_draw_path(self):
         path = QPainterPath()
-        path.addRect(int(self.x), int(self.y), int(self.w), int(self.h))
+        corner = int(self.h/KEY_ROUNDNESS) if (self.w > self.h) else int(self.w/KEY_ROUNDNESS)
+        path.addRoundedRect(int(self.x), int(self.y), int(self.w), int(self.h), corner, corner)
 
         # second part only considered if different from first
         if self.has2:
             path2 = QPainterPath()
-            path2.addRect(int(self.x2), int(self.y2), int(self.w2), int(self.h2))
+            path2.addRoundedRect(int(self.x2), int(self.y2), int(self.w2), int(self.h2), corner, corner)
             path = path.united(path2)
 
         return path
@@ -165,6 +167,7 @@ class KeyboardWidget(QWidget):
 
         self.enabled = True
         self.scale = 1
+        self.padding = KEYBOARD_WIDGET_PADDING
 
         self.setMouseTracking(True)
 
@@ -200,21 +203,13 @@ class KeyboardWidget(QWidget):
                 self.widgets_for_layout.append(cls(key, scale_factor))
 
     def place_widgets(self):
-        top_x = top_y = 1e6
         scale_factor = self.fontMetrics().height()
 
         self.widgets = []
 
-        # find the global top-left position, all the keys will be shifted to the left/up by that position
-        for widget in self.common_widgets:
-            widget.update_position(scale_factor)
-            p = widget.polygon.boundingRect().topLeft()
-            top_x = min(top_x, p.x())
-            top_y = min(top_y, p.y())
-
         # place common widgets, that is, ones which are always displayed and require no extra transforms
         for widget in self.common_widgets:
-            widget.update_position(scale_factor, -top_x + KEYBOARD_WIDGET_PADDING, -top_y + KEYBOARD_WIDGET_PADDING)
+            widget.update_position(scale_factor)
             self.widgets.append(widget)
 
         # top-left position for specific layout
@@ -235,8 +230,20 @@ class KeyboardWidget(QWidget):
             if opt == self.layout_editor.get_choice(idx):
                 shift_x = layout_x[idx][opt] - layout_x[idx][0]
                 shift_y = layout_y[idx][opt] - layout_y[idx][0]
-                widget.update_position(scale_factor, -shift_x - top_x + KEYBOARD_WIDGET_PADDING, -shift_y - top_y + KEYBOARD_WIDGET_PADDING)
+                widget.update_position(scale_factor, -shift_x, -shift_y)
                 self.widgets.append(widget)
+
+        # at this point some widgets on left side might be cutoff, or there may be too much empty space
+        # calculate top left position of visible widgets and shift everything around
+        top_x = top_y = 1e6
+        for widget in self.widgets:
+            if not widget.desc.decal:
+                p = widget.polygon.boundingRect().topLeft()
+                top_x = min(top_x, p.x())
+                top_y = min(top_y, p.y())
+        for widget in self.widgets:
+            widget.update_position(widget.scale, widget.shift_x - top_x + self.padding,
+                                   widget.shift_y - top_y + self.padding)
 
     def update_layout(self):
         """ Updates self.widgets for the currently active layout """
@@ -254,8 +261,8 @@ class KeyboardWidget(QWidget):
             max_w = max(max_w, p.x() * self.scale)
             max_h = max(max_h, p.y() * self.scale)
 
-        self.width = max_w + 2 * KEYBOARD_WIDGET_PADDING
-        self.height = max_h + 2 * KEYBOARD_WIDGET_PADDING
+        self.width = max_w + 2 * self.padding
+        self.height = max_h + 2 * self.padding
 
         self.update()
         self.updateGeometry()
@@ -333,7 +340,9 @@ class KeyboardWidget(QWidget):
                     qp.setPen(active_pen)
                     qp.setBrush(active_brush)
 
-                qp.drawRect(key.mask_rect)
+                qp.drawRoundedRect(key.mask_rect,
+                                   key.mask_rect.height()/KEY_ROUNDNESS,
+                                   key.mask_rect.height()/KEY_ROUNDNESS)
                 if key.color is not None and not active:
                     qp.setPen(key.color)
                 qp.drawText(key.mask_rect, Qt.AlignCenter, key.mask_text)
@@ -354,9 +363,9 @@ class KeyboardWidget(QWidget):
         """ Returns key, hit_masked_part """
 
         for key in self.widgets:
-            if key.masked and key.mask_polygon.containsPoint(pos, Qt.OddEvenFill):
+            if key.masked and key.mask_polygon.containsPoint(pos/self.scale, Qt.OddEvenFill):
                 return key, True
-            if key.polygon.containsPoint(pos, Qt.OddEvenFill):
+            if key.polygon.containsPoint(pos/self.scale, Qt.OddEvenFill):
                 return key, False
 
         return None, False
@@ -411,3 +420,6 @@ class KeyboardWidget(QWidget):
 
     def set_scale(self, scale):
         self.scale = scale
+
+    def get_scale(self):
+        return self.scale

@@ -4,6 +4,7 @@ from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QLabel, QCheckBox, QComboBox, QGridLayout, QWidget, QSizePolicy
 
 from basic_editor import BasicEditor
+from keyboard_widget import KeyboardWidget
 from vial_device import VialKeyboard
 
 
@@ -87,11 +88,18 @@ class LayoutEditor(BasicEditor):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.device = None
+        self.device = self.keyboard = None
 
         self.choices = []
 
         self.widgets = []
+
+        self.addStretch()
+        self.keyboard_preview = KeyboardWidget(self)
+        self.keyboard_preview.set_enabled(False)
+        self.keyboard_preview.set_scale(0.7)
+        self.addWidget(self.keyboard_preview)
+        self.setAlignment(self.keyboard_preview, QtCore.Qt.AlignHCenter)
 
         w = QWidget()
         w.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
@@ -99,12 +107,21 @@ class LayoutEditor(BasicEditor):
         w.setLayout(self.container)
         self.addWidget(w)
         self.setAlignment(w, QtCore.Qt.AlignHCenter)
+        self.addStretch()
+
+    def update_preview(self):
+        self.keyboard_preview.set_keys(self.keyboard.keys, self.keyboard.encoders)
+        self.keyboard_preview.update_layout()
+        self.keyboard_preview.update()
+        self.keyboard_preview.updateGeometry()
 
     def rebuild(self, device):
         super().rebuild(device)
 
         if not self.valid():
             return
+
+        self.keyboard = device.keyboard
 
         self.blockSignals(True)
 
@@ -122,6 +139,7 @@ class LayoutEditor(BasicEditor):
         self.unpack(self.device.keyboard.layout_options)
 
         self.blockSignals(False)
+        self.update_preview()
 
     def valid(self):
         return isinstance(self.device, VialKeyboard) and self.device.keyboard.layout_labels
@@ -149,3 +167,4 @@ class LayoutEditor(BasicEditor):
 
     def on_changed(self):
         self.changed.emit()
+        self.update_preview()

@@ -166,3 +166,20 @@ class ActionDelayUI(BasicActionUI):
     def on_change(self):
         self.act.delay = self.value.value()
         self.changed.emit()
+
+
+tag_to_action = {
+    "down": ActionDown,
+    "up": ActionUp,
+    "tap": ActionTap,
+    "text": ActionText,
+    "delay": ActionDelay,
+}
+
+ui_action = {
+    ActionText: ActionTextUI,
+    ActionUp: ActionUpUI,
+    ActionDown: ActionDownUI,
+    ActionTap: ActionTapUI,
+    ActionDelay: ActionDelayUI,
+}

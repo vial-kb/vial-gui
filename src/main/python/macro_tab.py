@@ -1,21 +1,20 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 import sys
+import json
 
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import QPushButton, QGridLayout, QHBoxLayout, QToolButton, QVBoxLayout, \
-    QTabWidget, QWidget, QLabel, QMenu, QScrollArea, QFrame
+    QTabWidget, QWidget, QLabel, QMenu, QScrollArea, QFrame, QFileDialog, QDialog
 
 from basic_editor import BasicEditor
 from keycodes import Keycode
-from macro_action import ActionText, ActionTap, ActionDown, ActionUp, ActionDelay, SS_TAP_CODE, SS_DOWN_CODE, \
-    SS_UP_CODE, SS_DELAY_CODE, SS_QMK_PREFIX
-from macro_action_ui import ActionTextUI, ActionTapUI
-from macro_key import KeyString, KeyDown, KeyUp, KeyTap
+from macro_action import ActionTap
+from macro_action_ui import ActionTextUI, ActionTapUI, ui_action, tag_to_action
 from macro_line import MacroLine
 from macro_optimizer import macro_optimize
-from unlocker import Unlocker
 from util import tr
 from vial_device import VialKeyboard
+from textbox_window import TextboxWindow
 
 
 class MacroTab(QVBoxLayout):
@@ -58,7 +57,13 @@ class MacroTab(QVBoxLayout):
         self.btn_tap_enter.setToolButtonStyle(Qt.ToolButtonTextOnly)
         self.btn_tap_enter.clicked.connect(self.on_tap_enter)
 
+        self.btn_text_window = QToolButton()
+        self.btn_text_window.setText(tr("MacroRecorder", "Open Text Editor..."))
+        self.btn_text_window.setToolButtonStyle(Qt.ToolButtonTextOnly)
+        self.btn_text_window.clicked.connect(self.on_text_window)
+
         layout_buttons = QHBoxLayout()
+        layout_buttons.addWidget(self.btn_text_window)
         layout_buttons.addStretch()
         layout_buttons.addWidget(self.btn_add)
         layout_buttons.addWidget(self.btn_tap_enter)
@@ -122,6 +127,36 @@ class MacroTab(QVBoxLayout):
         self.lines[other].insert(other)
         self.changed.emit()
 
+    def on_text_window(self):
+
+        # serialize all actions in this tab to a json
+        macro_text = []
+        macro_text.append([act.save() for act in self.actions()])
+        macro_text = json.dumps(macro_text[0])
+
+        textbox = TextboxWindow(macro_text, "vim", "Vial macro")
+
+        if textbox.exec():
+            macro_text = textbox.getText()
+            if len(macro_text) < 6:
+                macro_text = "[]"
+            macro_load = json.loads(macro_text)
+
+            # ensure a list exists
+            if not isinstance(macro_load, list):
+                return
+
+            # clear the actions from this tab
+            self.clear()
+
+            # add each action from the json to this tab
+            for act in macro_load:
+                if act[0] in tag_to_action:
+                    obj = tag_to_action[act[0]]()
+                    actionUI = ui_action[type(obj)]
+                    obj.restore(act)
+                    self.add_action(actionUI(self.container, obj))
+
     def on_change(self):
         self.changed.emit()
 
@@ -132,12 +167,14 @@ class MacroTab(QVBoxLayout):
         self.btn_record.hide()
         self.btn_add.hide()
         self.btn_tap_enter.hide()
+        self.btn_text_window.hide()
         self.btn_record_stop.show()
 
     def post_record(self):
         self.btn_record.show()
         self.btn_add.show()
         self.btn_tap_enter.show()
+        self.btn_text_window.show()
         self.btn_record_stop.hide()
 
     def actions(self):
