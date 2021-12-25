@@ -299,6 +299,7 @@ class Keyboard:
         if "vial" in payload:
             vial = payload["vial"]
             self.vibl = vial.get("vibl", False)
+            self.midi = vial.get("midi", None)
 
         self.layout_labels = payload["layouts"].get("labels")
 
@@ -306,8 +307,6 @@ class Keyboard:
         self.cols = payload["matrix"]["cols"]
 
         self.custom_keycodes = payload.get("customKeycodes", None)
-
-        self.midi = payload.get("midi", None)
 
         serial = KleSerial()
         kb = serial.deserialize(payload["layouts"]["keymap"])
