@@ -773,12 +773,10 @@ def create_midi_keycodes(midiSettingLevel):
     KEYCODES_MIDI.clear()
 
     if midiSettingLevel == "basic" or midiSettingLevel == "advanced":
-        for x, kc in enumerate(KEYCODES_MIDI_BASIC):
-            KEYCODES_MIDI.append(kc)
+        KEYCODES_MIDI.extend(KEYCODES_MIDI_BASIC)
 
     if midiSettingLevel == "advanced":
-        for x, kc in enumerate(KEYCODES_MIDI_ADVANCED):
-            KEYCODES_MIDI.append(kc)
+        KEYCODES_MIDI.extend(KEYCODES_MIDI_ADVANCED)
 
 def recreate_keyboard_keycodes(keyboard):
     """ Generates keycodes based on information the keyboard provides (e.g. layer keycodes, macros) """
