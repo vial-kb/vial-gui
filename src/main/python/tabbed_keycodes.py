@@ -7,7 +7,8 @@ from PyQt5.QtGui import QPalette
 from constants import KEYCODE_BTN_RATIO
 from flowlayout import FlowLayout
 from keycodes import KEYCODES_BASIC, KEYCODES_ISO, KEYCODES_MACRO, KEYCODES_LAYERS, KEYCODES_QUANTUM, \
-    KEYCODES_BACKLIGHT, KEYCODES_MEDIA, KEYCODES_SPECIAL, KEYCODES_SHIFTED, KEYCODES_USER, Keycode, KEYCODES_TAP_DANCE
+    KEYCODES_BACKLIGHT, KEYCODES_MEDIA, KEYCODES_SPECIAL, KEYCODES_SHIFTED, KEYCODES_USER, Keycode, \
+    KEYCODES_TAP_DANCE, KEYCODES_MIDI
 from square_button import SquareButton
 from util import tr, KeycodeDisplay
 
@@ -95,6 +96,7 @@ class TabbedKeycodes(QTabWidget):
             Tab("Quantum", KEYCODES_QUANTUM),
             Tab("Backlight", KEYCODES_BACKLIGHT),
             Tab("App, Media and Mouse", KEYCODES_MEDIA),
+            Tab("MIDI", KEYCODES_MIDI),
             Tab("Tap Dance", KEYCODES_TAP_DANCE),
             Tab("User", KEYCODES_USER),
             Tab("Macro", KEYCODES_MACRO),

@@ -216,6 +216,7 @@ class Keyboard:
         self.macro = b""
         self.vibl = False
         self.custom_keycodes = None
+        self.midi = None
 
         self.lighting_qmk_rgblight = self.lighting_qmk_backlight = self.lighting_vialrgb = False
 
@@ -298,6 +299,7 @@ class Keyboard:
         if "vial" in payload:
             vial = payload["vial"]
             self.vibl = vial.get("vibl", False)
+            self.midi = vial.get("midi", None)
 
         self.layout_labels = payload["layouts"].get("labels")
 
