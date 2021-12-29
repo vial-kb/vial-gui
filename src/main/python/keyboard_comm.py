@@ -325,9 +325,11 @@ class Keyboard:
                 self.encoderpos[idx] = True
                 self.encoder_count = max(self.encoder_count, idx + 1)
                 self.encoders.append(key)
-            elif key.labels[0] and "," in key.labels[0]:
-                row, col = key.labels[0].split(",")
-                row, col = int(row), int(col)
+            elif key.decal or (key.labels[0] and "," in key.labels[0]):
+                row, col = 0, 0
+                if key.labels[0] and "," in key.labels[0]:
+                    row, col = key.labels[0].split(",")
+                    row, col = int(row), int(col)
                 key.row = row
                 key.col = col
                 self.rowcol[(row, col)] = True
