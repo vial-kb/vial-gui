@@ -10,6 +10,7 @@ import sys
 from urllib.request import urlopen
 
 from combos import Combos
+from constants import WINDOW_WIDTH, WINDOW_HEIGHT
 from editor_container import EditorContainer
 from firmware_flasher import FirmwareFlasher
 from keyboard_comm import ProtocolError
@@ -36,6 +37,11 @@ class MainWindow(QMainWindow):
         self.appctx = appctx
 
         self.settings = QSettings("Vial", "Vial")
+        if self.settings.value("size", None) and self.settings.value("pos", None):
+            self.resize(self.settings.value("size"))
+            self.move(self.settings.value("pos"))
+        else:
+            self.resize(WINDOW_WIDTH, WINDOW_HEIGHT)
         themes.set_theme(self.get_theme())
 
         self.current_device = None
@@ -378,3 +384,9 @@ class MainWindow(QMainWindow):
             '<a href="https://get.vial.today/">https://get.vial.today/</a>'
             .format(self.appctx.build_settings["version"])
         )
+
+    def closeEvent(self, e):
+        self.settings.setValue("size", self.size())
+        self.settings.setValue("pos", self.pos())
+
+        e.accept()
