@@ -17,14 +17,14 @@ class Tab(QObject):
 
     keycode_changed = pyqtSignal(int)
 
-    def __init__(self, label, keycodes, word_wrap=False, prefix_buttons=None):
+    def __init__(self, parent, label, keycodes, word_wrap=False, prefix_buttons=None):
         super().__init__()
 
         self.label = label
         self.keycodes = keycodes
         self.word_wrap = word_wrap
 
-        self.container = QScrollArea()
+        self.container = QScrollArea(parent)
         self.layout = FlowLayout()
         if prefix_buttons:
             for btn in prefix_buttons:
@@ -90,16 +90,16 @@ class TabbedKeycodes(QTabWidget):
         any_btn.clicked.connect(lambda: self.anykey.emit())
 
         self.tabs = [
-            Tab("Basic", KEYCODES_SPECIAL + KEYCODES_BASIC + KEYCODES_SHIFTED, prefix_buttons=[any_btn]),
-            Tab("ISO/JIS", KEYCODES_ISO),
-            Tab("Layers", KEYCODES_LAYERS),
-            Tab("Quantum", KEYCODES_QUANTUM),
-            Tab("Backlight", KEYCODES_BACKLIGHT),
-            Tab("App, Media and Mouse", KEYCODES_MEDIA),
-            Tab("MIDI", KEYCODES_MIDI),
-            Tab("Tap Dance", KEYCODES_TAP_DANCE),
-            Tab("User", KEYCODES_USER),
-            Tab("Macro", KEYCODES_MACRO),
+            Tab(self, "Basic", KEYCODES_SPECIAL + KEYCODES_BASIC + KEYCODES_SHIFTED, prefix_buttons=[any_btn]),
+            Tab(self, "ISO/JIS", KEYCODES_ISO),
+            Tab(self, "Layers", KEYCODES_LAYERS),
+            Tab(self, "Quantum", KEYCODES_QUANTUM),
+            Tab(self, "Backlight", KEYCODES_BACKLIGHT),
+            Tab(self, "App, Media and Mouse", KEYCODES_MEDIA),
+            Tab(self, "MIDI", KEYCODES_MIDI),
+            Tab(self, "Tap Dance", KEYCODES_TAP_DANCE),
+            Tab(self, "User", KEYCODES_USER),
+            Tab(self, "Macro", KEYCODES_MACRO),
         ]
 
         for tab in self.tabs:
