@@ -139,6 +139,7 @@ class FirmwareFlasher(BasicEditor):
         self.btn_flash.clicked.connect(self.on_click_flash)
         progress_flash.addWidget(self.btn_flash)
         self.chk_restore_keymap = QCheckBox(main)
+        self.chk_restore_keymap.hide()
         self.chk_restore_keymap.setText(tr("Flasher", "Restore current layout after flashing"))
         self.chk_restore_keymap.setChecked(True)
         self.addWidget(self.chk_restore_keymap)
