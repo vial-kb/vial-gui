@@ -62,10 +62,11 @@ def hid_send(dev, msg, retries=1):
     return data
 
 
-def is_rawhid(desc):
+def is_rawhid(desc, quiet, check_protocol):
     if desc["usage_page"] != 0xFF60 or desc["usage"] != 0x61:
-        logging.warning("is_rawhid: {} does not match - usage_page={:04X} usage={:02X}".format(
-            desc["path"], desc["usage_page"], desc["usage"]))
+        if not quiet:
+            logging.warning("is_rawhid: {} does not match - usage_page={:04X} usage={:02X}".format(
+                desc["path"], desc["usage_page"], desc["usage"]))
         return False
 
     dev = hid.device()
@@ -73,55 +74,68 @@ def is_rawhid(desc):
     try:
         dev.open_path(desc["path"])
     except OSError as e:
-        logging.warning("is_rawhid: {} does not match - open_path error {}".format(desc["path"], e))
+        if not quiet:
+            logging.warning("is_rawhid: {} does not match - open_path error {}".format(desc["path"], e))
         return False
+
+    # if caller didn't ask to check protocol level support we're all done
+    if not check_protocol:
+        dev.close()
+        return True
 
     # probe VIA version and ensure it is supported
     data = b""
     try:
         data = hid_send(dev, b"\x01", retries=3)
     except RuntimeError as e:
-        logging.warning("is_rawhid: {} does not match - hid_send error {}".format(desc["path"], e))
+        if not quiet:
+            logging.warning("is_rawhid: {} does not match - hid_send error {}".format(desc["path"], e))
         pass
     dev.close()
 
     # must have VIA protocol version = 9
     if data[0:3] != b"\x01\x00\x09":
-        logging.warning("is_rawhid: {} does not match - unexpected data in response {}".format(
-            desc["path"], data.hex()))
+        if not quiet:
+            logging.warning("is_rawhid: {} does not match - unexpected data in response {}".format(
+                desc["path"], data.hex()))
         return False
 
-    logging.info("is_rawhid: {} matched OK".format(desc["path"]))
+    if not quiet:
+        logging.info("is_rawhid: {} matched OK".format(desc["path"]))
     return True
 
 
-def find_vial_devices(via_stack_json, sideload_vid=None, sideload_pid=None):
+def find_vial_devices(via_stack_json, sideload_vid=None, sideload_pid=None, quiet=False, check_protocol=True):
     from vial_device import VialBootloader, VialKeyboard, VialDummyKeyboard
 
     filtered = []
     for dev in hid.enumerate():
         if dev["vendor_id"] == sideload_vid and dev["product_id"] == sideload_pid:
-            logging.info("Trying VID={:04X}, PID={:04X}, serial={}, path={} - sideload".format(
-                dev["vendor_id"], dev["product_id"], dev["serial_number"], dev["path"]
-            ))
-            if is_rawhid(dev):
+            if not quiet:
+                logging.info("Trying VID={:04X}, PID={:04X}, serial={}, path={} - sideload".format(
+                    dev["vendor_id"], dev["product_id"], dev["serial_number"], dev["path"]
+                ))
+            if is_rawhid(dev, quiet, check_protocol):
                 filtered.append(VialKeyboard(dev, sideload=True))
         elif VIAL_SERIAL_NUMBER_MAGIC in dev["serial_number"]:
-            logging.info("Matching VID={:04X}, PID={:04X}, serial={}, path={} - vial serial magic".format(
-                dev["vendor_id"], dev["product_id"], dev["serial_number"], dev["path"]
-            ))
-            if is_rawhid(dev):
+            if not quiet:
+                logging.info("Matching VID={:04X}, PID={:04X}, serial={}, path={} - vial serial magic".format(
+                    dev["vendor_id"], dev["product_id"], dev["serial_number"], dev["path"]
+                ))
+            if is_rawhid(dev, quiet, check_protocol):
                 filtered.append(VialKeyboard(dev))
         elif VIBL_SERIAL_NUMBER_MAGIC in dev["serial_number"]:
-            logging.info("Matching VID={:04X}, PID={:04X}, serial={}, path={} - vibl serial magic".format(
-                dev["vendor_id"], dev["product_id"], dev["serial_number"], dev["path"]
-            ))
+            if not quiet:
+                logging.info("Matching VID={:04X}, PID={:04X}, serial={}, path={} - vibl serial magic".format(
+                    dev["vendor_id"], dev["product_id"], dev["serial_number"], dev["path"]
+                ))
             filtered.append(VialBootloader(dev))
         elif str(dev["vendor_id"] * 65536 + dev["product_id"]) in via_stack_json["definitions"]:
-            logging.info("Matching VID={:04X}, PID={:04X}, serial={}, path={} - VIA stack".format(
-                dev["vendor_id"], dev["product_id"], dev["serial_number"], dev["path"]
-            ))
-            if is_rawhid(dev):
+            if not quiet:
+                logging.info("Matching VID={:04X}, PID={:04X}, serial={}, path={} - VIA stack".format(
+                    dev["vendor_id"], dev["product_id"], dev["serial_number"], dev["path"]
+                ))
+            if is_rawhid(dev, quiet, check_protocol):
                 filtered.append(VialKeyboard(dev, via_stack=True))
 
     if sideload_vid == sideload_pid == 0:

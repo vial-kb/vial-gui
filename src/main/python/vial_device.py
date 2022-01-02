@@ -88,6 +88,7 @@ class VialDummyKeyboard(VialKeyboard):
 
     def __init__(self):
         self.sideload = True
+        self.desc = {"path": "/dummy/keyboard"}
 
     def open(self, override_json=None):
         self.keyboard = DummyKeyboard(None, usb_send=self.raise_usb_send)
