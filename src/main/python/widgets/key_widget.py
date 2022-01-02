@@ -1,7 +1,7 @@
 from PyQt5.QtCore import pyqtSignal
 
 from any_keycode_dialog import AnyKeycodeDialog
-from keyboard_widget import KeyboardWidget
+from widgets.keyboard_widget import KeyboardWidget
 from kle_serial import Key
 from tabbed_keycodes import TabbedKeycodes
 from util import KeycodeDisplay

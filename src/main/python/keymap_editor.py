@@ -6,10 +6,9 @@ from PyQt5.QtCore import Qt
 
 from any_keycode_dialog import AnyKeycodeDialog
 from basic_editor import BasicEditor
-from keyboard_widget import KeyboardWidget, EncoderWidget
-from keycodes import recreate_keyboard_keycodes, Keycode
-from keymaps import KEYMAPS
-from square_button import SquareButton
+from widgets.keyboard_widget import KeyboardWidget, EncoderWidget
+from keycodes import recreate_keyboard_keycodes
+from widgets.square_button import SquareButton
 from tabbed_keycodes import TabbedKeycodes
 from util import tr, KeycodeDisplay
 from vial_device import VialKeyboard

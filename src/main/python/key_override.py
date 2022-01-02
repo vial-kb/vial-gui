@@ -3,7 +3,7 @@ from PyQt5 import QtCore
 from PyQt5.QtCore import pyqtSignal, QObject
 from PyQt5.QtWidgets import QWidget, QSizePolicy, QGridLayout, QVBoxLayout, QLabel, QCheckBox
 
-from key_widget import KeyWidget
+from widgets.key_widget import KeyWidget
 from protocol.key_override import KeyOverrideOptions, KeyOverrideEntry
 from vial_device import VialKeyboard
 from basic_editor import BasicEditor

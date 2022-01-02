@@ -1,10 +1,9 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
-import time
 
-from PyQt5.QtCore import QCoreApplication, Qt, QTimer
-from PyQt5.QtWidgets import QVBoxLayout, QLabel, QProgressBar, QDialog, QDialogButtonBox
+from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtWidgets import QVBoxLayout, QLabel, QProgressBar, QDialog
 
-from keyboard_widget import KeyboardWidget
+from widgets.keyboard_widget import KeyboardWidget
 from util import tr
 
 
