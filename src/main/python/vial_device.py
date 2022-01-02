@@ -2,7 +2,8 @@
 import time
 
 from hidproxy import hid
-from protocol.keyboard_comm import Keyboard, DummyKeyboard
+from protocol.keyboard_comm import Keyboard
+from protocol.dummy_keyboard import DummyKeyboard
 from util import MSG_LEN, pad_for_vibl
 
 
