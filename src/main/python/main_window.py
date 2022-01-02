@@ -107,7 +107,8 @@ class MainWindow(QMainWindow):
 
         self.init_menu()
 
-        self.autorefresh = Autorefresh(self)
+        self.autorefresh = Autorefresh()
+        self.autorefresh.devices_updated.connect(self.on_devices_updated)
 
         # cache for via definition files
         self.cache_path = QStandardPaths.writableLocation(QStandardPaths.CacheLocation)
@@ -233,6 +234,27 @@ class MainWindow(QMainWindow):
         # we don't do check_protocol here either because if the matrix test tab is active,
         # that ends up corrupting usb hid packets
         self.autorefresh.update(check_protocol=False)
+
+    def on_devices_updated(self, devices, hard_refresh):
+        self.combobox_devices.blockSignals(True)
+
+        self.combobox_devices.clear()
+        for dev in devices:
+            self.combobox_devices.addItem(dev.title())
+            if self.autorefresh.current_device and dev.desc["path"] == self.autorefresh.current_device.desc["path"]:
+                self.combobox_devices.setCurrentIndex(self.combobox_devices.count() - 1)
+
+        self.combobox_devices.blockSignals(False)
+
+        if devices:
+            self.lbl_no_devices.hide()
+            self.tabs.show()
+        else:
+            self.lbl_no_devices.show()
+            self.tabs.hide()
+
+        if hard_refresh:
+            self.on_device_selected()
 
     def on_device_selected(self):
         try:

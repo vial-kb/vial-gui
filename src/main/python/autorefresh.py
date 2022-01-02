@@ -1,6 +1,6 @@
 import json
 
-from PyQt5.QtCore import QTimer
+from PyQt5.QtCore import QTimer, QObject, pyqtSignal
 
 from keyboard_comm import ProtocolError
 from util import find_vial_devices
@@ -18,12 +18,13 @@ class AutorefreshLocker:
         self.autorefresh._unlock()
 
 
-class Autorefresh:
+class Autorefresh(QObject):
 
     instance = None
+    devices_updated = pyqtSignal(object, bool)
 
-    def __init__(self, mainwindow):
-        self.mainwindow = mainwindow
+    def __init__(self):
+        super().__init__()
         self.devices = []
         self.locked = False
         self.current_device = None
@@ -52,32 +53,12 @@ class Autorefresh:
         if old_paths == new_paths:
             return
 
-        old_found = False
-        old_path = False
+        # trigger update and report whether a hard-reload is needed (if current device went away)
+        self.devices = new_devices
+        old_path = "blank"
         if self.current_device is not None:
             old_path = self.current_device.desc["path"]
-
-        self.mainwindow.combobox_devices.blockSignals(True)
-
-        self.mainwindow.combobox_devices.clear()
-        self.devices = new_devices
-        for dev in new_devices:
-            self.mainwindow.combobox_devices.addItem(dev.title())
-            if dev.desc["path"] == old_path:
-                old_found = True
-                self.mainwindow.combobox_devices.setCurrentIndex(self.mainwindow.combobox_devices.count() - 1)
-
-        self.mainwindow.combobox_devices.blockSignals(False)
-
-        if new_devices:
-            self.mainwindow.lbl_no_devices.hide()
-            self.mainwindow.tabs.show()
-        else:
-            self.mainwindow.lbl_no_devices.show()
-            self.mainwindow.tabs.hide()
-
-        if not old_found:
-            self.mainwindow.on_device_selected()
+        self.devices_updated.emit(new_devices, old_path not in new_paths)
 
     def _lock(self):
         self.locked = True
