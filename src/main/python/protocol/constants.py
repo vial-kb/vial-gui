@@ -48,3 +48,6 @@ DYNAMIC_VIAL_COMBO_GET = 0x03
 DYNAMIC_VIAL_COMBO_SET = 0x04
 DYNAMIC_VIAL_KEY_OVERRIDE_GET = 0x05
 DYNAMIC_VIAL_KEY_OVERRIDE_SET = 0x06
+
+# how much of a macro/keymap buffer we can read/write per packet
+BUFFER_FETCH_CHUNK = 28
