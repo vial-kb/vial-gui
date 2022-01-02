@@ -16,7 +16,7 @@ from constants import WINDOW_WIDTH, WINDOW_HEIGHT
 from widgets.editor_container import EditorContainer
 from editor.firmware_flasher import FirmwareFlasher
 from editor.key_override import KeyOverride
-from keyboard_comm import ProtocolError
+from protocol.keyboard_comm import ProtocolError
 from editor.keymap_editor import KeymapEditor
 from keymaps import KEYMAPS
 from editor.layout_editor import LayoutEditor
