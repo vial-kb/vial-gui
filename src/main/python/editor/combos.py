@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import QWidget, QSizePolicy, QGridLayout, QVBoxLayout, QLab
 
 from widgets.key_widget import KeyWidget
 from vial_device import VialKeyboard
-from basic_editor import BasicEditor
+from editor.basic_editor import BasicEditor
 from widgets.tab_widget_keycodes import TabWidgetWithKeycodes
 
 

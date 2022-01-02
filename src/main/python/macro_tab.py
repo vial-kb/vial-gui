@@ -1,19 +1,15 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
-import sys
 import json
 
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import QPushButton, QGridLayout, QHBoxLayout, QToolButton, QVBoxLayout, \
-    QTabWidget, QWidget, QLabel, QMenu, QScrollArea, QFrame, QFileDialog, QDialog
+    QWidget, QMenu, QScrollArea, QFrame
 
-from basic_editor import BasicEditor
 from keycodes import Keycode
 from macro_action import ActionTap
 from macro_action_ui import ActionTextUI, ActionTapUI, ui_action, tag_to_action
 from macro_line import MacroLine
-from macro_optimizer import macro_optimize
 from util import tr
-from vial_device import VialKeyboard
 from textbox_window import TextboxWindow
 
 

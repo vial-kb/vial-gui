@@ -19,7 +19,7 @@ from protocol.constants import CMD_VIA_GET_PROTOCOL_VERSION, CMD_VIA_GET_KEYBOAR
     VIALRGB_GET_SUPPORTED, VIALRGB_SET_MODE, CMD_VIAL_GET_KEYBOARD_ID, CMD_VIAL_GET_SIZE, CMD_VIAL_GET_DEFINITION, \
     CMD_VIAL_GET_ENCODER, CMD_VIAL_SET_ENCODER, CMD_VIAL_GET_UNLOCK_STATUS, CMD_VIAL_UNLOCK_START, CMD_VIAL_UNLOCK_POLL, \
     CMD_VIAL_LOCK, CMD_VIAL_QMK_SETTINGS_QUERY, CMD_VIAL_QMK_SETTINGS_GET, CMD_VIAL_QMK_SETTINGS_SET, \
-    CMD_VIAL_QMK_SETTINGS_RESET, CMD_VIAL_DYNAMIC_ENTRY_OP, DYNAMIC_VIAL_TAP_DANCE_SET, DYNAMIC_VIAL_COMBO_SET
+    CMD_VIAL_QMK_SETTINGS_RESET
 from protocol.dynamic import ProtocolDynamic
 from protocol.key_override import ProtocolKeyOverride
 from protocol.tap_dance import ProtocolTapDance
@@ -432,7 +432,7 @@ class Keyboard(ProtocolDynamic, ProtocolTapDance, ProtocolCombo, ProtocolKeyOver
                     self.supported_settings.add(qsid)
 
         for qsid in self.supported_settings:
-            from qmk_settings import QmkSettings
+            from editor.qmk_settings import QmkSettings
 
             if not QmkSettings.is_qsid_supported(qsid):
                 continue
@@ -583,7 +583,7 @@ class Keyboard(ProtocolDynamic, ProtocolTapDance, ProtocolCombo, ProtocolKeyOver
         self.restore_combo(data.get("combo", []))
 
         for qsid, value in data.get("settings", dict()).items():
-            from qmk_settings import QmkSettings
+            from editor.qmk_settings import QmkSettings
 
             qsid = int(qsid)
             if QmkSettings.is_qsid_supported(qsid):
@@ -719,7 +719,7 @@ class Keyboard(ProtocolDynamic, ProtocolTapDance, ProtocolCombo, ProtocolKeyOver
         return [self.macro_deserialize(x) for x in macros]
 
     def qmk_settings_set(self, qsid, value):
-        from qmk_settings import QmkSettings
+        from editor.qmk_settings import QmkSettings
         self.settings[qsid] = value
         data = self.usb_send(self.dev, struct.pack("<BBH", CMD_VIA_VIAL_PREFIX, CMD_VIAL_QMK_SETTINGS_SET, qsid)
                              + QmkSettings.qsid_serialize(qsid, value),

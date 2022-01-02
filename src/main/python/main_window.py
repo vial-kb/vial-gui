@@ -11,24 +11,24 @@ import sys
 from urllib.request import urlopen
 
 from autorefresh import Autorefresh
-from combos import Combos
+from editor.combos import Combos
 from constants import WINDOW_WIDTH, WINDOW_HEIGHT
 from widgets.editor_container import EditorContainer
-from firmware_flasher import FirmwareFlasher
-from key_override import KeyOverride
+from editor.firmware_flasher import FirmwareFlasher
+from editor.key_override import KeyOverride
 from keyboard_comm import ProtocolError
-from keymap_editor import KeymapEditor
+from editor.keymap_editor import KeymapEditor
 from keymaps import KEYMAPS
-from layout_editor import LayoutEditor
-from macro_recorder import MacroRecorder
-from qmk_settings import QmkSettings
-from rgb_configurator import RGBConfigurator
+from editor.layout_editor import LayoutEditor
+from editor.macro_recorder import MacroRecorder
+from editor.qmk_settings import QmkSettings
+from editor.rgb_configurator import RGBConfigurator
 from tabbed_keycodes import TabbedKeycodes
-from tap_dance import TapDance
+from editor.tap_dance import TapDance
 from unlocker import Unlocker
 from util import tr, EXAMPLE_KEYBOARDS, KeycodeDisplay
 from vial_device import VialKeyboard
-from matrix_test import MatrixTest
+from editor.matrix_test import MatrixTest
 
 import themes
 

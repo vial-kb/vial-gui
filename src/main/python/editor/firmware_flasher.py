@@ -11,7 +11,7 @@ from PyQt5.QtGui import QFontDatabase
 from PyQt5.QtWidgets import QHBoxLayout, QLineEdit, QToolButton, QPlainTextEdit, QProgressBar, QFileDialog, QDialog, \
     QCheckBox
 
-from basic_editor import BasicEditor
+from editor.basic_editor import BasicEditor
 from unlocker import Unlocker
 from util import tr, chunks, find_vial_devices, pad_for_vibl
 from vial_device import VialBootloader, VialKeyboard

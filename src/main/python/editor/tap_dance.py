@@ -8,7 +8,7 @@ from widgets.key_widget import KeyWidget
 from tabbed_keycodes import TabbedKeycodes
 from util import tr
 from vial_device import VialKeyboard
-from basic_editor import BasicEditor
+from editor.basic_editor import BasicEditor
 
 
 class TapDanceEntryUI(QObject):
