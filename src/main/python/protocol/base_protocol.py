@@ -9,6 +9,10 @@ class BaseProtocol:
     usb_send = NotImplemented
     dev = None
 
+    macro_count = 0
+    macro_memory = 0
+    macro = b""
+
     def _retrieve_dynamic_entries(self, cmd, count, fmt):
         out = []
         for x in range(count):
