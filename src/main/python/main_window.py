@@ -48,7 +48,6 @@ class MainWindow(QMainWindow):
         themes.set_theme(self.get_theme())
 
         self.current_device = None
-        self.devices = []
 
         self.combobox_devices = QComboBox()
         self.combobox_devices.currentIndexChanged.connect(self.on_device_selected)
@@ -243,7 +242,7 @@ class MainWindow(QMainWindow):
         self.current_device = None
         idx = self.combobox_devices.currentIndex()
         if idx >= 0:
-            self.current_device = self.devices[idx]
+            self.current_device = self.autorefresh.devices[idx]
 
         if self.current_device is not None:
             try:

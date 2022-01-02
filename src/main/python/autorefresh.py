@@ -23,6 +23,7 @@ class Autorefresh:
 
     def __init__(self, mainwindow):
         self.mainwindow = mainwindow
+        self.devices = []
         self.locked = False
 
         self.sideload_json = None
@@ -40,12 +41,12 @@ class Autorefresh:
         if self.locked:
             return
 
-        devices = find_vial_devices(self.via_stack_json, self.sideload_vid, self.sideload_pid,
+        new_devices = find_vial_devices(self.via_stack_json, self.sideload_vid, self.sideload_pid,
                                     quiet=True, check_protocol=check_protocol)
 
         # if the set of the devices didn't change at all, don't need to update the combobox
-        old_paths = set(d.desc["path"] for d in self.mainwindow.devices)
-        new_paths = set(d.desc["path"] for d in devices)
+        old_paths = set(d.desc["path"] for d in self.devices)
+        new_paths = set(d.desc["path"] for d in new_devices)
         if old_paths == new_paths:
             return
 
@@ -57,8 +58,8 @@ class Autorefresh:
         self.mainwindow.combobox_devices.blockSignals(True)
 
         self.mainwindow.combobox_devices.clear()
-        self.mainwindow.devices = devices
-        for dev in devices:
+        self.devices = new_devices
+        for dev in new_devices:
             self.mainwindow.combobox_devices.addItem(dev.title())
             if dev.desc["path"] == old_path:
                 old_found = True
@@ -66,7 +67,7 @@ class Autorefresh:
 
         self.mainwindow.combobox_devices.blockSignals(False)
 
-        if devices:
+        if new_devices:
             self.mainwindow.lbl_no_devices.hide()
             self.mainwindow.tabs.show()
         else:
