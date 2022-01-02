@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
-from macro_key import KeyUp, KeyDown, KeyTap, KeyString
+from macro.macro_key import KeyUp, KeyDown, KeyTap, KeyString
 
 
 def remove_repeats(sequence):

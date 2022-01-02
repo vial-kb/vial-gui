@@ -6,7 +6,7 @@ from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QPushButton, QApplication
 
 from keycodes import Keycode
-from macro_key import KeyUp, KeyDown
+from macro.macro_key import KeyUp, KeyDown
 from util import tr
 
 
