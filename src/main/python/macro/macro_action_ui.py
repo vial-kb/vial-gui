@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import QLineEdit, QToolButton, QComboBox, QWidget, QSizePol
 
 from widgets.flowlayout import FlowLayout
 from keycodes import KEYCODES_BASIC, KEYCODES_ISO, KEYCODES_MEDIA
-from macro_action import ActionText, ActionSequence, ActionDown, ActionUp, ActionTap, ActionDelay
+from macro.macro_action import ActionText, ActionSequence, ActionDown, ActionUp, ActionTap, ActionDelay
 from util import tr
 
 

@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import QWidget, QVBoxLayout, QPushButton, QApplication
 from fbs_runtime.application_context import is_frozen
 
 from keycodes import Keycode
-from macro_key import KeyUp, KeyDown
+from macro.macro_key import KeyUp, KeyDown
 from util import tr
 
 

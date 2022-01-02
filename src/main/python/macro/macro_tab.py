@@ -6,9 +6,9 @@ from PyQt5.QtWidgets import QPushButton, QGridLayout, QHBoxLayout, QToolButton, 
     QWidget, QMenu, QScrollArea, QFrame
 
 from keycodes import Keycode
-from macro_action import ActionTap
-from macro_action_ui import ActionTextUI, ActionTapUI, ui_action, tag_to_action
-from macro_line import MacroLine
+from macro.macro_action import ActionTap
+from macro.macro_action_ui import ActionTextUI, ActionTapUI, ui_action, tag_to_action
+from macro.macro_line import MacroLine
 from util import tr
 from textbox_window import TextboxWindow
 
