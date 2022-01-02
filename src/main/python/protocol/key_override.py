@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 import struct
 
+from keycodes import Keycode
 from protocol.base_protocol import BaseProtocol
 from protocol.constants import DYNAMIC_VIAL_KEY_OVERRIDE_GET, CMD_VIA_VIAL_PREFIX, CMD_VIAL_DYNAMIC_ENTRY_OP, \
     DYNAMIC_VIAL_KEY_OVERRIDE_SET
@@ -52,6 +53,30 @@ class KeyOverrideEntry:
     def __eq__(self, other):
         return isinstance(other, KeyOverrideEntry) and self.serialize() == other.serialize()
 
+    def save(self):
+        """ Serializes into Vial layout file """
+
+        return {
+            "trigger": Keycode.serialize(self.trigger),
+            "replacement": Keycode.serialize(self.replacement),
+            "layers": self.layers,
+            "trigger_mods": self.trigger_mods,
+            "negative_mod_mask": self.negative_mod_mask,
+            "suppressed_mods": self.suppressed_mods,
+            "options": self.options.serialize()
+        }
+
+    def restore(self, data):
+        """ Restores from a Vial layout file """
+
+        self.trigger = Keycode.deserialize(data["trigger"])
+        self.replacement = Keycode.deserialize(data["replacement"])
+        self.layers = data["layers"]
+        self.trigger_mods = data["trigger_mods"]
+        self.negative_mod_mask = data["negative_mod_mask"]
+        self.suppressed_mods = data["suppressed_mods"]
+        self.options = KeyOverrideOptions(data["options"])
+
 
 class ProtocolKeyOverride(BaseProtocol):
 
@@ -68,3 +93,13 @@ class ProtocolKeyOverride(BaseProtocol):
             self.key_override_entries[idx] = entry
             self.usb_send(self.dev, struct.pack("BBBB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_DYNAMIC_ENTRY_OP,
                                                 DYNAMIC_VIAL_KEY_OVERRIDE_SET, idx) + entry.serialize())
+
+    def save_key_override(self):
+        return [e.save() for e in self.key_override_entries]
+
+    def restore_key_override(self, data):
+        for x, e in enumerate(data):
+            if x < self.key_override_count:
+                ko = KeyOverrideEntry()
+                ko.restore(e)
+                self.key_override_set(x, ko)
