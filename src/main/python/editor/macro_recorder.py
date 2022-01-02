@@ -3,8 +3,8 @@ import sys
 
 from PyQt5.QtWidgets import QPushButton, QHBoxLayout, QTabWidget, QWidget, QLabel
 
-from basic_editor import BasicEditor
-from macro_action import ActionText, ActionTap, ActionDown, ActionUp, ActionDelay
+from editor.basic_editor import BasicEditor
+from macro_action import ActionText, ActionTap, ActionDown, ActionUp
 from macro_action_ui import ui_action
 from macro_key import KeyString, KeyDown, KeyUp, KeyTap
 from macro_optimizer import macro_optimize

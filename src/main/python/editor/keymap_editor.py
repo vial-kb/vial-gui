@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QMessageBox
 from PyQt5.QtCore import Qt
 
 from any_keycode_dialog import AnyKeycodeDialog
-from basic_editor import BasicEditor
+from editor.basic_editor import BasicEditor
 from widgets.keyboard_widget import KeyboardWidget, EncoderWidget
 from keycodes import recreate_keyboard_keycodes
 from widgets.square_button import SquareButton

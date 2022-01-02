@@ -7,7 +7,7 @@ from PyQt5.QtCore import pyqtSignal, QObject
 from PyQt5.QtWidgets import QVBoxLayout, QCheckBox, QGridLayout, QLabel, QWidget, QSizePolicy, QTabWidget, QSpinBox, \
     QHBoxLayout, QPushButton, QMessageBox
 
-from basic_editor import BasicEditor
+from editor.basic_editor import BasicEditor
 from util import tr
 from vial_device import VialKeyboard
 
