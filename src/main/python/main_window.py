@@ -122,10 +122,10 @@ class MainWindow(QMainWindow):
                 self.via_stack_json = json.load(vf)
                 vf.close()
 
+        self.autorefresh = Autorefresh(self)
+
         # make sure initial state is valid
         self.on_click_refresh()
-
-        self.autorefresh = Autorefresh(self)
 
     def init_menu(self):
         layout_load_act = QAction(tr("MenuFile", "Load saved layout..."), self)
@@ -230,18 +230,9 @@ class MainWindow(QMainWindow):
                 outf.write(self.keymap_editor.save_layout())
 
     def on_click_refresh(self):
-        self.combobox_devices.clear()
-        self.devices = find_vial_devices(self.via_stack_json, self.sideload_vid, self.sideload_pid)
-
-        for dev in self.devices:
-            self.combobox_devices.addItem(dev.title())
-
-        if self.devices:
-            self.lbl_no_devices.hide()
-            self.tabs.show()
-        else:
-            self.lbl_no_devices.show()
-            self.tabs.hide()
+        # we don't do check_protocol here either because if the matrix test tab is active,
+        # that ends up corrupting usb hid packets
+        self.autorefresh.update(check_protocol=False)
 
     def on_device_selected(self):
         if self.current_device is not None:
