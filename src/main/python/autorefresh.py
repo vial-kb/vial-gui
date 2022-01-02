@@ -1,3 +1,5 @@
+import json
+
 from PyQt5.QtCore import QTimer
 
 from util import find_vial_devices
@@ -23,6 +25,11 @@ class Autorefresh:
         self.mainwindow = mainwindow
         self.locked = False
 
+        self.sideload_json = None
+        self.sideload_vid = self.sideload_pid = -1
+        # create empty VIA definitions. Easier than setting it to none and handling a bunch of exceptions
+        self.via_stack_json = {"definitions": {}}
+
         self.timer = QTimer()
         self.timer.timeout.connect(self.update)
         self.timer.start(1000)
@@ -33,8 +40,8 @@ class Autorefresh:
         if self.locked:
             return
 
-        devices = find_vial_devices(self.mainwindow.via_stack_json, self.mainwindow.sideload_vid,
-                                    self.mainwindow.sideload_pid, quiet=True, check_protocol=check_protocol)
+        devices = find_vial_devices(self.via_stack_json, self.sideload_vid, self.sideload_pid,
+                                    quiet=True, check_protocol=check_protocol)
 
         # if the set of the devices didn't change at all, don't need to update the combobox
         old_paths = set(d.desc["path"] for d in self.mainwindow.devices)
@@ -78,3 +85,17 @@ class Autorefresh:
     @classmethod
     def lock(cls):
         return AutorefreshLocker(cls.instance)
+
+    def load_dummy(self, data):
+        self.sideload_json = json.loads(data)
+        self.sideload_vid = self.sideload_pid = 0
+        self.update()
+
+    def sideload_via_json(self, data):
+        self.sideload_json = json.loads(data)
+        self.sideload_vid = int(self.sideload_json["vendorId"], 16)
+        self.sideload_pid = int(self.sideload_json["productId"], 16)
+        self.update()
+
+    def load_via_stack(self, data):
+        self.via_stack_json = json.loads(data)

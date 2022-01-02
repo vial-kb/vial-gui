@@ -1,4 +1,6 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
+import logging
+from json import JSONDecodeError
 
 from PyQt5.QtCore import Qt, QSettings, QStandardPaths
 from PyQt5.QtWidgets import QWidget, QComboBox, QToolButton, QHBoxLayout, QVBoxLayout, QMainWindow, QAction, qApp, \
@@ -47,10 +49,6 @@ class MainWindow(QMainWindow):
 
         self.current_device = None
         self.devices = []
-        # create empty VIA definitions. Easier than setting it to none and handling a bunch of exceptions
-        self.via_stack_json = {"definitions": {}}
-        self.sideload_json = None
-        self.sideload_vid = self.sideload_pid = -1
 
         self.combobox_devices = QComboBox()
         self.combobox_devices.currentIndexChanged.connect(self.on_device_selected)
@@ -112,17 +110,22 @@ class MainWindow(QMainWindow):
 
         self.init_menu()
 
+        self.autorefresh = Autorefresh(self)
+
         # cache for via definition files
         self.cache_path = QStandardPaths.writableLocation(QStandardPaths.CacheLocation)
         if not os.path.exists(self.cache_path):
             os.makedirs(self.cache_path)
+
         # check if the via defitions already exist
         if os.path.isfile(os.path.join(self.cache_path, "via_keyboards.json")):
             with open(os.path.join(self.cache_path, "via_keyboards.json")) as vf:
-                self.via_stack_json = json.load(vf)
-                vf.close()
-
-        self.autorefresh = Autorefresh(self)
+                data = vf.read()
+            try:
+                self.autorefresh.load_via_stack(data)
+            except JSONDecodeError as e:
+                # the saved file is invalid - just ignore this
+                logging.warning("Failed to parse stored via_keyboards.json: {}".format(e))
 
         # make sure initial state is valid
         self.on_click_refresh()
@@ -245,9 +248,9 @@ class MainWindow(QMainWindow):
         if self.current_device is not None:
             try:
                 if self.current_device.sideload:
-                    self.current_device.open(self.sideload_json)
+                    self.current_device.open(self.autorefresh.sideload_json)
                 elif self.current_device.via_stack:
-                    self.current_device.open(self.via_stack_json["definitions"][self.current_device.via_id])
+                    self.current_device.open(self.autorefresh.via_stack_json["definitions"][self.current_device.via_id])
                 else:
                     self.current_device.open(None)
             except ProtocolError:
@@ -286,12 +289,12 @@ class MainWindow(QMainWindow):
             self.tabs.addTab(c, tr("MainWindow", lbl))
 
     def load_via_stack_json(self):
-        data = urlopen("https://github.com/vial-kb/via-keymap-precompiled/raw/main/via_keyboard_stack.json")
-        self.via_stack_json = json.load(data)
+        with urlopen("https://github.com/vial-kb/via-keymap-precompiled/raw/main/via_keyboard_stack.json") as resp:
+            data = resp.read()
+        self.autorefresh.load_via_stack(data)
         # write to cache
-        with open(os.path.join(self.cache_path, "via_keyboards.json"), "w") as cf:
-            cf.write(json.dumps(self.via_stack_json, indent=2))
-            cf.close()
+        with open(os.path.join(self.cache_path, "via_keyboards.json"), "wb") as cf:
+            cf.write(data)
 
     def on_sideload_json(self):
         dialog = QFileDialog()
@@ -301,10 +304,7 @@ class MainWindow(QMainWindow):
         if dialog.exec_() == QDialog.Accepted:
             with open(dialog.selectedFiles()[0], "rb") as inf:
                 data = inf.read()
-            self.sideload_json = json.loads(data)
-            self.sideload_vid = int(self.sideload_json["vendorId"], 16)
-            self.sideload_pid = int(self.sideload_json["productId"], 16)
-            self.on_click_refresh()
+            self.autorefresh.sideload_via_json(data)
 
     def on_load_dummy(self):
         dialog = QFileDialog()
@@ -314,9 +314,7 @@ class MainWindow(QMainWindow):
         if dialog.exec_() == QDialog.Accepted:
             with open(dialog.selectedFiles()[0], "rb") as inf:
                 data = inf.read()
-            self.sideload_json = json.loads(data)
-            self.sideload_vid = self.sideload_pid = 0
-            self.on_click_refresh()
+            self.autorefresh.load_dummy(data)
 
     def lock_ui(self):
         self.autorefresh._lock()

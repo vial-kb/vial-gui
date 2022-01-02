@@ -775,7 +775,8 @@ class Keyboard:
         if self.via_protocol < 0:
             return
 
-        data = self.usb_send(self.dev, struct.pack("BB", CMD_VIA_GET_KEYBOARD_VALUE, VIA_SWITCH_MATRIX_STATE), retries=20)
+        data = self.usb_send(self.dev, struct.pack("BB", CMD_VIA_GET_KEYBOARD_VALUE, VIA_SWITCH_MATRIX_STATE),
+                             retries=3)
         return data
 
     def macro_serialize(self, macro):
