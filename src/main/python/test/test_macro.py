@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 import unittest
 
-from keyboard_comm import DummyKeyboard
+from protocol.keyboard_comm import DummyKeyboard
 from keycodes import Keycode
 from macro.macro_action import ActionTap, ActionDown, ActionText, ActionDelay
 from macro.macro_key import KeyDown, KeyTap, KeyUp, KeyString

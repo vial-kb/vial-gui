@@ -2,7 +2,6 @@ import json
 
 from PyQt5.QtCore import QTimer, QObject, pyqtSignal
 
-from keyboard_comm import ProtocolError
 from util import find_vial_devices
 
 
