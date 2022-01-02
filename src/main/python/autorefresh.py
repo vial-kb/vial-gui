@@ -36,6 +36,12 @@ class Autorefresh:
         devices = find_vial_devices(self.mainwindow.via_stack_json, self.mainwindow.sideload_vid,
                                     self.mainwindow.sideload_pid, quiet=True, check_protocol=check_protocol)
 
+        # if the set of the devices didn't change at all, don't need to update the combobox
+        old_paths = set(d.desc["path"] for d in self.mainwindow.devices)
+        new_paths = set(d.desc["path"] for d in devices)
+        if old_paths == new_paths:
+            return
+
         old_found = False
         old_path = False
         if self.mainwindow.current_device is not None:
