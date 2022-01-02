@@ -8,7 +8,7 @@ from protocol.constants import DYNAMIC_VIAL_KEY_OVERRIDE_GET, CMD_VIA_VIAL_PREFI
 
 class KeyOverrideOptions:
 
-    def __init__(self, data):
+    def __init__(self, data=0):
         self.activation_trigger_down = bool(data & (1 << 0))
         self.activation_required_mod_down = bool(data & (1 << 1))
         self.activation_negative_mod_up = bool(data & (1 << 2))
@@ -32,7 +32,9 @@ class KeyOverrideOptions:
 
 class KeyOverrideEntry:
 
-    def __init__(self, args):
+    def __init__(self, args=None):
+        if args is None:
+            args = [0] * 7
         self.trigger, self.replacement, self.layers, self.trigger_mods, self.negative_mod_mask, \
             self.suppressed_mods, opt = args
         self.options = KeyOverrideOptions(opt)
@@ -48,7 +50,7 @@ class KeyOverrideEntry:
                                                       self.negative_mod_mask, self.suppressed_mods, self.options)
 
     def __eq__(self, other):
-        return self.serialize() == other.serialize()
+        return isinstance(other, KeyOverrideEntry) and self.serialize() == other.serialize()
 
 
 class ProtocolKeyOverride(BaseProtocol):
