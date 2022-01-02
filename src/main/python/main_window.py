@@ -47,8 +47,6 @@ class MainWindow(QMainWindow):
             self.resize(WINDOW_WIDTH, WINDOW_HEIGHT)
         themes.set_theme(self.get_theme())
 
-        self.current_device = None
-
         self.combobox_devices = QComboBox()
         self.combobox_devices.currentIndexChanged.connect(self.on_device_selected)
 
@@ -237,46 +235,32 @@ class MainWindow(QMainWindow):
         self.autorefresh.update(check_protocol=False)
 
     def on_device_selected(self):
-        if self.current_device is not None:
-            self.current_device.close()
-        self.current_device = None
-        idx = self.combobox_devices.currentIndex()
-        if idx >= 0:
-            self.current_device = self.autorefresh.devices[idx]
+        try:
+            self.autorefresh.select_device(self.combobox_devices.currentIndex())
+        except ProtocolError:
+            QMessageBox.warning(self, "", "Unsupported protocol version!\n"
+                                          "Please download latest Vial from https://get.vial.today/")
 
-        if self.current_device is not None:
-            try:
-                if self.current_device.sideload:
-                    self.current_device.open(self.autorefresh.sideload_json)
-                elif self.current_device.via_stack:
-                    self.current_device.open(self.autorefresh.via_stack_json["definitions"][self.current_device.via_id])
-                else:
-                    self.current_device.open(None)
-            except ProtocolError:
-                QMessageBox.warning(self, "", "Unsupported protocol version!\n"
-                                              "Please download latest Vial from https://get.vial.today/")
-
-            if isinstance(self.current_device, VialKeyboard) \
-                    and self.current_device.keyboard.keyboard_id in EXAMPLE_KEYBOARDS:
-                QMessageBox.warning(self, "", "An example keyboard UID was detected.\n"
-                                              "Please change your keyboard UID to be unique before you ship!")
+        if isinstance(self.autorefresh.current_device, VialKeyboard) \
+                and self.autorefresh.current_device.keyboard.keyboard_id in EXAMPLE_KEYBOARDS:
+            QMessageBox.warning(self, "", "An example keyboard UID was detected.\n"
+                                          "Please change your keyboard UID to be unique before you ship!")
 
         self.rebuild()
-
         self.refresh_tabs()
 
     def rebuild(self):
         # don't show "Security" menu for bootloader mode, as the bootloader is inherently insecure
-        self.security_menu.menuAction().setVisible(isinstance(self.current_device, VialKeyboard))
+        self.security_menu.menuAction().setVisible(isinstance(self.autorefresh.current_device, VialKeyboard))
 
         # if unlock process was interrupted, we must finish it first
-        if isinstance(self.current_device, VialKeyboard) and self.current_device.keyboard.get_unlock_in_progress():
-            Unlocker.unlock(self.current_device.keyboard)
-            self.current_device.keyboard.reload()
+        if isinstance(self.autorefresh.current_device, VialKeyboard) and self.autorefresh.current_device.keyboard.get_unlock_in_progress():
+            Unlocker.unlock(self.autorefresh.current_device.keyboard)
+            self.autorefresh.current_device.keyboard.reload()
 
         for e in [self.layout_editor, self.keymap_editor, self.firmware_flasher, self.macro_recorder,
                   self.tap_dance, self.combos, self.qmk_settings, self.matrix_tester, self.rgb_configurator]:
-            e.rebuild(self.current_device)
+            e.rebuild(self.autorefresh.current_device)
 
     def refresh_tabs(self):
         self.tabs.clear()
@@ -328,17 +312,17 @@ class MainWindow(QMainWindow):
         self.btn_refresh_devices.setEnabled(True)
 
     def unlock_keyboard(self):
-        if isinstance(self.current_device, VialKeyboard):
-            Unlocker.unlock(self.current_device.keyboard)
+        if isinstance(self.autorefresh.current_device, VialKeyboard):
+            Unlocker.unlock(self.autorefresh.current_device.keyboard)
 
     def lock_keyboard(self):
-        if isinstance(self.current_device, VialKeyboard):
-            self.current_device.keyboard.lock()
+        if isinstance(self.autorefresh.current_device, VialKeyboard):
+            self.autorefresh.current_device.keyboard.lock()
 
     def reboot_to_bootloader(self):
-        if isinstance(self.current_device, VialKeyboard):
-            Unlocker.unlock(self.current_device.keyboard)
-            self.current_device.keyboard.reset()
+        if isinstance(self.autorefresh.current_device, VialKeyboard):
+            Unlocker.unlock(self.autorefresh.current_device.keyboard)
+            self.autorefresh.current_device.keyboard.reset()
 
     def change_keyboard_layout(self, index):
         self.settings.setValue("keymap", KEYMAPS[index][0])

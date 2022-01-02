@@ -2,6 +2,7 @@ import json
 
 from PyQt5.QtCore import QTimer
 
+from keyboard_comm import ProtocolError
 from util import find_vial_devices
 
 
@@ -25,6 +26,7 @@ class Autorefresh:
         self.mainwindow = mainwindow
         self.devices = []
         self.locked = False
+        self.current_device = None
 
         self.sideload_json = None
         self.sideload_vid = self.sideload_pid = -1
@@ -42,7 +44,7 @@ class Autorefresh:
             return
 
         new_devices = find_vial_devices(self.via_stack_json, self.sideload_vid, self.sideload_pid,
-                                    quiet=True, check_protocol=check_protocol)
+                                        quiet=True, check_protocol=check_protocol)
 
         # if the set of the devices didn't change at all, don't need to update the combobox
         old_paths = set(d.desc["path"] for d in self.devices)
@@ -52,8 +54,8 @@ class Autorefresh:
 
         old_found = False
         old_path = False
-        if self.mainwindow.current_device is not None:
-            old_path = self.mainwindow.current_device.desc["path"]
+        if self.current_device is not None:
+            old_path = self.current_device.desc["path"]
 
         self.mainwindow.combobox_devices.blockSignals(True)
 
@@ -100,3 +102,18 @@ class Autorefresh:
 
     def load_via_stack(self, data):
         self.via_stack_json = json.loads(data)
+
+    def select_device(self, idx):
+        if self.current_device is not None:
+            self.current_device.close()
+        self.current_device = None
+        if idx >= 0:
+            self.current_device = self.devices[idx]
+
+        if self.current_device is not None:
+            if self.current_device.sideload:
+                self.current_device.open(self.sideload_json)
+            elif self.current_device.via_stack:
+                self.current_device.open(self.via_stack_json["definitions"][self.current_device.via_id])
+            else:
+                self.current_device.open(None)
