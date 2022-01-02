@@ -4,7 +4,7 @@ from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QLabel, QCheckBox, QComboBox, QGridLayout, QWidget, QSizePolicy
 
 from basic_editor import BasicEditor
-from keyboard_widget import KeyboardWidget
+from widgets.keyboard_widget import KeyboardWidget
 from vial_device import VialKeyboard
 
 

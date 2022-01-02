@@ -5,11 +5,11 @@ from PyQt5.QtWidgets import QTabWidget, QWidget, QScrollArea, QApplication
 from PyQt5.QtGui import QPalette
 
 from constants import KEYCODE_BTN_RATIO
-from flowlayout import FlowLayout
+from widgets.flowlayout import FlowLayout
 from keycodes import KEYCODES_BASIC, KEYCODES_ISO, KEYCODES_MACRO, KEYCODES_LAYERS, KEYCODES_QUANTUM, \
     KEYCODES_BACKLIGHT, KEYCODES_MEDIA, KEYCODES_SPECIAL, KEYCODES_SHIFTED, KEYCODES_USER, Keycode, \
     KEYCODES_TAP_DANCE, KEYCODES_MIDI
-from square_button import SquareButton
+from widgets.square_button import SquareButton
 from util import tr, KeycodeDisplay
 
 

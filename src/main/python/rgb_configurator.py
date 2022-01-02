@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import QWidget, QPushButton, QHBoxLayout, QSizePolicy, QGri
     QComboBox, QColorDialog, QCheckBox
 
 from basic_editor import BasicEditor
-from clickable_label import ClickableLabel
+from widgets.clickable_label import ClickableLabel
 from util import tr
 from vial_device import VialKeyboard
 

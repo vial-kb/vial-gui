@@ -5,7 +5,7 @@ from PyQt5.QtCore import Qt, QTimer
 import math
 
 from basic_editor import BasicEditor
-from keyboard_widget import KeyboardWidget
+from widgets.keyboard_widget import KeyboardWidget
 from util import tr
 from vial_device import VialKeyboard
 from unlocker import Unlocker

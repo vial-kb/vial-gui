@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 from PyQt5 import QtCore
 from PyQt5.QtCore import pyqtSignal, QObject
-from PyQt5.QtWidgets import QTabWidget, QWidget, QSizePolicy, QGridLayout, QVBoxLayout, QLabel, QLineEdit, QHBoxLayout, \
+from PyQt5.QtWidgets import QTabWidget, QWidget, QSizePolicy, QGridLayout, QVBoxLayout, QLabel, QHBoxLayout, \
     QPushButton, QSpinBox
 
-from key_widget import KeyWidget
+from widgets.key_widget import KeyWidget
 from tabbed_keycodes import TabbedKeycodes
 from util import tr
 from vial_device import VialKeyboard

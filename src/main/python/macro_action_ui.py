@@ -1,9 +1,7 @@
-import struct
-
 from PyQt5.QtCore import QObject, pyqtSignal, Qt
-from PyQt5.QtWidgets import QLineEdit, QToolButton, QComboBox, QWidget, QSizePolicy, QSpinBox, QHBoxLayout
+from PyQt5.QtWidgets import QLineEdit, QToolButton, QComboBox, QWidget, QSizePolicy, QSpinBox
 
-from flowlayout import FlowLayout
+from widgets.flowlayout import FlowLayout
 from keycodes import KEYCODES_BASIC, KEYCODES_ISO, KEYCODES_MEDIA
 from macro_action import ActionText, ActionSequence, ActionDown, ActionUp, ActionTap, ActionDelay
 from util import tr

@@ -6,7 +6,6 @@ from PyQt5.QtCore import Qt, QSettings, QStandardPaths
 from PyQt5.QtWidgets import QWidget, QComboBox, QToolButton, QHBoxLayout, QVBoxLayout, QMainWindow, QAction, qApp, \
     QFileDialog, QDialog, QTabWidget, QActionGroup, QMessageBox, QLabel
 
-import json
 import os
 import sys
 from urllib.request import urlopen
@@ -14,7 +13,7 @@ from urllib.request import urlopen
 from autorefresh import Autorefresh
 from combos import Combos
 from constants import WINDOW_WIDTH, WINDOW_HEIGHT
-from editor_container import EditorContainer
+from widgets.editor_container import EditorContainer
 from firmware_flasher import FirmwareFlasher
 from key_override import KeyOverride
 from keyboard_comm import ProtocolError
@@ -27,7 +26,7 @@ from rgb_configurator import RGBConfigurator
 from tabbed_keycodes import TabbedKeycodes
 from tap_dance import TapDance
 from unlocker import Unlocker
-from util import tr, find_vial_devices, EXAMPLE_KEYBOARDS, KeycodeDisplay
+from util import tr, EXAMPLE_KEYBOARDS, KeycodeDisplay
 from vial_device import VialKeyboard
 from matrix_test import MatrixTest
 
