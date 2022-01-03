@@ -7,9 +7,9 @@ from macro.macro_action import ActionTap, ActionDown, ActionText, ActionDelay
 from macro.macro_key import KeyDown, KeyTap, KeyUp, KeyString
 from macro.macro_optimizer import remove_repeats, replace_with_tap, replace_with_string
 
-KC_A = Keycode.find_by_qmk_id("KC_A")
-KC_B = Keycode.find_by_qmk_id("KC_B")
-KC_C = Keycode.find_by_qmk_id("KC_C")
+KC_A = Keycode.find_by_qmk_id("KC_A").code
+KC_B = Keycode.find_by_qmk_id("KC_B").code
+KC_C = Keycode.find_by_qmk_id("KC_C").code
 
 
 class TestMacro(unittest.TestCase):

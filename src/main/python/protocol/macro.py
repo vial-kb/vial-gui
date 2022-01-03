@@ -2,7 +2,7 @@ import struct
 
 from keycodes import Keycode
 from macro.macro_action import SS_TAP_CODE, SS_DOWN_CODE, SS_UP_CODE, ActionText, ActionTap, ActionDown, ActionUp, \
-    SS_QMK_PREFIX, SS_DELAY_CODE, ActionDelay
+    SS_QMK_PREFIX, SS_DELAY_CODE, ActionDelay, VIAL_MACRO_EXT_TAP, VIAL_MACRO_EXT_DOWN, VIAL_MACRO_EXT_UP
 from macro.macro_action_ui import tag_to_action
 from protocol.base_protocol import BaseProtocol
 from protocol.constants import CMD_VIA_MACRO_GET_COUNT, CMD_VIA_MACRO_GET_BUFFER_SIZE, CMD_VIA_MACRO_GET_BUFFER, \
@@ -44,12 +44,7 @@ def macro_deserialize_v1(data):
         if isinstance(s, str):
             out.append(ActionText(s))
         else:
-            # map integer values to qmk keycodes
-            keycodes = []
-            for code in s[1]:
-                keycode = Keycode.find_outer_keycode(code)
-                if keycode:
-                    keycodes.append(keycode)
+            keycodes = s[1]
             cls = {SS_TAP_CODE: ActionTap, SS_DOWN_CODE: ActionDown, SS_UP_CODE: ActionUp}[s[0]]
             out.append(cls(keycodes))
     return out
@@ -68,19 +63,36 @@ def macro_deserialize_v2(data):
             if len(data) < 2:
                 break
 
-            if data[1] in [SS_TAP_CODE, SS_DOWN_CODE, SS_UP_CODE]:
-                if len(data) < 3:
-                    break
+            act = data[1]
+            if act in [SS_TAP_CODE, SS_DOWN_CODE, SS_UP_CODE,
+                       VIAL_MACRO_EXT_TAP, VIAL_MACRO_EXT_DOWN, VIAL_MACRO_EXT_UP]:
+                if act in [SS_TAP_CODE, SS_DOWN_CODE, SS_UP_CODE]:
+                    if len(data) < 3:
+                        break
+                    length = 3
+                    kc = data[2]
+                else:
+                    remap = {VIAL_MACRO_EXT_TAP: SS_TAP_CODE,
+                             VIAL_MACRO_EXT_DOWN: SS_DOWN_CODE,
+                             VIAL_MACRO_EXT_UP: SS_UP_CODE}
+                    act = remap[act]
+                    if len(data) < 4:
+                        break
+                    length = 4
+                    kc = struct.unpack("<H", data[2:4])[0]
+                    # see decode_keycode() in qmk
+                    if kc > 0xFF00:
+                        kc = (kc & 0xFF) << 8
 
                 # append to previous *_CODE if it's the same type, otherwise create a new entry
-                if len(sequence) > 0 and isinstance(sequence[-1], list) and sequence[-1][0] == data[1]:
-                    sequence[-1][1].append(data[2])
+                if len(sequence) > 0 and isinstance(sequence[-1], list) and sequence[-1][0] == act:
+                    sequence[-1][1].append(kc)
                 else:
-                    sequence.append([data[1], [data[2]]])
+                    sequence.append([act, [kc]])
 
-                for x in range(3):
+                for x in range(length):
                     data.pop(0)
-            elif data[1] == SS_DELAY_CODE:
+            elif act == SS_DELAY_CODE:
                 if len(data) < 4:
                     break
 
@@ -108,12 +120,7 @@ def macro_deserialize_v2(data):
         else:
             args = None
             if s[0] in [SS_TAP_CODE, SS_DOWN_CODE, SS_UP_CODE]:
-                # map integer values to qmk keycodes
-                args = []
-                for code in s[1]:
-                    keycode = Keycode.find_outer_keycode(code)
-                    if keycode:
-                        args.append(keycode)
+                args = s[1]
             elif s[0] == SS_DELAY_CODE:
                 args = s[1]
 
