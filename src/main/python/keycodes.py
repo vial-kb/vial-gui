@@ -550,39 +550,41 @@ KEYCODES_MEDIA = [
     K(130, "KC_LCAP", "Locking\nCaps", "Locking Caps Lock", alias=["KC_LOCKING_CAPS"]),
     K(131, "KC_LNUM", "Locking\nNum", "Locking Num Lock", alias=["KC_LOCKING_NUM"]),
     K(132, "KC_LSCR", "Locking\nScroll", "Locking Scroll Lock", alias=["KC_LOCKING_SCROLL"]),
+]
 
-    K(0x5D09, "JS_BUTTON0", "Joystick\n0", "Joystick Button 0"),
-    K(0x5D0A, "JS_BUTTON1", "Joystick\n1", "Joystick Button 1"),
-    K(0x5D0B, "JS_BUTTON2", "Joystick\n2", "Joystick Button 2"),
-    K(0x5D0C, "JS_BUTTON3", "Joystick\n3", "Joystick Button 3"),
-    K(0x5D0D, "JS_BUTTON4", "Joystick\n4", "Joystick Button 4"),
-    K(0x5D0E, "JS_BUTTON5", "Joystick\n5", "Joystick Button 5"),
-    K(0x5D0F, "JS_BUTTON6", "Joystick\n6", "Joystick Button 6"),
-    K(0x5D10, "JS_BUTTON7", "Joystick\n7", "Joystick Button 7"),
-    K(0x5D11, "JS_BUTTON8", "Joystick\n8", "Joystick Button 8"),
-    K(0x5D12, "JS_BUTTON9", "Joystick\n9", "Joystick Button 9"),
-    K(0x5D13, "JS_BUTTON10" "Joystick\n10", "Joystick Button 10"),
-    K(0x5D14, "JS_BUTTON11" "Joystick\n11", "Joystick Button 11"),
-    K(0x5D15, "JS_BUTTON12" "Joystick\n12", "Joystick Button 12"),
-    K(0x5D16, "JS_BUTTON13" "Joystick\n13", "Joystick Button 13"),
-    K(0x5D17, "JS_BUTTON14" "Joystick\n14", "Joystick Button 14"),
-    K(0x5D18, "JS_BUTTON15" "Joystick\n15", "Joystick Button 15"),
-    K(0x5D19, "JS_BUTTON16" "Joystick\n16", "Joystick Button 16"),
-    K(0x5D1A, "JS_BUTTON17" "Joystick\n17", "Joystick Button 17"),
-    K(0x5D1B, "JS_BUTTON18" "Joystick\n18", "Joystick Button 18"),
-    K(0x5D1C, "JS_BUTTON19" "Joystick\n19", "Joystick Button 19"),
-    K(0x5D1D, "JS_BUTTON20" "Joystick\n20", "Joystick Button 20"),
-    K(0x5D1E, "JS_BUTTON21" "Joystick\n21", "Joystick Button 21"),
-    K(0x5D1F, "JS_BUTTON22" "Joystick\n22", "Joystick Button 22"),
-    K(0x5D20, "JS_BUTTON23" "Joystick\n23", "Joystick Button 23"),
-    K(0x5D21, "JS_BUTTON24" "Joystick\n24", "Joystick Button 24"),
-    K(0x5D22, "JS_BUTTON25" "Joystick\n25", "Joystick Button 25"),
-    K(0x5D23, "JS_BUTTON26" "Joystick\n26", "Joystick Button 26"),
-    K(0x5D24, "JS_BUTTON27" "Joystick\n27", "Joystick Button 27"),
-    K(0x5D25, "JS_BUTTON28" "Joystick\n28", "Joystick Button 28"),
-    K(0x5D26, "JS_BUTTON29" "Joystick\n29", "Joystick Button 29"),
-    K(0x5D27, "JS_BUTTON30" "Joystick\n30", "Joystick Button 30"),
-    K(0x5D28, "JS_BUTTON31" "Joystick\n31", "Joystick Button 31"),
+KEYCODES_JOYSTICK = [
+    K(0x5D08, "JS_BUTTON1", "Joystick\nBtn 1", "Joystick Button 1"),
+    K(0x5D09, "JS_BUTTON2", "Joystick\nBtn 2", "Joystick Button 2"),
+    K(0x5D0A, "JS_BUTTON3", "Joystick\nBtn 3", "Joystick Button 3"),
+    K(0x5D0B, "JS_BUTTON4", "Joystick\nBtn 4", "Joystick Button 4"),
+    K(0x5D0C, "JS_BUTTON5", "Joystick\nBtn 5", "Joystick Button 5"),
+    K(0x5D0D, "JS_BUTTON6", "Joystick\nBtn 6", "Joystick Button 6"),
+    K(0x5D0E, "JS_BUTTON7", "Joystick\nBtn 7", "Joystick Button 7"),
+    K(0x5D0F, "JS_BUTTON8", "Joystick\nBtn 8", "Joystick Button 8"),
+    K(0x5D10, "JS_BUTTON9", "Joystick\nBtn 9", "Joystick Button 9"),
+    K(0x5D11, "JS_BUTTON10", "Joystick\nBtn 10", "Joystick Button 10"),
+    K(0x5D12, "JS_BUTTON11", "Joystick\nBtn 11", "Joystick Button 11"),
+    K(0x5D13, "JS_BUTTON12", "Joystick\nBtn 12", "Joystick Button 12"),
+    K(0x5D14, "JS_BUTTON13", "Joystick\nBtn 13", "Joystick Button 13"),
+    K(0x5D15, "JS_BUTTON14", "Joystick\nBtn 14", "Joystick Button 14"),
+    K(0x5D16, "JS_BUTTON15", "Joystick\nBtn 15", "Joystick Button 15"),
+    K(0x5D17, "JS_BUTTON16", "Joystick\nBtn 16", "Joystick Button 16"),
+    K(0x5D18, "JS_BUTTON17", "Joystick\nBtn 17", "Joystick Button 17"),
+    K(0x5D19, "JS_BUTTON18", "Joystick\nBtn 18", "Joystick Button 18"),
+    K(0x5D1A, "JS_BUTTON19", "Joystick\nBtn 19", "Joystick Button 19"),
+    K(0x5D1B, "JS_BUTTON20", "Joystick\nBtn 20", "Joystick Button 20"),
+    K(0x5D1C, "JS_BUTTON21", "Joystick\nBtn 21", "Joystick Button 21"),
+    K(0x5D1D, "JS_BUTTON22", "Joystick\nBtn 22", "Joystick Button 22"),
+    K(0x5D1E, "JS_BUTTON23", "Joystick\nBtn 23", "Joystick Button 23"),
+    K(0x5D1F, "JS_BUTTON24", "Joystick\nBtn 24", "Joystick Button 24"),
+    K(0x5D20, "JS_BUTTON25", "Joystick\nBtn 25", "Joystick Button 25"),
+    K(0x5D21, "JS_BUTTON26", "Joystick\nBtn 26", "Joystick Button 26"),
+    K(0x5D22, "JS_BUTTON27", "Joystick\nBtn 27", "Joystick Button 27"),
+    K(0x5D23, "JS_BUTTON28", "Joystick\nBtn 28", "Joystick Button 28"),
+    K(0x5D24, "JS_BUTTON29", "Joystick\nBtn 29", "Joystick Button 29"),
+    K(0x5D25, "JS_BUTTON30", "Joystick\nBtn 30", "Joystick Button 30"),
+    K(0x5D26, "JS_BUTTON31", "Joystick\nBtn 31", "Joystick Button 31"),
+    K(0x5D27, "JS_BUTTON32", "Joystick\nBtn 32", "Joystick Button 32"),
 ]
 
 KEYCODES_TAP_DANCE = []
@@ -802,6 +804,10 @@ def create_custom_user_keycodes(custom_keycodes):
             )
         )
 
+def create_joystick_keycodes(joystickEnabled):
+    if joystickEnabled:
+        KEYCODES_MEDIA.extend(KEYCODES_JOYSTICK)
+
 def create_midi_keycodes(midiSettingLevel):
     KEYCODES_MIDI.clear()
 
@@ -858,6 +864,8 @@ def recreate_keyboard_keycodes(keyboard):
         create_custom_user_keycodes(keyboard.custom_keycodes)
     else:
         create_user_keycodes()
+
+    create_joystick_keycodes(keyboard.joystick)
 
     create_midi_keycodes(keyboard.midi)
 
