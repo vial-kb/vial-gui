@@ -42,16 +42,26 @@ jobs:
 
   build-mac:
     runs-on: macos-10.15
+    env:
+      PYTHON_VERSION: 3.6.8
+      MACOSX_DEPLOYMENT_TARGET: 10.9
 
     steps:
     - uses: actions/checkout@v2
-    - uses: actions/setup-python@v1
-      with:
-        python-version: '3.6.x'
+
+    - name: Get Python
+      run: curl https://www.python.org/ftp/python/${PYTHON_VERSION}/python-${PYTHON_VERSION}-macosx${MACOSX_DEPLOYMENT_TARGET}.pkg -o "python.pkg"
+
+    - name: Verify download
+      run: shasum -a 256 -c <<< '4bcd53faffc98d193ef7cdccd5668de3829c702af4db45258819a84a2cab60d0 *python.pkg'
+
+    - name: Install Python
+      run: |
+        sudo installer -pkg python.pkg -target /
 
     - name: Setup venv
       run: |
-        python -m venv venv
+        python3 -m venv venv
         source venv/bin/activate
         pip install -r requirements.txt
 

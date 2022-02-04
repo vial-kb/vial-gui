@@ -15,7 +15,6 @@ from fbs_runtime.application_context.PyQt5 import ApplicationContext
 import sys
 
 from main_window import MainWindow
-from constants import WINDOW_WIDTH, WINDOW_HEIGHT
 
 
 # http://timlehr.com/python-exception-hooks-with-qt-message-box/
@@ -65,7 +64,6 @@ if __name__ == '__main__':
         init_logger()
         qt_exception_hook = UncaughtHook()
         window = MainWindow(appctxt)
-        window.resize(WINDOW_WIDTH, WINDOW_HEIGHT)
         window.show()
         exit_code = appctxt.app.exec_()      # 2. Invoke appctxt.app.exec_()
         sys.exit(exit_code)

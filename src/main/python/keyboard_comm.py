@@ -325,9 +325,11 @@ class Keyboard:
                 self.encoderpos[idx] = True
                 self.encoder_count = max(self.encoder_count, idx + 1)
                 self.encoders.append(key)
-            elif key.labels[0] and "," in key.labels[0]:
-                row, col = key.labels[0].split(",")
-                row, col = int(row), int(col)
+            elif key.decal or (key.labels[0] and "," in key.labels[0]):
+                row, col = 0, 0
+                if key.labels[0] and "," in key.labels[0]:
+                    row, col = key.labels[0].split(",")
+                    row, col = int(row), int(col)
                 key.row = row
                 key.col = col
                 self.rowcol[(row, col)] = True
@@ -773,7 +775,8 @@ class Keyboard:
         if self.via_protocol < 0:
             return
 
-        data = self.usb_send(self.dev, struct.pack("BB", CMD_VIA_GET_KEYBOARD_VALUE, VIA_SWITCH_MATRIX_STATE), retries=20)
+        data = self.usb_send(self.dev, struct.pack("BB", CMD_VIA_GET_KEYBOARD_VALUE, VIA_SWITCH_MATRIX_STATE),
+                             retries=3)
         return data
 
     def macro_serialize(self, macro):

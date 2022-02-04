@@ -1,4 +1,6 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
+import logging
+from json import JSONDecodeError
 
 from PyQt5.QtCore import Qt, QSettings, QStandardPaths
 from PyQt5.QtWidgets import QWidget, QComboBox, QToolButton, QHBoxLayout, QVBoxLayout, QMainWindow, QAction, qApp, \
@@ -9,7 +11,9 @@ import os
 import sys
 from urllib.request import urlopen
 
+from autorefresh import Autorefresh
 from combos import Combos
+from constants import WINDOW_WIDTH, WINDOW_HEIGHT
 from editor_container import EditorContainer
 from firmware_flasher import FirmwareFlasher
 from keyboard_comm import ProtocolError
@@ -36,14 +40,12 @@ class MainWindow(QMainWindow):
         self.appctx = appctx
 
         self.settings = QSettings("Vial", "Vial")
+        if self.settings.value("size", None) and self.settings.value("pos", None):
+            self.resize(self.settings.value("size"))
+            self.move(self.settings.value("pos"))
+        else:
+            self.resize(WINDOW_WIDTH, WINDOW_HEIGHT)
         themes.set_theme(self.get_theme())
-
-        self.current_device = None
-        self.devices = []
-        # create empty VIA definitions. Easier than setting it to none and handling a bunch of exceptions
-        self.via_stack_json = {"definitions": {}}
-        self.sideload_json = None
-        self.sideload_vid = self.sideload_pid = -1
 
         self.combobox_devices = QComboBox()
         self.combobox_devices.currentIndexChanged.connect(self.on_device_selected)
@@ -105,15 +107,23 @@ class MainWindow(QMainWindow):
 
         self.init_menu()
 
+        self.autorefresh = Autorefresh()
+        self.autorefresh.devices_updated.connect(self.on_devices_updated)
+
         # cache for via definition files
         self.cache_path = QStandardPaths.writableLocation(QStandardPaths.CacheLocation)
         if not os.path.exists(self.cache_path):
             os.makedirs(self.cache_path)
+
         # check if the via defitions already exist
         if os.path.isfile(os.path.join(self.cache_path, "via_keyboards.json")):
             with open(os.path.join(self.cache_path, "via_keyboards.json")) as vf:
-                self.via_stack_json = json.load(vf)
-                vf.close()
+                data = vf.read()
+            try:
+                self.autorefresh.load_via_stack(data)
+            except JSONDecodeError as e:
+                # the saved file is invalid - just ignore this
+                logging.warning("Failed to parse stored via_keyboards.json: {}".format(e))
 
         # make sure initial state is valid
         self.on_click_refresh()
@@ -221,60 +231,58 @@ class MainWindow(QMainWindow):
                 outf.write(self.keymap_editor.save_layout())
 
     def on_click_refresh(self):
+        # we don't do check_protocol here either because if the matrix test tab is active,
+        # that ends up corrupting usb hid packets
+        self.autorefresh.update(check_protocol=False)
+
+    def on_devices_updated(self, devices, hard_refresh):
+        self.combobox_devices.blockSignals(True)
+
         self.combobox_devices.clear()
-        self.devices = find_vial_devices(self.via_stack_json, self.sideload_vid, self.sideload_pid)
-
-        for dev in self.devices:
+        for dev in devices:
             self.combobox_devices.addItem(dev.title())
+            if self.autorefresh.current_device and dev.desc["path"] == self.autorefresh.current_device.desc["path"]:
+                self.combobox_devices.setCurrentIndex(self.combobox_devices.count() - 1)
 
-        if self.devices:
+        self.combobox_devices.blockSignals(False)
+
+        if devices:
             self.lbl_no_devices.hide()
             self.tabs.show()
         else:
             self.lbl_no_devices.show()
             self.tabs.hide()
 
+        if hard_refresh:
+            self.on_device_selected()
+
     def on_device_selected(self):
-        if self.current_device is not None:
-            self.current_device.close()
-        self.current_device = None
-        idx = self.combobox_devices.currentIndex()
-        if idx >= 0:
-            self.current_device = self.devices[idx]
+        try:
+            self.autorefresh.select_device(self.combobox_devices.currentIndex())
+        except ProtocolError:
+            QMessageBox.warning(self, "", "Unsupported protocol version!\n"
+                                          "Please download latest Vial from https://get.vial.today/")
 
-        if self.current_device is not None:
-            try:
-                if self.current_device.sideload:
-                    self.current_device.open(self.sideload_json)
-                elif self.current_device.via_stack:
-                    self.current_device.open(self.via_stack_json["definitions"][self.current_device.via_id])
-                else:
-                    self.current_device.open(None)
-            except ProtocolError:
-                QMessageBox.warning(self, "", "Unsupported protocol version!\n"
-                                              "Please download latest Vial from https://get.vial.today/")
-
-            if isinstance(self.current_device, VialKeyboard) \
-                    and self.current_device.keyboard.keyboard_id in EXAMPLE_KEYBOARDS:
-                QMessageBox.warning(self, "", "An example keyboard UID was detected.\n"
-                                              "Please change your keyboard UID to be unique before you ship!")
+        if isinstance(self.autorefresh.current_device, VialKeyboard) \
+                and self.autorefresh.current_device.keyboard.keyboard_id in EXAMPLE_KEYBOARDS:
+            QMessageBox.warning(self, "", "An example keyboard UID was detected.\n"
+                                          "Please change your keyboard UID to be unique before you ship!")
 
         self.rebuild()
-
         self.refresh_tabs()
 
     def rebuild(self):
         # don't show "Security" menu for bootloader mode, as the bootloader is inherently insecure
-        self.security_menu.menuAction().setVisible(isinstance(self.current_device, VialKeyboard))
+        self.security_menu.menuAction().setVisible(isinstance(self.autorefresh.current_device, VialKeyboard))
 
         # if unlock process was interrupted, we must finish it first
-        if isinstance(self.current_device, VialKeyboard) and self.current_device.keyboard.get_unlock_in_progress():
-            Unlocker.unlock(self.current_device.keyboard)
-            self.current_device.keyboard.reload()
+        if isinstance(self.autorefresh.current_device, VialKeyboard) and self.autorefresh.current_device.keyboard.get_unlock_in_progress():
+            Unlocker.unlock(self.autorefresh.current_device.keyboard)
+            self.autorefresh.current_device.keyboard.reload()
 
         for e in [self.layout_editor, self.keymap_editor, self.firmware_flasher, self.macro_recorder,
                   self.tap_dance, self.combos, self.qmk_settings, self.matrix_tester, self.rgb_configurator]:
-            e.rebuild(self.current_device)
+            e.rebuild(self.autorefresh.current_device)
 
     def refresh_tabs(self):
         self.tabs.clear()
@@ -286,12 +294,12 @@ class MainWindow(QMainWindow):
             self.tabs.addTab(c, tr("MainWindow", lbl))
 
     def load_via_stack_json(self):
-        data = urlopen("https://github.com/vial-kb/via-keymap-precompiled/raw/main/via_keyboard_stack.json")
-        self.via_stack_json = json.load(data)
+        with urlopen("https://github.com/vial-kb/via-keymap-precompiled/raw/main/via_keyboard_stack.json") as resp:
+            data = resp.read()
+        self.autorefresh.load_via_stack(data)
         # write to cache
-        with open(os.path.join(self.cache_path, "via_keyboards.json"), "w") as cf:
-            cf.write(json.dumps(self.via_stack_json, indent=2))
-            cf.close()
+        with open(os.path.join(self.cache_path, "via_keyboards.json"), "wb") as cf:
+            cf.write(data)
 
     def on_sideload_json(self):
         dialog = QFileDialog()
@@ -301,10 +309,7 @@ class MainWindow(QMainWindow):
         if dialog.exec_() == QDialog.Accepted:
             with open(dialog.selectedFiles()[0], "rb") as inf:
                 data = inf.read()
-            self.sideload_json = json.loads(data)
-            self.sideload_vid = int(self.sideload_json["vendorId"], 16)
-            self.sideload_pid = int(self.sideload_json["productId"], 16)
-            self.on_click_refresh()
+            self.autorefresh.sideload_via_json(data)
 
     def on_load_dummy(self):
         dialog = QFileDialog()
@@ -314,32 +319,32 @@ class MainWindow(QMainWindow):
         if dialog.exec_() == QDialog.Accepted:
             with open(dialog.selectedFiles()[0], "rb") as inf:
                 data = inf.read()
-            self.sideload_json = json.loads(data)
-            self.sideload_vid = self.sideload_pid = 0
-            self.on_click_refresh()
+            self.autorefresh.load_dummy(data)
 
     def lock_ui(self):
+        self.autorefresh._lock()
         self.tabs.setEnabled(False)
         self.combobox_devices.setEnabled(False)
         self.btn_refresh_devices.setEnabled(False)
 
     def unlock_ui(self):
+        self.autorefresh._unlock()
         self.tabs.setEnabled(True)
         self.combobox_devices.setEnabled(True)
         self.btn_refresh_devices.setEnabled(True)
 
     def unlock_keyboard(self):
-        if isinstance(self.current_device, VialKeyboard):
-            Unlocker.unlock(self.current_device.keyboard)
+        if isinstance(self.autorefresh.current_device, VialKeyboard):
+            Unlocker.unlock(self.autorefresh.current_device.keyboard)
 
     def lock_keyboard(self):
-        if isinstance(self.current_device, VialKeyboard):
-            self.current_device.keyboard.lock()
+        if isinstance(self.autorefresh.current_device, VialKeyboard):
+            self.autorefresh.current_device.keyboard.lock()
 
     def reboot_to_bootloader(self):
-        if isinstance(self.current_device, VialKeyboard):
-            Unlocker.unlock(self.current_device.keyboard)
-            self.current_device.keyboard.reset()
+        if isinstance(self.autorefresh.current_device, VialKeyboard):
+            Unlocker.unlock(self.autorefresh.current_device.keyboard)
+            self.autorefresh.current_device.keyboard.reset()
 
     def change_keyboard_layout(self, index):
         self.settings.setValue("keymap", KEYMAPS[index][0])
@@ -378,3 +383,9 @@ class MainWindow(QMainWindow):
             '<a href="https://get.vial.today/">https://get.vial.today/</a>'
             .format(self.appctx.build_settings["version"])
         )
+
+    def closeEvent(self, e):
+        self.settings.setValue("size", self.size())
+        self.settings.setValue("pos", self.pos())
+
+        e.accept()

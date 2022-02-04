@@ -136,7 +136,6 @@ class MacroRecorder(BasicEditor):
 
         # merge: i.e. replace multiple instances of KeyDown with a single multi-key ActionDown, etc
         actions = self.keyboard.macro_deserialize(self.keyboard.macro_serialize(actions))
-        self.recording_tab.clear()
         for act in actions:
             self.recording_tab.add_action(ui_action[type(act)](self.recording_tab.container, act))
 
