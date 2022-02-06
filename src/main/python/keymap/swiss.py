@@ -44,5 +44,7 @@ keymap = {
     "KC_DQUO": "ä",
     "KC_RALT": "AltGr",
     "RALT(kc)": "AltGr\n(kc)",
-    "RALT_T(kc)": "AltGr_T\n(kc)"
+    "RALT_T(kc)": "AltGr_T\n(kc)",
+    "KC_Z": "Y",
+    "KC_Y": "Z"
 }
