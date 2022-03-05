@@ -52,7 +52,7 @@ class TapDanceEntryUI(QObject):
         self.kc_on_double_tap = KeyWidget()
         self.kc_on_double_tap.changed.connect(self.on_key_changed)
         self.container.addWidget(self.kc_on_double_tap, 2, 1)
-        self.container.addWidget(QLabel("On tap + hold"), 3, 0)
+        self.container.addWidget(QLabel("On double tap + hold"), 3, 0)
         self.kc_on_tap_hold = KeyWidget()
         self.kc_on_tap_hold.changed.connect(self.on_key_changed)
         self.container.addWidget(self.kc_on_tap_hold, 3, 1)
