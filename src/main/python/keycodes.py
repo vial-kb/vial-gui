@@ -783,11 +783,11 @@ def recreate_keyboard_keycodes(keyboard):
 
     layers = keyboard.layers
 
-    def generate_keycodes_for_mask(label, mask):
+    def generate_keycodes_for_mask(label, mask, description):
         keycodes = []
         for layer in range(layers):
             lbl = "{}({})".format(label, layer)
-            keycodes.append(Keycode(mask | layer, lbl, lbl))
+            keycodes.append(Keycode(mask | layer, lbl, lbl, description))
         return keycodes
 
     KEYCODES_LAYERS.clear()
@@ -796,12 +796,18 @@ def recreate_keyboard_keycodes(keyboard):
         KEYCODES_LAYERS.append(Keycode(0x5F10, "FN_MO13", "Fn1\n(Fn3)"))
         KEYCODES_LAYERS.append(Keycode(0x5F11, "FN_MO23", "Fn2\n(Fn3)"))
 
-    KEYCODES_LAYERS.extend(generate_keycodes_for_mask("MO", 0x5100))
-    KEYCODES_LAYERS.extend(generate_keycodes_for_mask("DF", 0x5200))
-    KEYCODES_LAYERS.extend(generate_keycodes_for_mask("TG", 0x5300))
-    KEYCODES_LAYERS.extend(generate_keycodes_for_mask("TT", 0x5800))
-    KEYCODES_LAYERS.extend(generate_keycodes_for_mask("OSL", 0x5400))
-    KEYCODES_LAYERS.extend(generate_keycodes_for_mask("TO", 0x5000 | (1 << 4)))
+    KEYCODES_LAYERS.extend(generate_keycodes_for_mask("MO", 0x5100,
+                                    "Momentarily turn on layer when pressed (requires KC_TRNS on destination layer)"))
+    KEYCODES_LAYERS.extend(generate_keycodes_for_mask("DF", 0x5200,
+                                    "Set the base (default) layer"))
+    KEYCODES_LAYERS.extend(generate_keycodes_for_mask("TG", 0x5300,
+                                    "Toggle layer on or off"))
+    KEYCODES_LAYERS.extend(generate_keycodes_for_mask("TT", 0x5800,
+                                    "Normally acts like MO unless it's tapped multiple times, which toggles layer on"))
+    KEYCODES_LAYERS.extend(generate_keycodes_for_mask("OSL", 0x5400, 
+                                    "Momentarily activates layer until a key is pressed"))
+    KEYCODES_LAYERS.extend(generate_keycodes_for_mask("TO", 0x5000 | (1 << 4),
+                                    "Turns on layer and turns off all other layers, except the default layer"))
 
     for x in range(layers):
         KEYCODES_LAYERS.append(Keycode(LT(x), "LT({}, kc)".format(x), "LT {}\n(kc)".format(x),
@@ -818,7 +824,7 @@ def recreate_keyboard_keycodes(keyboard):
     KEYCODES_TAP_DANCE.clear()
     for x in range(keyboard.tap_dance_count):
         lbl = "TD({})".format(x)
-        KEYCODES_TAP_DANCE.append(Keycode(QK_TAP_DANCE | x, lbl, lbl))
+        KEYCODES_TAP_DANCE.append(Keycode(QK_TAP_DANCE | x, lbl, lbl, "Tap dance keycode"))
 
     # Check if custom keycodes are defined in keyboard, and if so add them to user keycodes
     if keyboard.custom_keycodes is not None and len(keyboard.custom_keycodes) > 0:
