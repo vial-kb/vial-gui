@@ -804,7 +804,7 @@ def recreate_keyboard_keycodes(keyboard):
                                     "Toggle layer on or off"))
     KEYCODES_LAYERS.extend(generate_keycodes_for_mask("TT", 0x5800,
                                     "Normally acts like MO unless it's tapped multiple times, which toggles layer on"))
-    KEYCODES_LAYERS.extend(generate_keycodes_for_mask("OSL", 0x5400, 
+    KEYCODES_LAYERS.extend(generate_keycodes_for_mask("OSL", 0x5400,
                                     "Momentarily activates layer until a key is pressed"))
     KEYCODES_LAYERS.extend(generate_keycodes_for_mask("TO", 0x5000 | (1 << 4),
                                     "Turns on layer and turns off all other layers, except the default layer"))
