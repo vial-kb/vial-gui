@@ -10,6 +10,7 @@ import os
 import sys
 from urllib.request import urlopen
 
+from about_keyboard import AboutKeyboard
 from autorefresh import Autorefresh
 from editor.combos import Combos
 from constants import WINDOW_WIDTH, WINDOW_HEIGHT
@@ -208,7 +209,10 @@ class MainWindow(QMainWindow):
 
         about_vial_act = QAction(tr("MenuAbout", "About Vial..."), self)
         about_vial_act.triggered.connect(self.about_vial)
+        self.about_keyboard_act = QAction("", self)
+        self.about_keyboard_act.triggered.connect(self.about_keyboard)
         self.about_menu = self.menuBar().addMenu(tr("Menu", "About"))
+        self.about_menu.addAction(self.about_keyboard_act)
         self.about_menu.addAction(about_vial_act)
 
     def on_layout_load(self):
@@ -273,6 +277,11 @@ class MainWindow(QMainWindow):
     def rebuild(self):
         # don't show "Security" menu for bootloader mode, as the bootloader is inherently insecure
         self.security_menu.menuAction().setVisible(isinstance(self.autorefresh.current_device, VialKeyboard))
+
+        self.about_keyboard_act.setVisible(False)
+        if isinstance(self.autorefresh.current_device, VialKeyboard):
+            self.about_keyboard_act.setText("About {}...".format(self.autorefresh.current_device.title()))
+            self.about_keyboard_act.setVisible(True)
 
         # if unlock process was interrupted, we must finish it first
         if isinstance(self.autorefresh.current_device, VialKeyboard) and self.autorefresh.current_device.keyboard.get_unlock_in_progress():
@@ -383,6 +392,9 @@ class MainWindow(QMainWindow):
             '<a href="https://get.vial.today/">https://get.vial.today/</a>'
             .format(self.appctx.build_settings["version"])
         )
+
+    def about_keyboard(self):
+        AboutKeyboard(self.autorefresh.current_device).exec_()
 
     def closeEvent(self, e):
         self.settings.setValue("size", self.size())

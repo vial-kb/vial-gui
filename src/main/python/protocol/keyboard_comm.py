@@ -107,7 +107,9 @@ class Keyboard(ProtocolMacro, ProtocolDynamic, ProtocolTapDance, ProtocolCombo, 
 
         self.reload_via_protocol()
 
+        self.sideload = False
         if sideload_json is not None:
+            self.sideload = True
             payload = sideload_json
         else:
             # get keyboard identification
