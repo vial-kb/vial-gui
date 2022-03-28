@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 import logging
 import os
+import sys
 import time
 from logging.handlers import RotatingFileHandler
 
@@ -68,6 +69,12 @@ def is_rawhid(desc, quiet):
             logging.warning("is_rawhid: {} does not match - usage_page={:04X} usage={:02X}".format(
                 desc["path"], desc["usage_page"], desc["usage"]))
         return False
+
+    # there's no reason to check for permission issues on mac or windows
+    # and mac won't let us reopen an opened device
+    # so skip the rest of the checks for non-linux
+    if not sys.platform.startswith("linux"):
+        return True
 
     dev = hid.device()
 
