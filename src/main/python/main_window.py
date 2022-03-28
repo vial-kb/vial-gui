@@ -232,9 +232,7 @@ class MainWindow(QMainWindow):
                 outf.write(self.keymap_editor.save_layout())
 
     def on_click_refresh(self):
-        # we don't do check_protocol here either because if the matrix test tab is active,
-        # that ends up corrupting usb hid packets
-        self.autorefresh.update(check_protocol=False)
+        self.autorefresh.update()
 
     def on_devices_updated(self, devices, hard_refresh):
         self.combobox_devices.blockSignals(True)
