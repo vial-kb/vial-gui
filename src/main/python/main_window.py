@@ -232,7 +232,7 @@ class MainWindow(QMainWindow):
                 outf.write(self.keymap_editor.save_layout())
 
     def on_click_refresh(self):
-        self.autorefresh.update()
+        self.autorefresh.update(quiet=False, hard=True)
 
     def on_devices_updated(self, devices, hard_refresh):
         self.combobox_devices.blockSignals(True)
