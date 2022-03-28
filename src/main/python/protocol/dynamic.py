@@ -2,13 +2,14 @@
 import struct
 
 from protocol.base_protocol import BaseProtocol
-from protocol.constants import CMD_VIA_VIAL_PREFIX, CMD_VIAL_DYNAMIC_ENTRY_OP, DYNAMIC_VIAL_GET_NUMBER_OF_ENTRIES
+from protocol.constants import CMD_VIA_VIAL_PREFIX, CMD_VIAL_DYNAMIC_ENTRY_OP, DYNAMIC_VIAL_GET_NUMBER_OF_ENTRIES, \
+    VIAL_PROTOCOL_DYNAMIC
 
 
 class ProtocolDynamic(BaseProtocol):
 
     def reload_dynamic(self):
-        if self.vial_protocol < 4:
+        if self.vial_protocol < VIAL_PROTOCOL_DYNAMIC:
             self.tap_dance_count = 0
             self.tap_dance_entries = []
             self.combo_count = 0

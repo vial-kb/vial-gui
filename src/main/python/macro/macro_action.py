@@ -2,6 +2,7 @@
 import struct
 
 from keycodes import Keycode
+from protocol.constants import VIAL_PROTOCOL_ADVANCED_MACROS
 
 SS_QMK_PREFIX = 1
 
@@ -72,7 +73,7 @@ class ActionSequence(BasicAction):
     def serialize(self, vial_protocol):
         out = b""
         for kc in self.sequence:
-            if vial_protocol >= 2:
+            if vial_protocol >= VIAL_PROTOCOL_ADVANCED_MACROS:
                 out += struct.pack("B", SS_QMK_PREFIX)
             out += self.serialize_prefix(kc)
             if kc < 256:
@@ -141,7 +142,7 @@ class ActionDelay(BasicAction):
         self.delay = delay
 
     def serialize(self, vial_protocol):
-        if vial_protocol < 2:
+        if vial_protocol < VIAL_PROTOCOL_ADVANCED_MACROS:
             raise RuntimeError("ActionDelay can only be used with vial_protocol>=2")
         delay = self.delay
         return struct.pack("BBBB", SS_QMK_PREFIX, SS_DELAY_CODE, (delay % 255) + 1, (delay // 255) + 1)

@@ -6,7 +6,7 @@ from macro.macro_action import SS_TAP_CODE, SS_DOWN_CODE, SS_UP_CODE, ActionText
 from macro.macro_action_ui import tag_to_action
 from protocol.base_protocol import BaseProtocol
 from protocol.constants import CMD_VIA_MACRO_GET_COUNT, CMD_VIA_MACRO_GET_BUFFER_SIZE, CMD_VIA_MACRO_GET_BUFFER, \
-    CMD_VIA_MACRO_SET_BUFFER, BUFFER_FETCH_CHUNK
+    CMD_VIA_MACRO_SET_BUFFER, BUFFER_FETCH_CHUNK, VIAL_PROTOCOL_ADVANCED_MACROS
 from unlocker import Unlocker
 from util import chunks
 
@@ -207,7 +207,7 @@ class ProtocolMacro(BaseProtocol):
         """
         Deserialize a single macro
         """
-        if self.vial_protocol >= 2:
+        if self.vial_protocol >= VIAL_PROTOCOL_ADVANCED_MACROS:
             return macro_deserialize_v2(data)
         return macro_deserialize_v1(data)
 

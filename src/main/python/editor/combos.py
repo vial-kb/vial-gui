@@ -3,6 +3,7 @@ from PyQt5 import QtCore
 from PyQt5.QtCore import pyqtSignal, QObject
 from PyQt5.QtWidgets import QWidget, QSizePolicy, QGridLayout, QVBoxLayout, QLabel
 
+from protocol.constants import VIAL_PROTOCOL_DYNAMIC
 from widgets.key_widget import KeyWidget
 from vial_device import VialKeyboard
 from editor.basic_editor import BasicEditor
@@ -104,7 +105,7 @@ class Combos(BasicEditor):
 
     def valid(self):
         return isinstance(self.device, VialKeyboard) and \
-               (self.device.keyboard and self.device.keyboard.vial_protocol >= 4
+               (self.device.keyboard and self.device.keyboard.vial_protocol >= VIAL_PROTOCOL_DYNAMIC
                 and self.device.keyboard.combo_count > 0)
 
     def on_key_changed(self):

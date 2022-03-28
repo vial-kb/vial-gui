@@ -52,5 +52,14 @@ DYNAMIC_VIAL_KEY_OVERRIDE_SET = 0x06
 # how much of a macro/keymap buffer we can read/write per packet
 BUFFER_FETCH_CHUNK = 28
 
+# When did we get support for advanced macros (including delays in macros)
+VIAL_PROTOCOL_ADVANCED_MACROS = 2
+# Support for safe matrix tester (with unlock)
+VIAL_PROTOCOL_MATRIX_TESTER = 3
+# When did we get support for dynamic entries (tap dance, combos)
+VIAL_PROTOCOL_DYNAMIC = 4
+# When did we get support for qmk settings
+VIAL_PROTOCOL_QMK_SETTINGS = 4
 # When did we get support for 2-byte macros
 VIAL_PROTOCOL_EXT_MACROS = 5
+VIAL_PROTOCOL_KEY_OVERRIDE = 5
