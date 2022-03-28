@@ -9,7 +9,7 @@ from editor.basic_editor import BasicEditor
 from widgets.keyboard_widget import KeyboardWidget, EncoderWidget
 from keycodes import recreate_keyboard_keycodes
 from widgets.square_button import SquareButton
-from tabbed_keycodes import TabbedKeycodes
+from tabbed_keycodes import TabbedKeycodes, keycode_filter_masked
 from util import tr, KeycodeDisplay
 from vial_device import VialKeyboard
 
@@ -212,6 +212,10 @@ class KeymapEditor(BasicEditor):
     def on_key_clicked(self):
         """ Called when a key on the keyboard widget is clicked """
         self.refresh_layer_display()
+        if self.container.active_mask:
+            self.tabbed_keycodes.set_keycode_filter(keycode_filter_masked)
+        else:
+            self.tabbed_keycodes.set_keycode_filter(None)
 
     def on_layout_changed(self):
         if self.keyboard is None:

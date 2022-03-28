@@ -74,6 +74,14 @@ class Tab(QObject):
             widget.setText(label.replace("&", "&&"))
 
 
+def keycode_filter_any(kc):
+    return True
+
+
+def keycode_filter_masked(kc):
+    return kc < 256
+
+
 class TabbedKeycodes(QTabWidget):
 
     keycode_changed = pyqtSignal(int)
@@ -84,7 +92,7 @@ class TabbedKeycodes(QTabWidget):
 
         self.target = None
         self.is_tray = False
-        self.keycode_filter = lambda kc: True
+        self.keycode_filter = keycode_filter_any
 
         # create the "Any" keycode button
         any_btn = SquareButton()
@@ -160,7 +168,7 @@ class TabbedKeycodes(QTabWidget):
 
     def set_keycode_filter(self, keycode_filter):
         if keycode_filter is None:
-            keycode_filter = lambda kc: True
+            keycode_filter = keycode_filter_any
 
         if keycode_filter != self.keycode_filter:
             self.keycode_filter = keycode_filter

@@ -3,7 +3,7 @@ from PyQt5.QtCore import pyqtSignal
 from any_keycode_dialog import AnyKeycodeDialog
 from widgets.keyboard_widget import KeyboardWidget
 from kle_serial import Key
-from tabbed_keycodes import TabbedKeycodes
+from tabbed_keycodes import TabbedKeycodes, keycode_filter_masked, keycode_filter_any
 from util import KeycodeDisplay
 
 
@@ -17,7 +17,7 @@ class KeyWidget(KeyboardWidget):
         self.padding = 1
 
         self.keycode = 0
-        self.keycode_filter = keycode_filter
+        self.set_keycode_filter(keycode_filter)
 
         key = Key()
         key.row = key.col = 0
@@ -29,7 +29,10 @@ class KeyWidget(KeyboardWidget):
     def mousePressEvent(self, ev):
         super().mousePressEvent(ev)
         if self.active_key is not None:
-            TabbedKeycodes.open_tray(self, self.keycode_filter)
+            keycode_filter = self.keycode_filter
+            if self.active_mask:
+                keycode_filter = keycode_filter_masked
+            TabbedKeycodes.open_tray(self, keycode_filter)
         else:
             TabbedKeycodes.close_tray()
 
@@ -64,4 +67,6 @@ class KeyWidget(KeyboardWidget):
         self.changed.emit()
 
     def set_keycode_filter(self, keycode_filter):
+        if keycode_filter is None:
+            keycode_filter = keycode_filter_any
         self.keycode_filter = keycode_filter
