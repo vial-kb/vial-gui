@@ -47,6 +47,8 @@ def LCA(kc): return (QK_LCTL | QK_LALT | (kc))
 def LSA(kc): return (QK_LSFT | QK_LALT | (kc))
 def RSA(kc): return (QK_RSFT | QK_RALT | (kc))
 def RCS(kc): return (QK_RCTL | QK_RSFT | (kc))
+def LCG(kc): return (QK_LCTL | QK_LGUI | (kc))
+def RCG(kc): return (QK_RCTL | QK_RGUI | (kc))
 
 
 def LT(layer, kc): return (QK_LAYER_TAP | (((layer)&0xF) << 8) | ((kc)&0xFF))
@@ -80,6 +82,8 @@ def LCA_T(kc): return MT(MOD_LCTL | MOD_LALT, kc)
 def LSA_T(kc): return MT(MOD_LSFT | MOD_LALT, kc)
 def RSA_T(kc): return MT(MOD_RSFT | MOD_RALT, kc)
 def RCS_T(kc): return MT(MOD_RCTL | MOD_RSFT, kc)
+def LCG_T(kc): return MT(MOD_LCTL | MOD_LGUI, kc)
+def RCG_T(kc): return MT(MOD_RCTL | MOD_RGUI, kc)
 
 
 functions = {
@@ -100,6 +104,7 @@ functions = {
     "LSG_T": SGUI_T,
     "LCA_T": LCA_T, "LSA_T": LSA_T, "RSA_T": RSA_T, "RCS_T": RCS_T, "SAGR_T": RSA_T, "ALL_T": HYPR_T,
     "TD": TD,
+    "LCG": LCG, "RCG": RCG, "LCG_T": LCG_T, "RCG_T": RCG_T,
 }
 
 
