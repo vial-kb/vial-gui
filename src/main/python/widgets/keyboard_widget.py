@@ -160,6 +160,7 @@ class EncoderWidget(KeyWidget):
 class KeyboardWidget(QWidget):
 
     clicked = pyqtSignal()
+    deselected = pyqtSignal()
     anykey = pyqtSignal()
 
     def __init__(self, layout_editor):
@@ -377,6 +378,8 @@ class KeyboardWidget(QWidget):
         self.active_key, self.active_mask = self.hit_test(ev.pos())
         if self.active_key is not None:
             self.clicked.emit()
+        else:
+            self.deselected.emit()
         self.update()
 
     def resizeEvent(self, ev):
@@ -397,6 +400,7 @@ class KeyboardWidget(QWidget):
     def deselect(self):
         if self.active_key is not None:
             self.active_key = None
+            self.deselected.emit()
             self.update()
 
     def event(self, ev):

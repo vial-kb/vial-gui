@@ -34,6 +34,7 @@ class KeymapEditor(BasicEditor):
         # contains the actual keyboard
         self.container = KeyboardWidget(layout_editor)
         self.container.clicked.connect(self.on_key_clicked)
+        self.container.deselected.connect(self.on_key_deselected)
 
         layout = QVBoxLayout()
         layout.addLayout(layout_labels_container)
@@ -216,6 +217,9 @@ class KeymapEditor(BasicEditor):
             self.tabbed_keycodes.set_keycode_filter(keycode_filter_masked)
         else:
             self.tabbed_keycodes.set_keycode_filter(None)
+
+    def on_key_deselected(self):
+        self.tabbed_keycodes.set_keycode_filter(None)
 
     def on_layout_changed(self):
         if self.keyboard is None:
