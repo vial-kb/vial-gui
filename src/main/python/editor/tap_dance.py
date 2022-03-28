@@ -9,6 +9,7 @@ from tabbed_keycodes import TabbedKeycodes
 from util import tr
 from vial_device import VialKeyboard
 from editor.basic_editor import BasicEditor
+from widgets.tab_widget_keycodes import TabWidgetWithKeycodes
 
 
 class TapDanceEntryUI(QObject):
@@ -96,12 +97,6 @@ class TapDanceEntryUI(QObject):
         self.timing_changed.emit()
 
 
-class CustomTabWidget(QTabWidget):
-
-    def mouseReleaseEvent(self, ev):
-        TabbedKeycodes.close_tray()
-
-
 class TapDance(BasicEditor):
 
     def __init__(self):
@@ -110,7 +105,7 @@ class TapDance(BasicEditor):
 
         self.tap_dance_entries = []
         self.tap_dance_entries_available = []
-        self.tabs = CustomTabWidget()
+        self.tabs = TabWidgetWithKeycodes()
         for x in range(128):
             entry = TapDanceEntryUI(x)
             entry.key_changed.connect(self.on_key_changed)
