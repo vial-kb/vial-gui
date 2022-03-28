@@ -40,13 +40,15 @@ class Tab(QObject):
 
         self.buttons = []
 
-    def recreate_buttons(self):
+    def recreate_buttons(self, keycode_filter):
         for btn in self.buttons:
             btn.hide()
             btn.deleteLater()
         self.buttons = []
 
         for keycode in self.keycodes:
+            if not keycode_filter(keycode):
+                continue
             btn = SquareButton()
             btn.setWordWrap(self.word_wrap)
             btn.setRelSize(KEYCODE_BTN_RATIO)
@@ -82,6 +84,7 @@ class TabbedKeycodes(QTabWidget):
 
         self.target = None
         self.is_tray = False
+        self.keycode_filter = lambda kc: True
 
         # create the "Any" keycode button
         any_btn = SquareButton()
@@ -113,7 +116,7 @@ class TabbedKeycodes(QTabWidget):
             self.removeTab(0)
 
         for tab in self.tabs:
-            tab.recreate_buttons()
+            tab.recreate_buttons(self.keycode_filter)
             if tab.buttons:
                 self.addTab(tab.container, tr("TabbedKeycodes", tab.label))
 
@@ -126,7 +129,8 @@ class TabbedKeycodes(QTabWidget):
         cls.tray = tray
 
     @classmethod
-    def open_tray(cls, target):
+    def open_tray(cls, target, keycode_filter=None):
+        cls.tray.set_keycode_filter(keycode_filter)
         cls.tray.show()
         if cls.tray.target is not None and cls.tray.target != target:
             cls.tray.target.deselect()
@@ -153,3 +157,11 @@ class TabbedKeycodes(QTabWidget):
     def on_tray_anykey(self):
         if self.target is not None:
             self.target.on_anykey()
+
+    def set_keycode_filter(self, keycode_filter):
+        if keycode_filter is None:
+            keycode_filter = lambda kc: True
+
+        if keycode_filter != self.keycode_filter:
+            self.keycode_filter = keycode_filter
+            self.recreate_keycode_buttons()

@@ -11,12 +11,13 @@ class KeyWidget(KeyboardWidget):
 
     changed = pyqtSignal()
 
-    def __init__(self):
+    def __init__(self, keycode_filter=None):
         super().__init__(None)
 
         self.padding = 1
 
         self.keycode = 0
+        self.keycode_filter = keycode_filter
 
         key = Key()
         key.row = key.col = 0
@@ -28,7 +29,7 @@ class KeyWidget(KeyboardWidget):
     def mousePressEvent(self, ev):
         super().mousePressEvent(ev)
         if self.active_key is not None:
-            TabbedKeycodes.open_tray(self)
+            TabbedKeycodes.open_tray(self, self.keycode_filter)
         else:
             TabbedKeycodes.close_tray()
 

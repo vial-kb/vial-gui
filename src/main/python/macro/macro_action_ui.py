@@ -12,8 +12,8 @@ KC_TRNS = KEYCODES_SPECIAL[1]
 
 
 class DeletableKeyWidget(KeyWidget):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.setFocusPolicy(Qt.ClickFocus)
 
     def keyReleaseEvent(self, ev):
@@ -92,7 +92,7 @@ class ActionSequenceUI(BasicActionUI):
         self.widgets.clear()
 
         for kc in self.act.sequence:
-            w = DeletableKeyWidget()
+            w = DeletableKeyWidget(lambda keycode: keycode.code < 256)
             w.set_keycode(kc)
             w.changed.connect(self.on_change)
             self.layout.addWidget(w)
