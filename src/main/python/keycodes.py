@@ -446,6 +446,17 @@ KEYCODES_QUANTUM = [
     K(0x5CF0, "HPT_COND", "Haptic\n-", "Decrease DRV2605L continous haptic strength"),
     K(0x5CF1, "HPT_DWLI", "Haptic\nDwell+", "Increase Solenoid dwell time"),
     K(0x5CF2, "HPT_DWLD", "Haptic\nDwell-", "Decrease Solenoid dwell time"),
+
+    K(0x5C18, "KC_ASDN", "Auto-\nshift\nDown", "Lower the Auto Shift timeout variable (down)"),
+    K(0x5C17, "KC_ASUP", "Auto-\nshift\nUp", "Raise the Auto Shift timeout variable (up)"),
+    K(0x5C19, "KC_ASRP", "Auto-\nshift\nReport", "Report your current Auto Shift timeout value"),
+    K(0x5C1B, "KC_ASON", "Auto-\nshift\nOn", "Turns on the Auto Shift Function"),
+    K(0x5C1C, "KC_ASOFF", "Auto-\nshift\nOff", "Turns off the Auto Shift Function"),
+    K(0x5C1A, "KC_ASTG", "Auto-\nshift\nToggle", "Toggles the state of the Auto Shift feature"),
+
+    K(0x5CF7, "CMB_ON", "Combo\nOn", "Turns on Combo feature"),
+    K(0x5CF8, "CMB_OFF", "Combo\nOff", "Turns off Combo feature"),
+    K(0x5CF9, "CMB_TOG", "Combo\nToggle", "Toggles Combo feature on and off"),
 ]
 
 KEYCODES_BACKLIGHT = [
