@@ -36,6 +36,9 @@ class BasicActionUI(QObject):
             raise RuntimeError("{} was initialized with {}, expecting {}".format(self, act, self.actcls))
         self.act = act
 
+    def set_keycode_filter(self, keycode_filter):
+        pass
+
 
 class ActionTextUI(BasicActionUI):
 
@@ -80,7 +83,14 @@ class ActionSequenceUI(BasicActionUI):
         self.layout_container.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Maximum)
         self.layout_container.setLayout(self.layout)
         self.widgets = []
+        self.keycode_filter = None
         self.recreate_sequence()
+
+    def set_keycode_filter(self, keycode_filter):
+        if keycode_filter != self.keycode_filter:
+            self.keycode_filter = keycode_filter
+            for w in self.widgets:
+                w.set_keycode_filter(self.keycode_filter)
 
     def recreate_sequence(self):
         TabbedKeycodes.close_tray()
@@ -92,7 +102,7 @@ class ActionSequenceUI(BasicActionUI):
         self.widgets.clear()
 
         for kc in self.act.sequence:
-            w = DeletableKeyWidget(lambda keycode: keycode.code < 256)
+            w = DeletableKeyWidget(self.keycode_filter)
             w.set_keycode(kc)
             w.changed.connect(self.on_change)
             self.layout.addWidget(w)

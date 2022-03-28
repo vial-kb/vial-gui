@@ -9,6 +9,7 @@ from keycodes import Keycode
 from macro.macro_action import ActionTap
 from macro.macro_action_ui import ActionTextUI, ActionTapUI, ui_action, tag_to_action
 from macro.macro_line import MacroLine
+from protocol.constants import VIAL_PROTOCOL_EXT_MACROS
 from util import tr
 from textbox_window import TextboxWindow
 
@@ -84,6 +85,8 @@ class MacroTab(QVBoxLayout):
         self.addLayout(layout_buttons)
 
     def add_action(self, act):
+        if self.parent.keyboard.vial_protocol < VIAL_PROTOCOL_EXT_MACROS:
+            act.set_keycode_filter(lambda kc: kc < 256)
         line = MacroLine(self, act)
         line.changed.connect(self.on_change)
         self.lines.append(line)

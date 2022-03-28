@@ -55,8 +55,13 @@ class KeyWidget(KeyboardWidget):
     def set_keycode(self, kc):
         if kc == self.keycode:
             return
+        if self.keycode_filter and not self.keycode_filter(kc):
+            return
         self.keycode = kc
         KeycodeDisplay.display_keycode(self.widgets[0], self.keycode)
         self.update()
 
         self.changed.emit()
+
+    def set_keycode_filter(self, keycode_filter):
+        self.keycode_filter = keycode_filter

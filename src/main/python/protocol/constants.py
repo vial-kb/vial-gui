@@ -51,3 +51,6 @@ DYNAMIC_VIAL_KEY_OVERRIDE_SET = 0x06
 
 # how much of a macro/keymap buffer we can read/write per packet
 BUFFER_FETCH_CHUNK = 28
+
+# When did we get support for 2-byte macros
+VIAL_PROTOCOL_EXT_MACROS = 5

@@ -24,7 +24,7 @@ from unlocker import Unlocker
 from util import MSG_LEN, hid_send
 
 SUPPORTED_VIA_PROTOCOL = [-1, 9]
-SUPPORTED_VIAL_PROTOCOL = [-1, 0, 1, 2, 3, 4]
+SUPPORTED_VIAL_PROTOCOL = [-1, 0, 1, 2, 3, 4, 5]
 
 
 class ProtocolError(Exception):

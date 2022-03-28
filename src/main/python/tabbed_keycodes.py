@@ -47,7 +47,7 @@ class Tab(QObject):
         self.buttons = []
 
         for keycode in self.keycodes:
-            if not keycode_filter(keycode):
+            if not keycode_filter(keycode.code):
                 continue
             btn = SquareButton()
             btn.setWordWrap(self.word_wrap)
