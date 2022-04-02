@@ -18,7 +18,8 @@
                 { "type": "boolean", "title": "Tapping Force Hold", "qsid": 8, "bit": 2 },
                 { "type": "boolean", "title": "Retro Tapping", "qsid": 8, "bit": 3 },
                 { "type": "integer", "title": "Tap Code Delay", "qsid": 18, "min": 0, "max": 1000, "width": 2 },
-                { "type": "integer", "title": "Tap Hold Caps Delay", "qsid": 19, "min": 0, "max": 1000, "width": 2 }
+                { "type": "integer", "title": "Tap Hold Caps Delay", "qsid": 19, "min": 0, "max": 1000, "width": 2 },
+                { "type": "integer", "title": "Tapping Toggle", "qsid": 20, "min": 0, "max": 100, "width": 1 }
             ]
         },
         {
