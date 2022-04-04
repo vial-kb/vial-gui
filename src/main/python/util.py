@@ -7,7 +7,7 @@ from logging.handlers import RotatingFileHandler
 
 from PyQt5.QtCore import QCoreApplication, QStandardPaths
 from PyQt5.QtGui import QPalette
-from PyQt5.QtWidgets import QApplication
+from PyQt5.QtWidgets import QApplication, QWidget, QScrollArea, QFrame
 
 from hidproxy import hid
 from keycodes import Keycode
@@ -149,6 +149,19 @@ def init_logger():
     handler = RotatingFileHandler(path, maxBytes=5 * 1024 * 1024, backupCount=5)
     handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(module)s:%(lineno)d - %(message)s"))
     logging.getLogger().addHandler(handler)
+
+
+def make_scrollable(layout):
+    w = QWidget()
+    w.setLayout(layout)
+    w.setObjectName("w")
+    scroll = QScrollArea()
+    scroll.setFrameShape(QFrame.NoFrame)
+    scroll.setStyleSheet("QScrollArea { background-color:transparent; }")
+    w.setStyleSheet("#w { background-color:transparent; }")
+    scroll.setWidgetResizable(True)
+    scroll.setWidget(w)
+    return scroll
 
 
 class KeycodeDisplay:
