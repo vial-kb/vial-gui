@@ -29,7 +29,11 @@ class AlternativeDisplay(QWidget):
         self.key_layout = FlowLayout()
 
         if prefix_buttons:
-            for btn in prefix_buttons:
+            for title, code in prefix_buttons:
+                btn = SquareButton()
+                btn.setRelSize(KEYCODE_BTN_RATIO)
+                btn.setText(title)
+                btn.clicked.connect(lambda st, k=code: self.keycode_changed.emit(k))
                 self.key_layout.addWidget(btn)
 
         layout = QVBoxLayout()
@@ -153,26 +157,20 @@ class TabbedKeycodes(QTabWidget):
         self.is_tray = False
         self.keycode_filter = keycode_filter_any
 
-        # create the "Any" keycode button
-        any_btn = SquareButton()
-        any_btn.setText("Any")
-        any_btn.setRelSize(KEYCODE_BTN_RATIO)
-        any_btn.clicked.connect(lambda: self.anykey.emit())
-
         self.tabs = [
             Tab(self, "Basic", [
                 (ansi_100, KEYCODES_SPECIAL + KEYCODES_SHIFTED),
                 (ansi_80, KEYCODES_SPECIAL + KEYCODES_BASIC_NUMPAD + KEYCODES_SHIFTED),
                 (ansi_70, KEYCODES_SPECIAL + KEYCODES_BASIC_NUMPAD + KEYCODES_BASIC_NAV + KEYCODES_SHIFTED),
                 (None, KEYCODES_SPECIAL + KEYCODES_BASIC + KEYCODES_SHIFTED),
-            ], prefix_buttons=[any_btn]),
+            ], prefix_buttons=[("Any", -1)]),
             Tab(self, "ISO/JIS", [
                 (iso_100, KEYCODES_SPECIAL + KEYCODES_SHIFTED + KEYCODES_ISO_KR),
                 (iso_80, KEYCODES_SPECIAL + KEYCODES_BASIC_NUMPAD + KEYCODES_SHIFTED + KEYCODES_ISO_KR),
                 (iso_70, KEYCODES_SPECIAL + KEYCODES_BASIC_NUMPAD + KEYCODES_BASIC_NAV + KEYCODES_SHIFTED +
                  KEYCODES_ISO_KR),
                 (None, KEYCODES_ISO),
-            ]),
+            ], prefix_buttons=[("Any", -1)]),
             SimpleTab(self, "Layers", KEYCODES_LAYERS),
             SimpleTab(self, "Quantum", KEYCODES_QUANTUM),
             SimpleTab(self, "Backlight", KEYCODES_BACKLIGHT),
@@ -184,10 +182,16 @@ class TabbedKeycodes(QTabWidget):
         ]
 
         for tab in self.tabs:
-            tab.keycode_changed.connect(lambda kc: self.keycode_changed.emit(kc))
+            tab.keycode_changed.connect(self.on_keycode_changed)
 
         self.recreate_keycode_buttons()
         KeycodeDisplay.notify_keymap_override(self)
+
+    def on_keycode_changed(self, code):
+        if code == -1:
+            self.anykey.emit()
+        else:
+            self.keycode_changed.emit(code)
 
     def recreate_keycode_buttons(self):
         prev_tab = self.tabText(self.currentIndex()) if self.currentIndex() >= 0 else ""
