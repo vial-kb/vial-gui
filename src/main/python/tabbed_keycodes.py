@@ -1,44 +1,42 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
-from PyQt5.QtCore import Qt, pyqtSignal, QObject
-from PyQt5.QtWidgets import QTabWidget, QWidget, QScrollArea, QApplication
+from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtWidgets import QTabWidget, QWidget, QScrollArea, QApplication, QVBoxLayout
 from PyQt5.QtGui import QPalette
 
 from constants import KEYCODE_BTN_RATIO
+from widgets.display_keyboard import DisplayKeyboard
+from widgets.display_keyboard_defs import ansi_100, ansi_80, ansi_70, iso_100, iso_80, iso_70
 from widgets.flowlayout import FlowLayout
 from keycodes import KEYCODES_BASIC, KEYCODES_ISO, KEYCODES_MACRO, KEYCODES_LAYERS, KEYCODES_QUANTUM, \
     KEYCODES_BACKLIGHT, KEYCODES_MEDIA, KEYCODES_SPECIAL, KEYCODES_SHIFTED, KEYCODES_USER, Keycode, \
-    KEYCODES_TAP_DANCE, KEYCODES_MIDI
+    KEYCODES_TAP_DANCE, KEYCODES_MIDI, KEYCODES_BASIC_NUMPAD, KEYCODES_BASIC_NAV, KEYCODES_ISO_KR
 from widgets.square_button import SquareButton
 from util import tr, KeycodeDisplay
 
 
-class Tab(QObject):
+class AlternativeDisplay(QWidget):
 
-    keycode_changed = pyqtSignal(int)
-
-    def __init__(self, parent, label, keycodes, word_wrap=False, prefix_buttons=None):
+    def __init__(self, kbdef, keycodes, prefix_buttons):
         super().__init__()
 
-        self.label = label
+        self.kb_display = None
         self.keycodes = keycodes
-        self.word_wrap = word_wrap
+        self.buttons = []
 
-        self.container = QScrollArea(parent)
-        self.layout = FlowLayout()
+        self.key_layout = FlowLayout()
+
         if prefix_buttons:
             for btn in prefix_buttons:
-                self.layout.addWidget(btn)
+                self.key_layout.addWidget(btn)
 
-        self.container.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
-        self.container.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.container.setWidgetResizable(True)
-
-        w = QWidget()
-        w.setLayout(self.layout)
-        self.container.setWidget(w)
-
-        self.buttons = []
+        layout = QVBoxLayout()
+        if kbdef:
+            self.kb_display = DisplayKeyboard(kbdef)
+            layout.addWidget(self.kb_display)
+            layout.setAlignment(self.kb_display, Qt.AlignHCenter)
+        layout.addLayout(self.key_layout)
+        self.setLayout(layout)
 
     def recreate_buttons(self, keycode_filter):
         for btn in self.buttons:
@@ -49,16 +47,14 @@ class Tab(QObject):
             if not keycode_filter(keycode.code):
                 continue
             btn = SquareButton()
-            btn.setWordWrap(self.word_wrap)
             btn.setRelSize(KEYCODE_BTN_RATIO)
             btn.setToolTip(Keycode.tooltip(keycode.code))
             btn.clicked.connect(lambda st, k=keycode: self.keycode_changed.emit(k.code))
             btn.keycode = keycode
-            self.layout.addWidget(btn)
+            self.key_layout.addWidget(btn)
             self.buttons.append(btn)
 
         self.relabel_buttons()
-        self.container.setVisible(len(self.buttons) > 0)
 
     def relabel_buttons(self):
         for widget in self.buttons:
@@ -71,6 +67,65 @@ class Tab(QObject):
                 label = widget.keycode.label
                 widget.setStyleSheet("QPushButton {}")
             widget.setText(label.replace("&", "&&"))
+
+    def required_width(self):
+        return self.kb_display.width() if self.kb_display else 0
+
+
+class Tab(QScrollArea):
+
+    keycode_changed = pyqtSignal(int)
+
+    def __init__(self, parent, label, alts, prefix_buttons=None):
+        super().__init__(parent)
+
+        self.label = label
+        self.layout = QVBoxLayout()
+        self.layout.setContentsMargins(0, 0, 0, 0)
+
+        self.alternatives = []
+        for kb, keys in alts:
+            alt = AlternativeDisplay(kb, keys, prefix_buttons)
+            self.layout.addWidget(alt)
+            self.alternatives.append(alt)
+
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.setWidgetResizable(True)
+
+        w = QWidget()
+        w.setLayout(self.layout)
+        self.setWidget(w)
+
+    def recreate_buttons(self, keycode_filter):
+        for alt in self.alternatives:
+            alt.recreate_buttons(keycode_filter)
+
+    def relabel_buttons(self):
+        for alt in self.alternatives:
+            alt.relabel_buttons()
+
+    def visible(self):
+        return True
+
+    def resizeEvent(self, evt):
+        super().resizeEvent(evt)
+
+        # hide everything first
+        for alt in self.alternatives:
+            alt.hide()
+
+        # then display first alternative which fits on screen w/o horizontal scroll
+        for alt in self.alternatives:
+            if self.width() - self.verticalScrollBar().width() > alt.required_width():
+                alt.show()
+                break
+
+
+class SimpleTab(Tab):
+
+    def __init__(self, parent, label, keycodes):
+        super().__init__(parent, label, [(None, keycodes)])
 
 
 def keycode_filter_any(kc):
@@ -100,16 +155,27 @@ class TabbedKeycodes(QTabWidget):
         any_btn.clicked.connect(lambda: self.anykey.emit())
 
         self.tabs = [
-            Tab(self, "Basic", KEYCODES_SPECIAL + KEYCODES_BASIC + KEYCODES_SHIFTED, prefix_buttons=[any_btn]),
-            Tab(self, "ISO/JIS", KEYCODES_ISO),
-            Tab(self, "Layers", KEYCODES_LAYERS),
-            Tab(self, "Quantum", KEYCODES_QUANTUM),
-            Tab(self, "Backlight", KEYCODES_BACKLIGHT),
-            Tab(self, "App, Media and Mouse", KEYCODES_MEDIA),
-            Tab(self, "MIDI", KEYCODES_MIDI),
-            Tab(self, "Tap Dance", KEYCODES_TAP_DANCE),
-            Tab(self, "User", KEYCODES_USER),
-            Tab(self, "Macro", KEYCODES_MACRO),
+            Tab(self, "Basic", [
+                (ansi_100, KEYCODES_SPECIAL + KEYCODES_SHIFTED),
+                (ansi_80, KEYCODES_SPECIAL + KEYCODES_BASIC_NUMPAD + KEYCODES_SHIFTED),
+                (ansi_70, KEYCODES_SPECIAL + KEYCODES_BASIC_NUMPAD + KEYCODES_BASIC_NAV + KEYCODES_SHIFTED),
+                (None, KEYCODES_SPECIAL + KEYCODES_BASIC + KEYCODES_SHIFTED),
+            ], prefix_buttons=[any_btn]),
+            Tab(self, "ISO/JIS", [
+                (iso_100, KEYCODES_SPECIAL + KEYCODES_SHIFTED + KEYCODES_ISO_KR),
+                (iso_80, KEYCODES_SPECIAL + KEYCODES_BASIC_NUMPAD + KEYCODES_SHIFTED + KEYCODES_ISO_KR),
+                (iso_70, KEYCODES_SPECIAL + KEYCODES_BASIC_NUMPAD + KEYCODES_BASIC_NAV + KEYCODES_SHIFTED +
+                 KEYCODES_ISO_KR),
+                (None, KEYCODES_ISO),
+            ]),
+            SimpleTab(self, "Layers", KEYCODES_LAYERS),
+            SimpleTab(self, "Quantum", KEYCODES_QUANTUM),
+            SimpleTab(self, "Backlight", KEYCODES_BACKLIGHT),
+            SimpleTab(self, "App, Media and Mouse", KEYCODES_MEDIA),
+            SimpleTab(self, "MIDI", KEYCODES_MIDI),
+            SimpleTab(self, "Tap Dance", KEYCODES_TAP_DANCE),
+            SimpleTab(self, "User", KEYCODES_USER),
+            SimpleTab(self, "Macro", KEYCODES_MACRO),
         ]
 
         for tab in self.tabs:
@@ -124,8 +190,8 @@ class TabbedKeycodes(QTabWidget):
 
         for tab in self.tabs:
             tab.recreate_buttons(self.keycode_filter)
-            if tab.buttons:
-                self.addTab(tab.container, tr("TabbedKeycodes", tab.label))
+            if tab.visible():
+                self.addTab(tab, tr("TabbedKeycodes", tab.label))
 
     def on_keymap_override(self):
         for tab in self.tabs:

@@ -113,6 +113,44 @@ KEYCODES_SPECIAL = [
     K(0x01, "KC_TRNS", "▽", alias=["KC_TRANSPARENT"]),
 ]
 
+KEYCODES_BASIC_NUMPAD = [
+    K(0x53, "KC_NUMLOCK", "Num\nLock", recorder_alias=["num lock"], alias=["KC_NLCK"]),
+    K(0x54, "KC_KP_SLASH", "/", alias=["KC_PSLS"]),
+    K(0x55, "KC_KP_ASTERISK", "*", alias=["KC_PAST"]),
+    K(0x56, "KC_KP_MINUS", "-", alias=["KC_PMNS"]),
+    K(0x57, "KC_KP_PLUS", "+", alias=["KC_PPLS"]),
+    K(0x58, "KC_KP_ENTER", "Num\nEnter", alias=["KC_PENT"]),
+    K(0x59, "KC_KP_1", "1", alias=["KC_P1"]),
+    K(0x5A, "KC_KP_2", "2", alias=["KC_P2"]),
+    K(0x5B, "KC_KP_3", "3", alias=["KC_P3"]),
+    K(0x5C, "KC_KP_4", "4", alias=["KC_P4"]),
+    K(0x5D, "KC_KP_5", "5", alias=["KC_P5"]),
+    K(0x5E, "KC_KP_6", "6", alias=["KC_P6"]),
+    K(0x5F, "KC_KP_7", "7", alias=["KC_P7"]),
+    K(0x60, "KC_KP_8", "8", alias=["KC_P8"]),
+    K(0x61, "KC_KP_9", "9", alias=["KC_P9"]),
+    K(0x62, "KC_KP_0", "0", alias=["KC_P0"]),
+    K(0x63, "KC_KP_DOT", ".", alias=["KC_PDOT"]),
+    K(0x67, "KC_KP_EQUAL", "=", alias=["KC_PEQL"]),
+    K(0x85, "KC_KP_COMMA", ",", alias=["KC_PCMM"]),
+]
+
+KEYCODES_BASIC_NAV = [
+    K(0x46, "KC_PSCREEN", "Print\nScreen", alias=["KC_PSCR"]),
+    K(0x47, "KC_SCROLLLOCK", "Scroll\nLock", recorder_alias=["scroll lock"], alias=["KC_SLCK", "KC_BRMD"]),
+    K(0x48, "KC_PAUSE", "Pause", recorder_alias=["pause", "break"], alias=["KC_PAUS", "KC_BRK", "KC_BRMU"]),
+    K(0x49, "KC_INSERT", "Insert", recorder_alias=["insert"], alias=["KC_INS"]),
+    K(0x4A, "KC_HOME", "Home", recorder_alias=["home"]),
+    K(0x4B, "KC_PGUP", "Page\nUp", recorder_alias=["page up"]),
+    K(0x4C, "KC_DELETE", "Del", recorder_alias=["delete"], alias=["KC_DEL"]),
+    K(0x4D, "KC_END", "End", recorder_alias=["end"]),
+    K(0x4E, "KC_PGDOWN", "Page\nDown", recorder_alias=["page down"], alias=["KC_PGDN"]),
+    K(0x4F, "KC_RIGHT", "Right", recorder_alias=["right"], alias=["KC_RGHT"]),
+    K(0x50, "KC_LEFT", "Left", recorder_alias=["left"]),
+    K(0x51, "KC_DOWN", "Down", recorder_alias=["down"]),
+    K(0x52, "KC_UP", "Up", recorder_alias=["up"]),
+]
+
 KEYCODES_BASIC = [
     K(0x04, "KC_A", "A", printable="a", recorder_alias=["a"]),
     K(0x05, "KC_B", "B", printable="b", recorder_alias=["b"]),
@@ -179,40 +217,8 @@ KEYCODES_BASIC = [
     K(0x43, "KC_F10", "F10", recorder_alias=["f10"]),
     K(0x44, "KC_F11", "F11", recorder_alias=["f11"]),
     K(0x45, "KC_F12", "F12", recorder_alias=["f12"]),
-    K(0x46, "KC_PSCREEN", "Print\nScreen", alias=["KC_PSCR"]),
-    K(0x47, "KC_SCROLLLOCK", "Scroll\nLock", recorder_alias=["scroll lock"], alias=["KC_SLCK", "KC_BRMD"]),
-    K(0x48, "KC_PAUSE", "Pause", recorder_alias=["pause", "break"], alias=["KC_PAUS", "KC_BRK", "KC_BRMU"]),
-    K(0x49, "KC_INSERT", "Insert", recorder_alias=["insert"], alias=["KC_INS"]),
-    K(0x4A, "KC_HOME", "Home", recorder_alias=["home"]),
-    K(0x4B, "KC_PGUP", "Page\nUp", recorder_alias=["page up"]),
-    K(0x4C, "KC_DELETE", "Del", recorder_alias=["delete"], alias=["KC_DEL"]),
-    K(0x4D, "KC_END", "End", recorder_alias=["end"]),
-    K(0x4E, "KC_PGDOWN", "Page\nDown", recorder_alias=["page down"], alias=["KC_PGDN"]),
-    K(0x4F, "KC_RIGHT", "Right", recorder_alias=["right"], alias=["KC_RGHT"]),
-    K(0x50, "KC_LEFT", "Left", recorder_alias=["left"]),
-    K(0x51, "KC_DOWN", "Down", recorder_alias=["down"]),
-    K(0x52, "KC_UP", "Up", recorder_alias=["up"]),
-    K(0x53, "KC_NUMLOCK", "Num\nLock", recorder_alias=["num lock"], alias=["KC_NLCK"]),
-    K(0x54, "KC_KP_SLASH", "/", alias=["KC_PSLS"]),
-    K(0x55, "KC_KP_ASTERISK", "*", alias=["KC_PAST"]),
-    K(0x56, "KC_KP_MINUS", "-", alias=["KC_PMNS"]),
-    K(0x57, "KC_KP_PLUS", "+", alias=["KC_PPLS"]),
-    K(0x58, "KC_KP_ENTER", "Num\nEnter", alias=["KC_PENT"]),
-    K(0x59, "KC_KP_1", "1", alias=["KC_P1"]),
-    K(0x5A, "KC_KP_2", "2", alias=["KC_P2"]),
-    K(0x5B, "KC_KP_3", "3", alias=["KC_P3"]),
-    K(0x5C, "KC_KP_4", "4", alias=["KC_P4"]),
-    K(0x5D, "KC_KP_5", "5", alias=["KC_P5"]),
-    K(0x5E, "KC_KP_6", "6", alias=["KC_P6"]),
-    K(0x5F, "KC_KP_7", "7", alias=["KC_P7"]),
-    K(0x60, "KC_KP_8", "8", alias=["KC_P8"]),
-    K(0x61, "KC_KP_9", "9", alias=["KC_P9"]),
-    K(0x62, "KC_KP_0", "0", alias=["KC_P0"]),
-    K(0x63, "KC_KP_DOT", ".", alias=["KC_PDOT"]),
-    K(0x65, "KC_APPLICATION", "Menu", recorder_alias=["menu", "left menu", "right menu"], alias=["KC_APP"]),
-    K(0x67, "KC_KP_EQUAL", "=", alias=["KC_PEQL"]),
-    K(0x85, "KC_KP_COMMA", ",", alias=["KC_PCMM"]),
 
+    K(0x65, "KC_APPLICATION", "Menu", recorder_alias=["menu", "left menu", "right menu"], alias=["KC_APP"]),
     K(0xE0, "KC_LCTRL", "LCtrl", recorder_alias=["left ctrl", "ctrl"], alias=["KC_LCTL"]),
     K(0xE1, "KC_LSHIFT", "LShift", recorder_alias=["left shift", "shift"], alias=["KC_LSFT"]),
     K(0xE2, "KC_LALT", "LAlt", recorder_alias=["alt"], alias=["KC_LOPT"]),
@@ -222,6 +228,9 @@ KEYCODES_BASIC = [
     K(0xE6, "KC_RALT", "RAlt", alias=["KC_ALGR", "KC_ROPT"]),
     K(0xE7, "KC_RGUI", "RGui", recorder_alias=["right windows"], alias=["KC_RCMD", "KC_RWIN"]),
 ]
+
+KEYCODES_BASIC.extend(KEYCODES_BASIC_NUMPAD)
+KEYCODES_BASIC.extend(KEYCODES_BASIC_NAV)
 
 KEYCODES_SHIFTED = [
     K(0x235, "KC_TILD", "~"),
@@ -255,9 +264,14 @@ KEYCODES_ISO = [
     K(0x89, "KC_JYEN", "|\n¥", alias=["KC_INT3"]),
     K(0x8A, "KC_HENK", "変換", "JIS Henkan", alias=["KC_INT4"]),
     K(0x8B, "KC_MHEN", "無変換", "JIS Muhenkan", alias=["KC_INT5"]),
+]
+
+KEYCODES_ISO_KR = [
     K(0x90, "KC_LANG1", "한영\nかな", "Korean Han/Yeong / JP Mac Kana", alias=["KC_HAEN"]),
     K(0x91, "KC_LANG2", "漢字\n英数", "Korean Hanja / JP Mac Eisu", alias=["KC_HANJ"]),
 ]
+
+KEYCODES_ISO.extend(KEYCODES_ISO_KR)
 
 KEYCODES_LAYERS = []
 
