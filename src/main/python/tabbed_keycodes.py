@@ -17,6 +17,8 @@ from util import tr, KeycodeDisplay
 
 class AlternativeDisplay(QWidget):
 
+    keycode_changed = pyqtSignal(int)
+
     def __init__(self, kbdef, keycodes, prefix_buttons):
         super().__init__()
 
@@ -33,6 +35,7 @@ class AlternativeDisplay(QWidget):
         layout = QVBoxLayout()
         if kbdef:
             self.kb_display = DisplayKeyboard(kbdef)
+            self.kb_display.keycode_changed.connect(self.keycode_changed)
             layout.addWidget(self.kb_display)
             layout.setAlignment(self.kb_display, Qt.AlignHCenter)
         layout.addLayout(self.key_layout)
@@ -86,6 +89,7 @@ class Tab(QScrollArea):
         self.alternatives = []
         for kb, keys in alts:
             alt = AlternativeDisplay(kb, keys, prefix_buttons)
+            alt.keycode_changed.connect(self.keycode_changed)
             self.layout.addWidget(alt)
             self.alternatives.append(alt)
 

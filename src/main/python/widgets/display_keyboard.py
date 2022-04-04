@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 import json
 
+from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QGridLayout, QWidget, QSizePolicy
 
 from constants import KEYCODE_BTN_RATIO
@@ -11,16 +12,17 @@ from kle_serial import Serial as KleSerial
 
 class DisplayKeyboard(QWidget):
 
+    keycode_changed = pyqtSignal(int)
+
     def btn(self, kc):
         kc = Keycode.find_by_qmk_id(kc)
 
         btn = SquareButton()
-        # btn.setWordWrap(self.word_wrap)
         btn.setRelSize(KEYCODE_BTN_RATIO)
         btn.setContentsMargins(0, 0, 0, 0)
         btn.setToolTip(Keycode.tooltip(kc.code))
         btn.setText(kc.label)
-        # btn.clicked.connect(lambda st, k=keycode: self.keycode_changed.emit(k.code))
+        btn.clicked.connect(lambda st, k=kc: self.keycode_changed.emit(k.code))
         btn.keycode = kc.code
         return btn
 
