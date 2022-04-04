@@ -68,6 +68,9 @@ class AlternativeDisplay(QWidget):
     def required_width(self):
         return self.kb_display.width() if self.kb_display else 0
 
+    def has_buttons(self):
+        return len(self.buttons) > 0
+
 
 class Tab(QScrollArea):
 
@@ -98,13 +101,17 @@ class Tab(QScrollArea):
     def recreate_buttons(self, keycode_filter):
         for alt in self.alternatives:
             alt.recreate_buttons(keycode_filter)
+        self.setVisible(self.has_buttons())
 
     def relabel_buttons(self):
         for alt in self.alternatives:
             alt.relabel_buttons()
 
-    def visible(self):
-        return True
+    def has_buttons(self):
+        for alt in self.alternatives:
+            if alt.has_buttons():
+                return True
+        return False
 
     def resizeEvent(self, evt):
         super().resizeEvent(evt)
@@ -188,7 +195,7 @@ class TabbedKeycodes(QTabWidget):
 
         for tab in self.tabs:
             tab.recreate_buttons(self.keycode_filter)
-            if tab.visible():
+            if tab.has_buttons():
                 self.addTab(tab, tr("TabbedKeycodes", tab.label))
 
     def on_keymap_override(self):
