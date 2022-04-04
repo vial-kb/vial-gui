@@ -196,3 +196,16 @@ class KeycodeDisplay:
     def notify_keymap_override(cls, client):
         cls.clients.append(client)
         client.on_keymap_override()
+
+    @classmethod
+    def relabel_buttons(cls, buttons):
+        for widget in buttons:
+            qmk_id = widget.keycode.qmk_id
+            if qmk_id in KeycodeDisplay.keymap_override:
+                label = KeycodeDisplay.keymap_override[qmk_id]
+                highlight_color = QApplication.palette().color(QPalette.Link).getRgb()
+                widget.setStyleSheet("QPushButton {color: rgb%s;}" % str(highlight_color))
+            else:
+                label = widget.keycode.label
+                widget.setStyleSheet("QPushButton {}")
+            widget.setText(label.replace("&", "&&"))

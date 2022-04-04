@@ -60,16 +60,10 @@ class AlternativeDisplay(QWidget):
         self.relabel_buttons()
 
     def relabel_buttons(self):
-        for widget in self.buttons:
-            qmk_id = widget.keycode.qmk_id
-            if qmk_id in KeycodeDisplay.keymap_override:
-                label = KeycodeDisplay.keymap_override[qmk_id]
-                highlight_color = QApplication.palette().color(QPalette.Link).getRgb()
-                widget.setStyleSheet("QPushButton {color: rgb%s;}" % str(highlight_color))
-            else:
-                label = widget.keycode.label
-                widget.setStyleSheet("QPushButton {}")
-            widget.setText(label.replace("&", "&&"))
+        if self.kb_display:
+            self.kb_display.relabel_buttons()
+
+        KeycodeDisplay.relabel_buttons(self.buttons)
 
     def required_width(self):
         return self.kb_display.width() if self.kb_display else 0
