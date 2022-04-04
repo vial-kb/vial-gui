@@ -36,10 +36,7 @@ class Keycode:
 
     @classmethod
     def find(cls, code):
-        for keycode in KEYCODES:
-            if keycode.code == code:
-                return keycode
-        return None
+        return KEYCODES_MAP.get(code)
 
     @classmethod
     def find_outer_keycode(cls, code):
@@ -746,6 +743,7 @@ for x in range(256):
     KEYCODES_HIDDEN.append(K(QK_TAP_DANCE | x, "TD({})".format(x), "TD({})".format(x)))
 
 KEYCODES = []
+KEYCODES_MAP = dict()
 
 K = None
 
@@ -757,6 +755,9 @@ def recreate_keycodes():
     KEYCODES.extend(KEYCODES_SPECIAL + KEYCODES_BASIC + KEYCODES_SHIFTED + KEYCODES_ISO + KEYCODES_LAYERS +
                     KEYCODES_QUANTUM + KEYCODES_BACKLIGHT + KEYCODES_MEDIA + KEYCODES_TAP_DANCE + KEYCODES_MACRO +
                     KEYCODES_USER + KEYCODES_HIDDEN + KEYCODES_MIDI)
+    KEYCODES_MAP.clear()
+    for keycode in KEYCODES:
+        KEYCODES_MAP[keycode.code] = keycode
 
 
 def create_user_keycodes():
