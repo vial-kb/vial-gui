@@ -1,9 +1,10 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 from PyQt5 import QtCore
 from PyQt5.QtCore import pyqtSignal, QObject
-from PyQt5.QtWidgets import QWidget, QSizePolicy, QGridLayout, QVBoxLayout, QLabel, QCheckBox
+from PyQt5.QtWidgets import QWidget, QSizePolicy, QGridLayout, QVBoxLayout, QLabel, QCheckBox, QScrollArea, QFrame
 
 from protocol.constants import VIAL_PROTOCOL_DYNAMIC
+from util import make_scrollable
 from widgets.key_widget import KeyWidget
 from protocol.key_override import KeyOverrideOptions, KeyOverrideEntry
 from vial_device import VialKeyboard
@@ -173,8 +174,7 @@ class KeyOverrideEntryUI(QObject):
         l = QVBoxLayout()
         l.addWidget(w)
         l.setAlignment(w, QtCore.Qt.AlignHCenter)
-        self.w2 = QWidget()
-        self.w2.setLayout(l)
+        self.w2 = make_scrollable(l)
 
     def populate_container(self):
         self.container.addWidget(QLabel("Enable"), 0, 0)

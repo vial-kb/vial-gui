@@ -11,7 +11,7 @@ from macro.macro_action_ui import ActionTextUI, ActionTapUI, ui_action, tag_to_a
 from macro.macro_line import MacroLine
 from protocol.constants import VIAL_PROTOCOL_EXT_MACROS
 from tabbed_keycodes import keycode_filter_masked
-from util import tr
+from util import tr, make_scrollable
 from textbox_window import TextboxWindow
 
 
@@ -72,17 +72,7 @@ class MacroTab(QVBoxLayout):
         vbox.addLayout(self.container)
         vbox.addStretch()
 
-        w = QWidget()
-        w.setLayout(vbox)
-        w.setObjectName("w")
-        scroll = QScrollArea()
-        scroll.setFrameShape(QFrame.NoFrame)
-        scroll.setStyleSheet("QScrollArea { background-color:transparent; }")
-        w.setStyleSheet("#w { background-color:transparent; }")
-        scroll.setWidgetResizable(True)
-        scroll.setWidget(w)
-
-        self.addWidget(scroll)
+        self.addWidget(make_scrollable(vbox))
         self.addLayout(layout_buttons)
 
     def add_action(self, act):

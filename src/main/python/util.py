@@ -7,7 +7,7 @@ from logging.handlers import RotatingFileHandler
 
 from PyQt5.QtCore import QCoreApplication, QStandardPaths
 from PyQt5.QtGui import QPalette
-from PyQt5.QtWidgets import QApplication
+from PyQt5.QtWidgets import QApplication, QWidget, QScrollArea, QFrame
 
 from hidproxy import hid
 from keycodes import Keycode
@@ -151,6 +151,19 @@ def init_logger():
     logging.getLogger().addHandler(handler)
 
 
+def make_scrollable(layout):
+    w = QWidget()
+    w.setLayout(layout)
+    w.setObjectName("w")
+    scroll = QScrollArea()
+    scroll.setFrameShape(QFrame.NoFrame)
+    scroll.setStyleSheet("QScrollArea { background-color:transparent; }")
+    w.setStyleSheet("#w { background-color:transparent; }")
+    scroll.setWidgetResizable(True)
+    scroll.setWidget(w)
+    return scroll
+
+
 class KeycodeDisplay:
 
     keymap_override = KEYMAPS[0][1]
@@ -196,3 +209,16 @@ class KeycodeDisplay:
     def notify_keymap_override(cls, client):
         cls.clients.append(client)
         client.on_keymap_override()
+
+    @classmethod
+    def relabel_buttons(cls, buttons):
+        for widget in buttons:
+            qmk_id = widget.keycode.qmk_id
+            if qmk_id in KeycodeDisplay.keymap_override:
+                label = KeycodeDisplay.keymap_override[qmk_id]
+                highlight_color = QApplication.palette().color(QPalette.Link).getRgb()
+                widget.setStyleSheet("QPushButton {color: rgb%s;}" % str(highlight_color))
+            else:
+                label = widget.keycode.label
+                widget.setStyleSheet("QPushButton {}")
+            widget.setText(label.replace("&", "&&"))
