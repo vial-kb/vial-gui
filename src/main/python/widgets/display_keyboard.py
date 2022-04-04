@@ -26,6 +26,7 @@ class DisplayKeyboard(QWidget):
         for key in keymap.keys:
             kc = Keycode.find_by_qmk_id(key.labels[0])
             btn = SquareButton()
+            btn.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
             btn.setRelSize(KEYCODE_BTN_RATIO)
             btn.setContentsMargins(0, 0, 0, 0)
             btn.setToolTip(Keycode.tooltip(kc.code))
