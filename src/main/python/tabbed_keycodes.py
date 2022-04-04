@@ -190,6 +190,7 @@ class TabbedKeycodes(QTabWidget):
         KeycodeDisplay.notify_keymap_override(self)
 
     def recreate_keycode_buttons(self):
+        prev_tab = self.tabText(self.currentIndex()) if self.currentIndex() >= 0 else ""
         while self.count() > 0:
             self.removeTab(0)
 
@@ -197,6 +198,8 @@ class TabbedKeycodes(QTabWidget):
             tab.recreate_buttons(self.keycode_filter)
             if tab.has_buttons():
                 self.addTab(tab, tr("TabbedKeycodes", tab.label))
+                if tab.label == prev_tab:
+                    self.setCurrentIndex(self.count() - 1)
 
     def on_keymap_override(self):
         for tab in self.tabs:
