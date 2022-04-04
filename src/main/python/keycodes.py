@@ -785,6 +785,7 @@ def create_custom_user_keycodes(custom_keycodes):
             )
         )
 
+
 def create_midi_keycodes(midiSettingLevel):
     KEYCODES_MIDI.clear()
 
@@ -793,6 +794,7 @@ def create_midi_keycodes(midiSettingLevel):
 
     if midiSettingLevel == "advanced":
         KEYCODES_MIDI.extend(KEYCODES_MIDI_ADVANCED)
+
 
 def recreate_keyboard_keycodes(keyboard):
     """ Generates keycodes based on information the keyboard provides (e.g. layer keycodes, macros) """
@@ -812,18 +814,24 @@ def recreate_keyboard_keycodes(keyboard):
         KEYCODES_LAYERS.append(Keycode(0x5F10, "FN_MO13", "Fn1\n(Fn3)"))
         KEYCODES_LAYERS.append(Keycode(0x5F11, "FN_MO23", "Fn2\n(Fn3)"))
 
-    KEYCODES_LAYERS.extend(generate_keycodes_for_mask("MO", 0x5100,
-                                    "Momentarily turn on layer when pressed (requires KC_TRNS on destination layer)"))
-    KEYCODES_LAYERS.extend(generate_keycodes_for_mask("DF", 0x5200,
-                                    "Set the base (default) layer"))
-    KEYCODES_LAYERS.extend(generate_keycodes_for_mask("TG", 0x5300,
-                                    "Toggle layer on or off"))
-    KEYCODES_LAYERS.extend(generate_keycodes_for_mask("TT", 0x5800,
-                                    "Normally acts like MO unless it's tapped multiple times, which toggles layer on"))
-    KEYCODES_LAYERS.extend(generate_keycodes_for_mask("OSL", 0x5400,
-                                    "Momentarily activates layer until a key is pressed"))
-    KEYCODES_LAYERS.extend(generate_keycodes_for_mask("TO", 0x5000 | (1 << 4),
-                                    "Turns on layer and turns off all other layers, except the default layer"))
+    KEYCODES_LAYERS.extend(
+        generate_keycodes_for_mask("MO", 0x5100,
+                                   "Momentarily turn on layer when pressed (requires KC_TRNS on destination layer)"))
+    KEYCODES_LAYERS.extend(
+        generate_keycodes_for_mask("DF", 0x5200,
+                                   "Set the base (default) layer"))
+    KEYCODES_LAYERS.extend(
+        generate_keycodes_for_mask("TG", 0x5300,
+                                   "Toggle layer on or off"))
+    KEYCODES_LAYERS.extend(
+        generate_keycodes_for_mask("TT", 0x5800,
+                                   "Normally acts like MO unless it's tapped multiple times, which toggles layer on"))
+    KEYCODES_LAYERS.extend(
+        generate_keycodes_for_mask("OSL", 0x5400,
+                                   "Momentarily activates layer until a key is pressed"))
+    KEYCODES_LAYERS.extend(
+        generate_keycodes_for_mask("TO", 0x5000 | (1 << 4),
+                                   "Turns on layer and turns off all other layers, except the default layer"))
 
     for x in range(layers):
         KEYCODES_LAYERS.append(Keycode(LT(x), "LT({}, kc)".format(x), "LT {}\n(kc)".format(x),
