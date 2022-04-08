@@ -80,7 +80,10 @@ class Unlocker(QDialog):
             return True
 
         dlg = cls(cls.global_layout_editor, keyboard)
-        return bool(dlg.exec_())
+        cls.global_main_window.lock_ui()
+        ret = bool(dlg.exec_())
+        cls.global_main_window.unlock_ui()
+        return ret
 
     def keyPressEvent(self, ev):
         """ Ignore all key presses, e.g. Esc should not close the window """
