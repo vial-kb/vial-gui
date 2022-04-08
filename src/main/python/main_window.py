@@ -78,6 +78,7 @@ class MainWindow(QMainWindow):
                         (self.matrix_tester, "Matrix tester"), (self.firmware_flasher, "Firmware updater")]
 
         Unlocker.global_layout_editor = self.layout_editor
+        Unlocker.global_main_window = self
 
         self.current_tab = None
         self.tabs = QTabWidget()
