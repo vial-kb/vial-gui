@@ -7,10 +7,15 @@ class BasicKey:
     pass
 
 
-class KeyDown(BasicKey):
+class BasicKeycode(BasicKey):
 
-    def __init__(self, keycode):
-        self.keycode = keycode
+    def __init__(self, kc):
+        if isinstance(kc, int):
+            kc = Keycode.find(kc)
+        self.keycode = kc
+
+
+class KeyDown(BasicKeycode):
 
     def __repr__(self):
         return "Down({})".format(Keycode.label(self.keycode.code))
@@ -19,10 +24,7 @@ class KeyDown(BasicKey):
         return isinstance(other, KeyDown) and other.keycode == self.keycode
 
 
-class KeyUp(BasicKey):
-
-    def __init__(self, keycode):
-        self.keycode = keycode
+class KeyUp(BasicKeycode):
 
     def __repr__(self):
         return "Up({})".format(Keycode.label(self.keycode.code))
@@ -31,10 +33,7 @@ class KeyUp(BasicKey):
         return isinstance(other, KeyUp) and other.keycode == self.keycode
 
 
-class KeyTap(BasicKey):
-
-    def __init__(self, keycode):
-        self.keycode = keycode
+class KeyTap(BasicKeycode):
 
     def __repr__(self):
         return "Tap({})".format(Keycode.label(self.keycode.code))

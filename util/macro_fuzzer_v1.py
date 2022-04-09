@@ -4,7 +4,7 @@ import sys
 sys.path.append("src/main/python")
 
 with atheris.instrument_imports():
-    from keyboard_comm import macro_deserialize_v1
+    from protocol.macro import macro_deserialize_v1
 
 
 def TestOneInput(data):

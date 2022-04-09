@@ -1,17 +1,18 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 import sys
 
-from PyQt5.QtWidgets import QPushButton, QHBoxLayout, QTabWidget, QWidget, QLabel
+from PyQt5.QtWidgets import QPushButton, QHBoxLayout, QWidget, QLabel
 
-from basic_editor import BasicEditor
-from macro_action import ActionText, ActionTap, ActionDown, ActionUp, ActionDelay
-from macro_action_ui import ui_action
-from macro_key import KeyString, KeyDown, KeyUp, KeyTap
-from macro_optimizer import macro_optimize
-from macro_tab import MacroTab
+from editor.basic_editor import BasicEditor
+from macro.macro_action import ActionText, ActionTap, ActionDown, ActionUp
+from macro.macro_action_ui import ui_action
+from macro.macro_key import KeyString, KeyDown, KeyUp, KeyTap
+from macro.macro_optimizer import macro_optimize
+from macro.macro_tab import MacroTab
 from unlocker import Unlocker
 from util import tr
 from vial_device import VialKeyboard
+from widgets.tab_widget_keycodes import TabWidgetWithKeycodes
 
 
 class MacroRecorder(BasicEditor):
@@ -29,11 +30,11 @@ class MacroRecorder(BasicEditor):
         self.recorder = None
 
         if sys.platform.startswith("linux"):
-            from macro_recorder_linux import LinuxRecorder
+            from macro.macro_recorder_linux import LinuxRecorder
 
             self.recorder = LinuxRecorder()
         elif sys.platform.startswith("win"):
-            from macro_recorder_windows import WindowsRecorder
+            from macro.macro_recorder_windows import WindowsRecorder
 
             self.recorder = WindowsRecorder()
 
@@ -45,7 +46,7 @@ class MacroRecorder(BasicEditor):
         self.recording_tab = None
         self.recording_append = False
 
-        self.tabs = QTabWidget()
+        self.tabs = TabWidgetWithKeycodes()
         for x in range(32):
             tab = MacroTab(self, self.recorder is not None)
             tab.changed.connect(self.on_change)

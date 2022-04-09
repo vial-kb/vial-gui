@@ -4,8 +4,9 @@ from PyQt5.QtCore import Qt, QTimer
 
 import math
 
-from basic_editor import BasicEditor
-from keyboard_widget import KeyboardWidget
+from editor.basic_editor import BasicEditor
+from protocol.constants import VIAL_PROTOCOL_MATRIX_TESTER
+from widgets.keyboard_widget import KeyboardWidget
 from util import tr
 from vial_device import VialKeyboard
 from unlocker import Unlocker
@@ -61,7 +62,7 @@ class MatrixTest(BasicEditor):
     def valid(self):
         # Check if vial protocol is v3 or later
         return isinstance(self.device, VialKeyboard) and \
-               (self.device.keyboard and self.device.keyboard.vial_protocol >= 3)
+               (self.device.keyboard and self.device.keyboard.vial_protocol >= VIAL_PROTOCOL_MATRIX_TESTER)
 
     def reset_keyboard_widget(self):
         # reset keyboard widget

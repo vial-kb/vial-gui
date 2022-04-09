@@ -9,6 +9,7 @@ class FakeKeyboard:
     macro_count = 16
     custom_keycodes = None
     tap_dance_count = 0
+    midi = None
 
 
 class TestKeycode(unittest.TestCase):

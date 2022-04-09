@@ -6,29 +6,30 @@ from PyQt5.QtCore import Qt, QSettings, QStandardPaths
 from PyQt5.QtWidgets import QWidget, QComboBox, QToolButton, QHBoxLayout, QVBoxLayout, QMainWindow, QAction, qApp, \
     QFileDialog, QDialog, QTabWidget, QActionGroup, QMessageBox, QLabel
 
-import json
 import os
 import sys
 from urllib.request import urlopen
 
+from about_keyboard import AboutKeyboard
 from autorefresh import Autorefresh
-from combos import Combos
+from editor.combos import Combos
 from constants import WINDOW_WIDTH, WINDOW_HEIGHT
-from editor_container import EditorContainer
-from firmware_flasher import FirmwareFlasher
-from keyboard_comm import ProtocolError
-from keymap_editor import KeymapEditor
+from widgets.editor_container import EditorContainer
+from editor.firmware_flasher import FirmwareFlasher
+from editor.key_override import KeyOverride
+from protocol.keyboard_comm import ProtocolError
+from editor.keymap_editor import KeymapEditor
 from keymaps import KEYMAPS
-from layout_editor import LayoutEditor
-from macro_recorder import MacroRecorder
-from qmk_settings import QmkSettings
-from rgb_configurator import RGBConfigurator
+from editor.layout_editor import LayoutEditor
+from editor.macro_recorder import MacroRecorder
+from editor.qmk_settings import QmkSettings
+from editor.rgb_configurator import RGBConfigurator
 from tabbed_keycodes import TabbedKeycodes
-from tap_dance import TapDance
+from editor.tap_dance import TapDance
 from unlocker import Unlocker
-from util import tr, find_vial_devices, EXAMPLE_KEYBOARDS, KeycodeDisplay
+from util import tr, EXAMPLE_KEYBOARDS, KeycodeDisplay
 from vial_device import VialKeyboard
-from matrix_test import MatrixTest
+from editor.matrix_test import MatrixTest
 
 import themes
 
@@ -65,6 +66,7 @@ class MainWindow(QMainWindow):
         self.macro_recorder = MacroRecorder()
         self.tap_dance = TapDance()
         self.combos = Combos()
+        self.key_override = KeyOverride()
         QmkSettings.initialize(appctx)
         self.qmk_settings = QmkSettings()
         self.matrix_tester = MatrixTest(self.layout_editor)
@@ -72,10 +74,11 @@ class MainWindow(QMainWindow):
 
         self.editors = [(self.keymap_editor, "Keymap"), (self.layout_editor, "Layout"), (self.macro_recorder, "Macros"),
                         (self.rgb_configurator, "Lighting"), (self.tap_dance, "Tap Dance"), (self.combos, "Combos"),
-                        (self.qmk_settings, "QMK Settings"),
+                        (self.key_override, "Key Overrides"), (self.qmk_settings, "QMK Settings"),
                         (self.matrix_tester, "Matrix tester"), (self.firmware_flasher, "Firmware updater")]
 
         Unlocker.global_layout_editor = self.layout_editor
+        Unlocker.global_main_window = self
 
         self.current_tab = None
         self.tabs = QTabWidget()
@@ -94,12 +97,12 @@ class MainWindow(QMainWindow):
 
         layout = QVBoxLayout()
         layout.addLayout(layout_combobox)
-        layout.addWidget(self.tabs)
+        layout.addWidget(self.tabs, 1)
         layout.addWidget(self.lbl_no_devices)
         layout.setAlignment(self.lbl_no_devices, Qt.AlignHCenter)
         self.tray_keycodes = TabbedKeycodes()
         self.tray_keycodes.make_tray()
-        layout.addWidget(self.tray_keycodes)
+        layout.addWidget(self.tray_keycodes, 1)
         self.tray_keycodes.hide()
         w = QWidget()
         w.setLayout(layout)
@@ -207,7 +210,10 @@ class MainWindow(QMainWindow):
 
         about_vial_act = QAction(tr("MenuAbout", "About Vial..."), self)
         about_vial_act.triggered.connect(self.about_vial)
+        self.about_keyboard_act = QAction("", self)
+        self.about_keyboard_act.triggered.connect(self.about_keyboard)
         self.about_menu = self.menuBar().addMenu(tr("Menu", "About"))
+        self.about_menu.addAction(self.about_keyboard_act)
         self.about_menu.addAction(about_vial_act)
 
     def on_layout_load(self):
@@ -231,9 +237,7 @@ class MainWindow(QMainWindow):
                 outf.write(self.keymap_editor.save_layout())
 
     def on_click_refresh(self):
-        # we don't do check_protocol here either because if the matrix test tab is active,
-        # that ends up corrupting usb hid packets
-        self.autorefresh.update(check_protocol=False)
+        self.autorefresh.update(quiet=False, hard=True)
 
     def on_devices_updated(self, devices, hard_refresh):
         self.combobox_devices.blockSignals(True)
@@ -275,13 +279,19 @@ class MainWindow(QMainWindow):
         # don't show "Security" menu for bootloader mode, as the bootloader is inherently insecure
         self.security_menu.menuAction().setVisible(isinstance(self.autorefresh.current_device, VialKeyboard))
 
+        self.about_keyboard_act.setVisible(False)
+        if isinstance(self.autorefresh.current_device, VialKeyboard):
+            self.about_keyboard_act.setText("About {}...".format(self.autorefresh.current_device.title()))
+            self.about_keyboard_act.setVisible(True)
+
         # if unlock process was interrupted, we must finish it first
         if isinstance(self.autorefresh.current_device, VialKeyboard) and self.autorefresh.current_device.keyboard.get_unlock_in_progress():
             Unlocker.unlock(self.autorefresh.current_device.keyboard)
             self.autorefresh.current_device.keyboard.reload()
 
         for e in [self.layout_editor, self.keymap_editor, self.firmware_flasher, self.macro_recorder,
-                  self.tap_dance, self.combos, self.qmk_settings, self.matrix_tester, self.rgb_configurator]:
+                  self.tap_dance, self.combos, self.key_override, self.qmk_settings, self.matrix_tester,
+                  self.rgb_configurator]:
             e.rebuild(self.autorefresh.current_device)
 
     def refresh_tabs(self):
@@ -383,6 +393,9 @@ class MainWindow(QMainWindow):
             '<a href="https://get.vial.today/">https://get.vial.today/</a>'
             .format(self.appctx.build_settings["version"])
         )
+
+    def about_keyboard(self):
+        AboutKeyboard(self.autorefresh.current_device).exec_()
 
     def closeEvent(self, e):
         self.settings.setValue("size", self.size())

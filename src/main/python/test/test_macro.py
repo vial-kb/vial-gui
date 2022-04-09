@@ -1,15 +1,17 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 import unittest
 
-from keyboard_comm import DummyKeyboard
+from protocol.dummy_keyboard import DummyKeyboard
 from keycodes import Keycode
-from macro_action import ActionTap, ActionDown, ActionText, ActionDelay
-from macro_key import KeyDown, KeyTap, KeyUp, KeyString
-from macro_optimizer import remove_repeats, replace_with_tap, replace_with_string
+from macro.macro_action import ActionTap, ActionDown, ActionText, ActionDelay, ActionUp
+from macro.macro_key import KeyDown, KeyTap, KeyUp, KeyString
+from macro.macro_optimizer import remove_repeats, replace_with_tap, replace_with_string
 
-KC_A = Keycode.find_by_qmk_id("KC_A")
-KC_B = Keycode.find_by_qmk_id("KC_B")
-KC_C = Keycode.find_by_qmk_id("KC_C")
+KC_A = Keycode.find_by_qmk_id("KC_A").code
+KC_B = Keycode.find_by_qmk_id("KC_B").code
+KC_C = Keycode.find_by_qmk_id("KC_C").code
+
+CMB_TOG = Keycode.find_by_qmk_id("CMB_TOG").code
 
 
 class TestMacro(unittest.TestCase):
@@ -85,10 +87,10 @@ class TestMacro(unittest.TestCase):
                                  ActionDown([KC_C, KC_B, KC_A]), ActionDelay(256)])
 
     def test_save(self):
-        down = ActionDown([KC_A, KC_B])
-        self.assertEqual(down.save(), ["down", "KC_A", "KC_B"])
-        tap = ActionTap([KC_B, KC_A])
-        self.assertEqual(tap.save(), ["tap", "KC_B", "KC_A"])
+        down = ActionDown([KC_A, KC_B, CMB_TOG])
+        self.assertEqual(down.save(), ["down", "KC_A", "KC_B", "CMB_TOG"])
+        tap = ActionTap([CMB_TOG, KC_B, KC_A])
+        self.assertEqual(tap.save(), ["tap", "CMB_TOG", "KC_B", "KC_A"])
         text = ActionText("Hello world")
         self.assertEqual(text.save(), ["text", "Hello world"])
         delay = ActionDelay(123)
@@ -96,14 +98,40 @@ class TestMacro(unittest.TestCase):
 
     def test_restore(self):
         down = ActionDown()
-        down.restore(["down", "KC_A", "KC_B"])
-        self.assertEqual(down, ActionDown([KC_A, KC_B]))
+        down.restore(["down", "KC_A", "KC_B", "CMB_TOG"])
+        self.assertEqual(down, ActionDown([KC_A, KC_B, CMB_TOG]))
         tap = ActionTap()
-        tap.restore(["tap", "KC_B", "KC_A"])
-        self.assertEqual(tap, ActionTap([KC_B, KC_A]))
+        tap.restore(["tap", "CMB_TOG", "KC_B", "KC_A"])
+        self.assertEqual(tap, ActionTap([CMB_TOG, KC_B, KC_A]))
         text = ActionText()
         text.restore(["text", "Hello world"])
         self.assertEqual(text, ActionText("Hello world"))
         delay = ActionDelay()
         delay.restore(["delay", 123])
         self.assertEqual(delay, ActionDelay(123))
+
+    def test_twobyte_keycodes(self):
+        kb = DummyKeyboard(None)
+        kb.vial_protocol = 2
+        data = kb.macro_serialize([ActionTap([CMB_TOG, KC_A])])
+        self.assertEqual(data, b"\x01\x05\xF9\x5C\x01\x01\x04")
+        data = kb.macro_serialize([ActionDown([CMB_TOG, KC_A])])
+        self.assertEqual(data, b"\x01\x06\xF9\x5C\x01\x02\x04")
+        data = kb.macro_serialize([ActionUp([CMB_TOG, KC_A])])
+        self.assertEqual(data, b"\x01\x07\xF9\x5C\x01\x03\x04")
+
+        macro = kb.macro_deserialize(b"\x01\x05\xF9\x5C\x01\x01\x04")
+        self.assertEqual(macro, [ActionTap([CMB_TOG, KC_A])])
+        macro = kb.macro_deserialize(b"\x01\x06\xF9\x5C\x01\x02\x04")
+        self.assertEqual(macro, [ActionDown([CMB_TOG, KC_A])])
+        macro = kb.macro_deserialize(b"\x01\x07\xF9\x5C\x01\x03\x04")
+        self.assertEqual(macro, [ActionUp([CMB_TOG, KC_A])])
+
+    def test_twobyte_with_zeroes(self):
+        kb = DummyKeyboard(None)
+        kb.vial_protocol = 2
+        data = kb.macro_serialize([ActionTap([0xA000, 0xB100, 0xC200])])
+        self.assertEqual(data, b"\x01\x05\xA0\xFF\x01\x05\xB1\xFF\x01\x05\xC2\xFF")
+
+        macro = kb.macro_deserialize(b"\x01\x05\xC2\xFF\x01\x05\xB1\xFF\x01\x05\xA0\xFF")
+        self.assertEqual(macro, [ActionTap([0xC200, 0xB100, 0xA000])])

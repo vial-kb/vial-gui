@@ -1,9 +1,9 @@
 from PyQt5.QtCore import pyqtSignal
 
 from any_keycode_dialog import AnyKeycodeDialog
-from keyboard_widget import KeyboardWidget
+from widgets.keyboard_widget import KeyboardWidget
 from kle_serial import Key
-from tabbed_keycodes import TabbedKeycodes
+from tabbed_keycodes import TabbedKeycodes, keycode_filter_masked, keycode_filter_any
 from util import KeycodeDisplay
 
 
@@ -11,12 +11,13 @@ class KeyWidget(KeyboardWidget):
 
     changed = pyqtSignal()
 
-    def __init__(self):
+    def __init__(self, keycode_filter=None):
         super().__init__(None)
 
         self.padding = 1
 
         self.keycode = 0
+        self.set_keycode_filter(keycode_filter)
 
         key = Key()
         key.row = key.col = 0
@@ -28,7 +29,10 @@ class KeyWidget(KeyboardWidget):
     def mousePressEvent(self, ev):
         super().mousePressEvent(ev)
         if self.active_key is not None:
-            TabbedKeycodes.open_tray(self)
+            keycode_filter = self.keycode_filter
+            if self.active_mask:
+                keycode_filter = keycode_filter_masked
+            TabbedKeycodes.open_tray(self, keycode_filter)
         else:
             TabbedKeycodes.close_tray()
 
@@ -54,8 +58,15 @@ class KeyWidget(KeyboardWidget):
     def set_keycode(self, kc):
         if kc == self.keycode:
             return
+        if self.keycode_filter and not self.keycode_filter(kc):
+            return
         self.keycode = kc
         KeycodeDisplay.display_keycode(self.widgets[0], self.keycode)
         self.update()
 
         self.changed.emit()
+
+    def set_keycode_filter(self, keycode_filter):
+        if keycode_filter is None:
+            keycode_filter = keycode_filter_any
+        self.keycode_filter = keycode_filter

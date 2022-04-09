@@ -6,193 +6,32 @@ from collections import OrderedDict
 
 from keycodes import RESET_KEYCODE, Keycode
 from kle_serial import Serial as KleSerial
-from macro_action import SS_TAP_CODE, SS_DOWN_CODE, SS_UP_CODE, ActionText, ActionTap, ActionDown, ActionUp, \
-    SS_QMK_PREFIX, SS_DELAY_CODE, ActionDelay
-from macro_action_ui import tag_to_action
+from protocol.combo import ProtocolCombo
+from protocol.constants import CMD_VIA_GET_PROTOCOL_VERSION, CMD_VIA_GET_KEYBOARD_VALUE, CMD_VIA_SET_KEYBOARD_VALUE, \
+    CMD_VIA_SET_KEYCODE, CMD_VIA_LIGHTING_SET_VALUE, CMD_VIA_LIGHTING_GET_VALUE, CMD_VIA_LIGHTING_SAVE, \
+    CMD_VIA_GET_LAYER_COUNT, CMD_VIA_KEYMAP_GET_BUFFER, CMD_VIA_VIAL_PREFIX, VIA_LAYOUT_OPTIONS, \
+    VIA_SWITCH_MATRIX_STATE, QMK_BACKLIGHT_BRIGHTNESS, QMK_BACKLIGHT_EFFECT, QMK_RGBLIGHT_BRIGHTNESS, \
+    QMK_RGBLIGHT_EFFECT, QMK_RGBLIGHT_EFFECT_SPEED, QMK_RGBLIGHT_COLOR, VIALRGB_GET_INFO, VIALRGB_GET_MODE, \
+    VIALRGB_GET_SUPPORTED, VIALRGB_SET_MODE, CMD_VIAL_GET_KEYBOARD_ID, CMD_VIAL_GET_SIZE, CMD_VIAL_GET_DEFINITION, \
+    CMD_VIAL_GET_ENCODER, CMD_VIAL_SET_ENCODER, CMD_VIAL_GET_UNLOCK_STATUS, CMD_VIAL_UNLOCK_START, CMD_VIAL_UNLOCK_POLL, \
+    CMD_VIAL_LOCK, CMD_VIAL_QMK_SETTINGS_QUERY, CMD_VIAL_QMK_SETTINGS_GET, CMD_VIAL_QMK_SETTINGS_SET, \
+    CMD_VIAL_QMK_SETTINGS_RESET, BUFFER_FETCH_CHUNK, VIAL_PROTOCOL_QMK_SETTINGS
+from protocol.dynamic import ProtocolDynamic
+from protocol.key_override import ProtocolKeyOverride
+from protocol.macro import ProtocolMacro
+from protocol.tap_dance import ProtocolTapDance
 from unlocker import Unlocker
-from util import MSG_LEN, hid_send, chunks
+from util import MSG_LEN, hid_send
 
 SUPPORTED_VIA_PROTOCOL = [-1, 9]
-SUPPORTED_VIAL_PROTOCOL = [-1, 0, 1, 2, 3, 4]
-
-CMD_VIA_GET_PROTOCOL_VERSION = 0x01
-CMD_VIA_GET_KEYBOARD_VALUE = 0x02
-CMD_VIA_SET_KEYBOARD_VALUE = 0x03
-CMD_VIA_GET_KEYCODE = 0x04
-CMD_VIA_SET_KEYCODE = 0x05
-CMD_VIA_LIGHTING_SET_VALUE = 0x07
-CMD_VIA_LIGHTING_GET_VALUE = 0x08
-CMD_VIA_LIGHTING_SAVE = 0x09
-CMD_VIA_MACRO_GET_COUNT = 0x0C
-CMD_VIA_MACRO_GET_BUFFER_SIZE = 0x0D
-CMD_VIA_MACRO_GET_BUFFER = 0x0E
-CMD_VIA_MACRO_SET_BUFFER = 0x0F
-CMD_VIA_GET_LAYER_COUNT = 0x11
-CMD_VIA_KEYMAP_GET_BUFFER = 0x12
-CMD_VIA_VIAL_PREFIX = 0xFE
-
-VIA_LAYOUT_OPTIONS = 0x02
-VIA_SWITCH_MATRIX_STATE = 0x03
-
-QMK_BACKLIGHT_BRIGHTNESS = 0x09
-QMK_BACKLIGHT_EFFECT = 0x0A
-
-QMK_RGBLIGHT_BRIGHTNESS = 0x80
-QMK_RGBLIGHT_EFFECT = 0x81
-QMK_RGBLIGHT_EFFECT_SPEED = 0x82
-QMK_RGBLIGHT_COLOR = 0x83
-
-VIALRGB_GET_INFO = 0x40
-VIALRGB_GET_MODE = 0x41
-VIALRGB_GET_SUPPORTED = 0x42
-
-VIALRGB_SET_MODE = 0x41
-
-CMD_VIAL_GET_KEYBOARD_ID = 0x00
-CMD_VIAL_GET_SIZE = 0x01
-CMD_VIAL_GET_DEFINITION = 0x02
-CMD_VIAL_GET_ENCODER = 0x03
-CMD_VIAL_SET_ENCODER = 0x04
-CMD_VIAL_GET_UNLOCK_STATUS = 0x05
-CMD_VIAL_UNLOCK_START = 0x06
-CMD_VIAL_UNLOCK_POLL = 0x07
-CMD_VIAL_LOCK = 0x08
-
-CMD_VIAL_QMK_SETTINGS_QUERY = 0x09
-CMD_VIAL_QMK_SETTINGS_GET = 0x0A
-CMD_VIAL_QMK_SETTINGS_SET = 0x0B
-CMD_VIAL_QMK_SETTINGS_RESET = 0x0C
-
-CMD_VIAL_DYNAMIC_ENTRY_OP = 0x0D
-
-DYNAMIC_VIAL_GET_NUMBER_OF_ENTRIES = 0x00
-DYNAMIC_VIAL_TAP_DANCE_GET = 0x01
-DYNAMIC_VIAL_TAP_DANCE_SET = 0x02
-DYNAMIC_VIAL_COMBO_GET = 0x03
-DYNAMIC_VIAL_COMBO_SET = 0x04
-
-# how much of a macro/keymap buffer we can read/write per packet
-BUFFER_FETCH_CHUNK = 28
+SUPPORTED_VIAL_PROTOCOL = [-1, 0, 1, 2, 3, 4, 5]
 
 
 class ProtocolError(Exception):
     pass
 
 
-def macro_deserialize_v1(data):
-    """
-    Deserialize a single macro, protocol version 1
-    """
-
-    out = []
-    sequence = []
-    data = bytearray(data)
-    while len(data) > 0:
-        if data[0] in [SS_TAP_CODE, SS_DOWN_CODE, SS_UP_CODE]:
-            if len(data) < 2:
-                break
-
-            # append to previous *_CODE if it's the same type, otherwise create a new entry
-            if len(sequence) > 0 and isinstance(sequence[-1], list) and sequence[-1][0] == data[0]:
-                sequence[-1][1].append(data[1])
-            else:
-                sequence.append([data[0], [data[1]]])
-
-            data.pop(0)
-            data.pop(0)
-        else:
-            # append to previous string if it is a string, otherwise create a new entry
-            ch = chr(data[0])
-            if len(sequence) > 0 and isinstance(sequence[-1], str):
-                sequence[-1] += ch
-            else:
-                sequence.append(ch)
-            data.pop(0)
-    for s in sequence:
-        if isinstance(s, str):
-            out.append(ActionText(s))
-        else:
-            # map integer values to qmk keycodes
-            keycodes = []
-            for code in s[1]:
-                keycode = Keycode.find_outer_keycode(code)
-                if keycode:
-                    keycodes.append(keycode)
-            cls = {SS_TAP_CODE: ActionTap, SS_DOWN_CODE: ActionDown, SS_UP_CODE: ActionUp}[s[0]]
-            out.append(cls(keycodes))
-    return out
-
-
-def macro_deserialize_v2(data):
-    """
-    Deserialize a single macro, protocol version 2
-    """
-
-    out = []
-    sequence = []
-    data = bytearray(data)
-    while len(data) > 0:
-        if data[0] == SS_QMK_PREFIX:
-            if len(data) < 2:
-                break
-
-            if data[1] in [SS_TAP_CODE, SS_DOWN_CODE, SS_UP_CODE]:
-                if len(data) < 3:
-                    break
-
-                # append to previous *_CODE if it's the same type, otherwise create a new entry
-                if len(sequence) > 0 and isinstance(sequence[-1], list) and sequence[-1][0] == data[1]:
-                    sequence[-1][1].append(data[2])
-                else:
-                    sequence.append([data[1], [data[2]]])
-
-                for x in range(3):
-                    data.pop(0)
-            elif data[1] == SS_DELAY_CODE:
-                if len(data) < 4:
-                    break
-
-                # decode the delay
-                delay = (data[2] - 1) + (data[3] - 1) * 255
-                sequence.append([SS_DELAY_CODE, delay])
-
-                for x in range(4):
-                    data.pop(0)
-            else:
-                # it is clearly malformed, just skip this byte and hope for the best
-                data.pop(0)
-                data.pop(0)
-        else:
-            # append to previous string if it is a string, otherwise create a new entry
-            ch = chr(data[0])
-            if len(sequence) > 0 and isinstance(sequence[-1], str):
-                sequence[-1] += ch
-            else:
-                sequence.append(ch)
-            data.pop(0)
-    for s in sequence:
-        if isinstance(s, str):
-            out.append(ActionText(s))
-        else:
-            args = None
-            if s[0] in [SS_TAP_CODE, SS_DOWN_CODE, SS_UP_CODE]:
-                # map integer values to qmk keycodes
-                args = []
-                for code in s[1]:
-                    keycode = Keycode.find_outer_keycode(code)
-                    if keycode:
-                        args.append(keycode)
-            elif s[0] == SS_DELAY_CODE:
-                args = s[1]
-
-            if args is not None:
-                cls = {SS_TAP_CODE: ActionTap, SS_DOWN_CODE: ActionDown, SS_UP_CODE: ActionUp,
-                       SS_DELAY_CODE: ActionDelay}[s[0]]
-                out.append(cls(args))
-    return out
-
-
-class Keyboard:
+class Keyboard(ProtocolMacro, ProtocolDynamic, ProtocolTapDance, ProtocolCombo, ProtocolKeyOverride):
     """ Low-level communication with a vial-enabled keyboard """
 
     def __init__(self, dev, usb_send=hid_send):
@@ -211,9 +50,6 @@ class Keyboard:
         self.layout_options = -1
         self.keys = []
         self.encoders = []
-        self.macro_count = 0
-        self.macro_memory = 0
-        self.macro = b""
         self.vibl = False
         self.custom_keycodes = None
         self.midi = None
@@ -247,7 +83,11 @@ class Keyboard:
         self.reload_persistent_rgb()
         self.reload_rgb()
         self.reload_settings()
+
         self.reload_dynamic()
+        self.reload_tap_dance()
+        self.reload_combo()
+        self.reload_key_override()
 
     def reload_layers(self):
         """ Get how many layers the keyboard has """
@@ -267,7 +107,9 @@ class Keyboard:
 
         self.reload_via_protocol()
 
+        self.sideload = False
         if sideload_json is not None:
+            self.sideload = True
             payload = sideload_json
         else:
             # get keyboard identification
@@ -376,27 +218,6 @@ class Keyboard:
                                  retries=20)
             self.layout_options = struct.unpack(">I", data[2:6])[0]
 
-    def reload_macros(self):
-        """ Loads macro information from the keyboard """
-        data = self.usb_send(self.dev, struct.pack("B", CMD_VIA_MACRO_GET_COUNT), retries=20)
-        self.macro_count = data[1]
-        data = self.usb_send(self.dev, struct.pack("B", CMD_VIA_MACRO_GET_BUFFER_SIZE), retries=20)
-        self.macro_memory = struct.unpack(">H", data[1:3])[0]
-
-        self.macro = b""
-        if self.macro_memory:
-            # now retrieve the entire buffer, MACRO_CHUNK bytes at a time, as that is what fits into a packet
-            for x in range(0, self.macro_memory, BUFFER_FETCH_CHUNK):
-                sz = min(BUFFER_FETCH_CHUNK, self.macro_memory - x)
-                data = self.usb_send(self.dev, struct.pack(">BHB", CMD_VIA_MACRO_GET_BUFFER, x, sz), retries=20)
-                self.macro += data[4:4+sz]
-                if self.macro.count(b"\x00") > self.macro_count:
-                    break
-            # macros are stored as NUL-separated strings, so let's clean up the buffer
-            # ensuring we only get macro_count strings after we split by NUL
-            macros = self.macro.split(b"\x00") + [b""] * self.macro_count
-            self.macro = b"\x00".join(macros[:self.macro_count]) + b"\x00"
-
     def reload_persistent_rgb(self):
         """
             Reload RGB properties which are slow, and do not change while keyboard is plugged in
@@ -457,7 +278,7 @@ class Keyboard:
     def reload_settings(self):
         self.settings = dict()
         self.supported_settings = set()
-        if self.vial_protocol < 4:
+        if self.vial_protocol < VIAL_PROTOCOL_QMK_SETTINGS:
             return
         cur = 0
         while cur != 0xFFFF:
@@ -470,7 +291,7 @@ class Keyboard:
                     self.supported_settings.add(qsid)
 
         for qsid in self.supported_settings:
-            from qmk_settings import QmkSettings
+            from editor.qmk_settings import QmkSettings
 
             if not QmkSettings.is_qsid_supported(qsid):
                 continue
@@ -479,35 +300,6 @@ class Keyboard:
                                  retries=20)
             if data[0] == 0:
                 self.settings[qsid] = QmkSettings.qsid_deserialize(qsid, data[1:])
-
-    def reload_dynamic(self):
-        if self.vial_protocol < 4:
-            self.tap_dance_count = 0
-            self.tap_dance_entries = []
-            self.combo_count = 0
-            self.combo_entries = []
-            return
-        data = self.usb_send(self.dev, struct.pack("BBB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_DYNAMIC_ENTRY_OP,
-                                                   DYNAMIC_VIAL_GET_NUMBER_OF_ENTRIES), retries=20)
-        self.tap_dance_count = data[0]
-        self.combo_count = data[1]
-
-        self.tap_dance_entries = []
-        for x in range(self.tap_dance_count):
-            data = self.usb_send(self.dev, struct.pack("BBBB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_DYNAMIC_ENTRY_OP,
-                                                       DYNAMIC_VIAL_TAP_DANCE_GET, x), retries=20)
-            if data[0] != 0:
-                raise RuntimeError("failed retrieving tapdance entry {} from the device".format(x))
-            self.tap_dance_entries.append(struct.unpack("<HHHHH", data[1:11]))
-
-        self.combo_entries = []
-        for x in range(self.combo_count):
-            data = self.usb_send(self.dev, struct.pack("BBBB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_DYNAMIC_ENTRY_OP,
-                                                       DYNAMIC_VIAL_COMBO_GET, x), retries=20)
-
-            if data[0] != 0:
-                raise RuntimeError("failed retrieving combo entry {} from the device".format(x))
-            self.combo_entries.append(struct.unpack("<HHHHH", data[1:11]))
 
     def set_key(self, layer, row, col, code):
         if code < 0:
@@ -539,16 +331,6 @@ class Keyboard:
             self.layout_options = options
             self.usb_send(self.dev, struct.pack(">BBI", CMD_VIA_SET_KEYBOARD_VALUE, VIA_LAYOUT_OPTIONS, options),
                           retries=20)
-
-    def set_macro(self, data):
-        if len(data) > self.macro_memory:
-            raise RuntimeError("the macro is too big: got {} max {}".format(len(data), self.macro_memory))
-
-        for x, chunk in enumerate(chunks(data, BUFFER_FETCH_CHUNK)):
-            off = x * BUFFER_FETCH_CHUNK
-            self.usb_send(self.dev, struct.pack(">BHB", CMD_VIA_MACRO_SET_BUFFER, off, len(chunk)) + chunk,
-                          retries=20)
-        self.macro = data
 
     def set_qmk_rgblight_brightness(self, value):
         self.underglow_brightness = value
@@ -612,39 +394,12 @@ class Keyboard:
         data["macro"] = self.save_macro()
         data["vial_protocol"] = self.vial_protocol
         data["via_protocol"] = self.via_protocol
-
-        tap_dance = []
-        for entry in self.tap_dance_entries:
-            tap_dance.append((
-                Keycode.serialize(entry[0]),
-                Keycode.serialize(entry[1]),
-                Keycode.serialize(entry[2]),
-                Keycode.serialize(entry[3]),
-                entry[4]
-            ))
-        data["tap_dance"] = tap_dance
-
-        combo = []
-        for entry in self.combo_entries:
-            combo.append((
-                Keycode.serialize(entry[0]),
-                Keycode.serialize(entry[1]),
-                Keycode.serialize(entry[2]),
-                Keycode.serialize(entry[3]),
-                Keycode.serialize(entry[4]),
-            ))
-        data["combo"] = combo
-
+        data["tap_dance"] = self.save_tap_dance()
+        data["combo"] = self.save_combo()
+        data["key_override"] = self.save_key_override()
         data["settings"] = self.settings
 
         return json.dumps(data).encode("utf-8")
-
-    def save_macro(self):
-        macros = self.macros_deserialize(self.macro)
-        out = []
-        for macro in macros:
-            out.append([act.save() for act in macro])
-        return out
 
     def restore_layout(self, data):
         """ Restores saved layout """
@@ -667,47 +422,16 @@ class Keyboard:
         self.set_layout_options(data["layout_options"])
         self.restore_macros(data.get("macro"))
 
-        for x, e in enumerate(data.get("tap_dance", [])):
-            if x < self.tap_dance_count:
-                e = (Keycode.deserialize(e[0]), Keycode.deserialize(e[1]), Keycode.deserialize(e[2]),
-                     Keycode.deserialize(e[3]), e[4])
-                self.tap_dance_set(x, e)
-
-        for x, e in enumerate(data.get("combo", [])):
-            if x < self.combo_count:
-                e = (Keycode.deserialize(e[0]), Keycode.deserialize(e[1]), Keycode.deserialize(e[2]),
-                     Keycode.deserialize(e[3]), Keycode.deserialize(e[4]))
-                self.combo_set(x, e)
+        self.restore_tap_dance(data.get("tap_dance", []))
+        self.restore_combo(data.get("combo", []))
+        self.restore_key_override(data.get("key_override", []))
 
         for qsid, value in data.get("settings", dict()).items():
-            from qmk_settings import QmkSettings
+            from editor.qmk_settings import QmkSettings
 
             qsid = int(qsid)
             if QmkSettings.is_qsid_supported(qsid):
                 self.qmk_settings_set(qsid, value)
-
-    def restore_macros(self, macros):
-        if not isinstance(macros, list):
-            return
-        
-        full_macro = []
-        for macro in macros:
-            actions = []
-            for act in macro:
-                if act[0] in tag_to_action:
-                    obj = tag_to_action[act[0]]()
-                    obj.restore(act)
-                    actions.append(obj)
-            full_macro.append(actions)
-        if len(full_macro) < self.macro_count:
-            full_macro += [[] for x in range(self.macro_count - len(full_macro))]
-        full_macro = full_macro[:self.macro_count]
-        # TODO: log a warning if macro is cutoff
-        data = self.macros_serialize(full_macro)[0:self.macro_memory]
-        if data != self.macro:
-            Unlocker.unlock(self)
-            self.set_macro(data)
-            self.lock()
 
     def reset(self):
         self.usb_send(self.dev, struct.pack("B", 0xB))
@@ -779,44 +503,8 @@ class Keyboard:
                              retries=3)
         return data
 
-    def macro_serialize(self, macro):
-        """
-        Serialize a single macro, a macro is made out of macro actions (BasicAction)
-        """
-        out = b""
-        for action in macro:
-            out += action.serialize(self.vial_protocol)
-        return out
-
-    def macro_deserialize(self, data):
-        """
-        Deserialize a single macro
-        """
-        if self.vial_protocol >= 2:
-            return macro_deserialize_v2(data)
-        return macro_deserialize_v1(data)
-
-    def macros_serialize(self, macros):
-        """
-        Serialize a list of macros, the list must contain all macros (macro_count)
-        """
-        if len(macros) != self.macro_count:
-            raise RuntimeError("expected array with {} macros, got {} macros".format(self.macro_count, len(macros)))
-        out = [self.macro_serialize(macro) for macro in macros]
-        return b"\x00".join(out) + b"\x00"
-
-    def macros_deserialize(self, data):
-        """
-        Deserialize a list of macros
-        """
-        macros = data.split(b"\x00")
-        if len(macros) < self.macro_count:
-            macros += [b""] * (self.macro_count - len(macros))
-        macros = macros[:self.macro_count]
-        return [self.macro_deserialize(x) for x in macros]
-
     def qmk_settings_set(self, qsid, value):
-        from qmk_settings import QmkSettings
+        from editor.qmk_settings import QmkSettings
         self.settings[qsid] = value
         data = self.usb_send(self.dev, struct.pack("<BBH", CMD_VIA_VIAL_PREFIX, CMD_VIAL_QMK_SETTINGS_SET, qsid)
                              + QmkSettings.qsid_serialize(qsid, value),
@@ -825,28 +513,6 @@ class Keyboard:
 
     def qmk_settings_reset(self):
         self.usb_send(self.dev, struct.pack("BB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_QMK_SETTINGS_RESET))
-
-    def tap_dance_get(self, idx):
-        return self.tap_dance_entries[idx]
-
-    def tap_dance_set(self, idx, entry):
-        if self.tap_dance_entries[idx] == entry:
-            return
-        self.tap_dance_entries[idx] = entry
-        serialized = struct.pack("<HHHHH", *self.tap_dance_entries[idx])
-        self.usb_send(self.dev, struct.pack("BBBB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_DYNAMIC_ENTRY_OP,
-                                            DYNAMIC_VIAL_TAP_DANCE_SET, idx) + serialized, retries=20)
-
-    def combo_get(self, idx):
-        return self.combo_entries[idx]
-
-    def combo_set(self, idx, entry):
-        if self.combo_entries[idx] == entry:
-            return
-        self.combo_entries[idx] = entry
-        serialized = struct.pack("<HHHHH", *self.combo_entries[idx])
-        self.usb_send(self.dev, struct.pack("BBBB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_DYNAMIC_ENTRY_OP,
-                                            DYNAMIC_VIAL_COMBO_SET, idx) + serialized, retries=20)
 
     def _vialrgb_set_mode(self):
         self.usb_send(self.dev, struct.pack("BBHBBBB", CMD_VIA_LIGHTING_SET_VALUE, VIALRGB_SET_MODE,
@@ -868,108 +534,3 @@ class Keyboard:
     def set_vialrgb_color(self, h, s, v):
         self.rgb_hsv = (h, s, v)
         self._vialrgb_set_mode()
-
-
-class DummyKeyboard(Keyboard):
-
-    def reload_layers(self):
-        self.layers = 4
-
-    def reload_keymap(self):
-        for layer in range(self.layers):
-            for row, col in self.rowcol.keys():
-                self.layout[(layer, row, col)] = 0
-
-        for layer in range(self.layers):
-            for idx in self.encoderpos:
-                self.encoder_layout[(layer, idx, 0)] = 0
-                self.encoder_layout[(layer, idx, 1)] = 0
-
-        if self.layout_labels:
-            self.layout_options = 0
-
-    def reload_macros(self):
-        self.macro_count = 16
-        self.macro_memory = 900
-
-        self.macro = b"\x00" * self.macro_count
-
-    def set_key(self, layer, row, col, code):
-        if code < 0:
-            return
-        self.layout[(layer, row, col)] = code
-
-    def set_encoder(self, layer, index, direction, code):
-        if code < 0:
-            return
-        self.encoder_layout[(layer, index, direction)] = code
-
-    def set_layout_options(self, options):
-        if self.layout_options != -1 and self.layout_options != options:
-            self.layout_options = options
-
-    def set_macro(self, data):
-        if len(data) > self.macro_memory:
-            raise RuntimeError("the macro is too big: got {} max {}".format(len(data), self.macro_memory))
-        self.macro = data
-
-    def reset(self):
-        pass
-
-    def get_uid(self):
-        return b"\x00" * 8
-
-    def get_unlock_status(self):
-        return 1
-
-    def get_unlock_in_progress(self):
-        return 0
-
-    def get_unlock_keys(self):
-        return []
-
-    def unlock_start(self):
-        return
-
-    def unlock_poll(self):
-        return b""
-
-    def lock(self):
-        return
-
-    def reload_via_protocol(self):
-        pass
-
-    def reload_persistent_rgb(self):
-        """
-            Reload RGB properties which are slow, and do not change while keyboard is plugged in
-            e.g. VialRGB supported effects list
-        """
-
-        if "lighting" in self.definition:
-            self.lighting_qmk_rgblight = self.definition["lighting"] in ["qmk_rgblight", "qmk_backlight_rgblight"]
-            self.lighting_qmk_backlight = self.definition["lighting"] in ["qmk_backlight", "qmk_backlight_rgblight"]
-            self.lighting_vialrgb = self.definition["lighting"] == "vialrgb"
-
-        if self.lighting_vialrgb:
-            self.rgb_version = 1
-            self.rgb_maximum_brightness = 128
-
-            self.rgb_supported_effects = {0, 1, 2, 3}
-
-    def reload_rgb(self):
-        if self.lighting_qmk_rgblight:
-            self.underglow_brightness = 128
-            self.underglow_effect = 1
-            self.underglow_effect_speed = 5
-            # hue, sat
-            self.underglow_color = (32, 64)
-
-        if self.lighting_qmk_backlight:
-            self.backlight_brightness = 42
-            self.backlight_effect = 0
-
-        if self.lighting_vialrgb:
-            self.rgb_mode = 2
-            self.rgb_speed = 90
-            self.rgb_hsv = (16, 32, 64)

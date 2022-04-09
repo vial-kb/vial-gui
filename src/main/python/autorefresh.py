@@ -2,7 +2,6 @@ import json
 
 from PyQt5.QtCore import QTimer, QObject, pyqtSignal
 
-from keyboard_comm import ProtocolError
 from util import find_vial_devices
 
 
@@ -40,17 +39,17 @@ class Autorefresh(QObject):
 
         Autorefresh.instance = self
 
-    def update(self, check_protocol=False):
+    def update(self, quiet=True, hard=False):
         if self.locked:
             return
 
         new_devices = find_vial_devices(self.via_stack_json, self.sideload_vid, self.sideload_pid,
-                                        quiet=True, check_protocol=check_protocol)
+                                        quiet=quiet)
 
         # if the set of the devices didn't change at all, don't need to update the combobox
         old_paths = set(d.desc["path"] for d in self.devices)
         new_paths = set(d.desc["path"] for d in new_devices)
-        if old_paths == new_paths:
+        if old_paths == new_paths and not hard:
             return
 
         # trigger update and report whether a hard-reload is needed (if current device went away)
@@ -58,7 +57,7 @@ class Autorefresh(QObject):
         old_path = "blank"
         if self.current_device is not None:
             old_path = self.current_device.desc["path"]
-        self.devices_updated.emit(new_devices, old_path not in new_paths)
+        self.devices_updated.emit(new_devices, (old_path not in new_paths) or hard)
 
     def _lock(self):
         self.locked = True

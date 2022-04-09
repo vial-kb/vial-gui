@@ -1,10 +1,9 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
-import time
 
-from PyQt5.QtCore import QCoreApplication, Qt, QTimer
-from PyQt5.QtWidgets import QVBoxLayout, QLabel, QProgressBar, QDialog, QDialogButtonBox
+from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtWidgets import QVBoxLayout, QLabel, QProgressBar, QDialog
 
-from keyboard_widget import KeyboardWidget
+from widgets.keyboard_widget import KeyboardWidget
 from util import tr
 
 
@@ -81,7 +80,10 @@ class Unlocker(QDialog):
             return True
 
         dlg = cls(cls.global_layout_editor, keyboard)
-        return bool(dlg.exec_())
+        cls.global_main_window.lock_ui()
+        ret = bool(dlg.exec_())
+        cls.global_main_window.unlock_ui()
+        return ret
 
     def keyPressEvent(self, ev):
         """ Ignore all key presses, e.g. Esc should not close the window """

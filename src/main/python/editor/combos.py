@@ -1,12 +1,13 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 from PyQt5 import QtCore
 from PyQt5.QtCore import pyqtSignal, QObject
-from PyQt5.QtWidgets import QTabWidget, QWidget, QSizePolicy, QGridLayout, QVBoxLayout, QLabel
+from PyQt5.QtWidgets import QWidget, QSizePolicy, QGridLayout, QVBoxLayout, QLabel
 
-from key_widget import KeyWidget
-from tabbed_keycodes import TabbedKeycodes
+from protocol.constants import VIAL_PROTOCOL_DYNAMIC
+from widgets.key_widget import KeyWidget
 from vial_device import VialKeyboard
-from basic_editor import BasicEditor
+from editor.basic_editor import BasicEditor
+from widgets.tab_widget_keycodes import TabWidgetWithKeycodes
 
 
 class ComboEntryUI(QObject):
@@ -71,12 +72,6 @@ class ComboEntryUI(QObject):
         self.key_changed.emit()
 
 
-class CustomTabWidget(QTabWidget):
-
-    def mouseReleaseEvent(self, ev):
-        TabbedKeycodes.close_tray()
-
-
 class Combos(BasicEditor):
 
     def __init__(self):
@@ -85,7 +80,7 @@ class Combos(BasicEditor):
 
         self.combo_entries = []
         self.combo_entries_available = []
-        self.tabs = CustomTabWidget()
+        self.tabs = TabWidgetWithKeycodes()
         for x in range(128):
             entry = ComboEntryUI(x)
             entry.key_changed.connect(self.on_key_changed)
@@ -110,7 +105,7 @@ class Combos(BasicEditor):
 
     def valid(self):
         return isinstance(self.device, VialKeyboard) and \
-               (self.device.keyboard and self.device.keyboard.vial_protocol >= 4
+               (self.device.keyboard and self.device.keyboard.vial_protocol >= VIAL_PROTOCOL_DYNAMIC
                 and self.device.keyboard.combo_count > 0)
 
     def on_key_changed(self):

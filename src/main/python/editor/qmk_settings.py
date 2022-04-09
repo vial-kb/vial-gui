@@ -7,7 +7,8 @@ from PyQt5.QtCore import pyqtSignal, QObject
 from PyQt5.QtWidgets import QVBoxLayout, QCheckBox, QGridLayout, QLabel, QWidget, QSizePolicy, QTabWidget, QSpinBox, \
     QHBoxLayout, QPushButton, QMessageBox
 
-from basic_editor import BasicEditor
+from editor.basic_editor import BasicEditor
+from protocol.constants import VIAL_PROTOCOL_QMK_SETTINGS
 from util import tr
 from vial_device import VialKeyboard
 
@@ -228,7 +229,7 @@ class QmkSettings(BasicEditor):
 
     def valid(self):
         return isinstance(self.device, VialKeyboard) and \
-               (self.device.keyboard and self.device.keyboard.vial_protocol >= 4
+               (self.device.keyboard and self.device.keyboard.vial_protocol >= VIAL_PROTOCOL_QMK_SETTINGS
                 and len(self.device.keyboard.supported_settings))
 
     @classmethod

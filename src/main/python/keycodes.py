@@ -36,10 +36,7 @@ class Keycode:
 
     @classmethod
     def find(cls, code):
-        for keycode in KEYCODES:
-            if keycode.code == code:
-                return keycode
-        return None
+        return KEYCODES_MAP.get(code)
 
     @classmethod
     def find_outer_keycode(cls, code):
@@ -116,6 +113,44 @@ KEYCODES_SPECIAL = [
     K(0x01, "KC_TRNS", "▽", alias=["KC_TRANSPARENT"]),
 ]
 
+KEYCODES_BASIC_NUMPAD = [
+    K(0x53, "KC_NUMLOCK", "Num\nLock", recorder_alias=["num lock"], alias=["KC_NLCK"]),
+    K(0x54, "KC_KP_SLASH", "/", alias=["KC_PSLS"]),
+    K(0x55, "KC_KP_ASTERISK", "*", alias=["KC_PAST"]),
+    K(0x56, "KC_KP_MINUS", "-", alias=["KC_PMNS"]),
+    K(0x57, "KC_KP_PLUS", "+", alias=["KC_PPLS"]),
+    K(0x58, "KC_KP_ENTER", "Num\nEnter", alias=["KC_PENT"]),
+    K(0x59, "KC_KP_1", "1", alias=["KC_P1"]),
+    K(0x5A, "KC_KP_2", "2", alias=["KC_P2"]),
+    K(0x5B, "KC_KP_3", "3", alias=["KC_P3"]),
+    K(0x5C, "KC_KP_4", "4", alias=["KC_P4"]),
+    K(0x5D, "KC_KP_5", "5", alias=["KC_P5"]),
+    K(0x5E, "KC_KP_6", "6", alias=["KC_P6"]),
+    K(0x5F, "KC_KP_7", "7", alias=["KC_P7"]),
+    K(0x60, "KC_KP_8", "8", alias=["KC_P8"]),
+    K(0x61, "KC_KP_9", "9", alias=["KC_P9"]),
+    K(0x62, "KC_KP_0", "0", alias=["KC_P0"]),
+    K(0x63, "KC_KP_DOT", ".", alias=["KC_PDOT"]),
+    K(0x67, "KC_KP_EQUAL", "=", alias=["KC_PEQL"]),
+    K(0x85, "KC_KP_COMMA", ",", alias=["KC_PCMM"]),
+]
+
+KEYCODES_BASIC_NAV = [
+    K(0x46, "KC_PSCREEN", "Print\nScreen", alias=["KC_PSCR"]),
+    K(0x47, "KC_SCROLLLOCK", "Scroll\nLock", recorder_alias=["scroll lock"], alias=["KC_SLCK", "KC_BRMD"]),
+    K(0x48, "KC_PAUSE", "Pause", recorder_alias=["pause", "break"], alias=["KC_PAUS", "KC_BRK", "KC_BRMU"]),
+    K(0x49, "KC_INSERT", "Insert", recorder_alias=["insert"], alias=["KC_INS"]),
+    K(0x4A, "KC_HOME", "Home", recorder_alias=["home"]),
+    K(0x4B, "KC_PGUP", "Page\nUp", recorder_alias=["page up"]),
+    K(0x4C, "KC_DELETE", "Del", recorder_alias=["delete"], alias=["KC_DEL"]),
+    K(0x4D, "KC_END", "End", recorder_alias=["end"]),
+    K(0x4E, "KC_PGDOWN", "Page\nDown", recorder_alias=["page down"], alias=["KC_PGDN"]),
+    K(0x4F, "KC_RIGHT", "Right", recorder_alias=["right"], alias=["KC_RGHT"]),
+    K(0x50, "KC_LEFT", "Left", recorder_alias=["left"]),
+    K(0x51, "KC_DOWN", "Down", recorder_alias=["down"]),
+    K(0x52, "KC_UP", "Up", recorder_alias=["up"]),
+]
+
 KEYCODES_BASIC = [
     K(0x04, "KC_A", "A", printable="a", recorder_alias=["a"]),
     K(0x05, "KC_B", "B", printable="b", recorder_alias=["b"]),
@@ -182,40 +217,8 @@ KEYCODES_BASIC = [
     K(0x43, "KC_F10", "F10", recorder_alias=["f10"]),
     K(0x44, "KC_F11", "F11", recorder_alias=["f11"]),
     K(0x45, "KC_F12", "F12", recorder_alias=["f12"]),
-    K(0x46, "KC_PSCREEN", "Print\nScreen", alias=["KC_PSCR"]),
-    K(0x47, "KC_SCROLLLOCK", "Scroll\nLock", recorder_alias=["scroll lock"], alias=["KC_SLCK", "KC_BRMD"]),
-    K(0x48, "KC_PAUSE", "Pause", recorder_alias=["pause", "break"], alias=["KC_PAUS", "KC_BRK", "KC_BRMU"]),
-    K(0x49, "KC_INSERT", "Insert", recorder_alias=["insert"], alias=["KC_INS"]),
-    K(0x4A, "KC_HOME", "Home", recorder_alias=["home"]),
-    K(0x4B, "KC_PGUP", "Page\nUp", recorder_alias=["page up"]),
-    K(0x4C, "KC_DELETE", "Del", recorder_alias=["delete"], alias=["KC_DEL"]),
-    K(0x4D, "KC_END", "End", recorder_alias=["end"]),
-    K(0x4E, "KC_PGDOWN", "Page\nDown", recorder_alias=["page down"], alias=["KC_PGDN"]),
-    K(0x4F, "KC_RIGHT", "Right", recorder_alias=["right"], alias=["KC_RGHT"]),
-    K(0x50, "KC_LEFT", "Left", recorder_alias=["left"]),
-    K(0x51, "KC_DOWN", "Down", recorder_alias=["down"]),
-    K(0x52, "KC_UP", "Up", recorder_alias=["up"]),
-    K(0x53, "KC_NUMLOCK", "Num\nLock", recorder_alias=["num lock"], alias=["KC_NLCK"]),
-    K(0x54, "KC_KP_SLASH", "/", alias=["KC_PSLS"]),
-    K(0x55, "KC_KP_ASTERISK", "*", alias=["KC_PAST"]),
-    K(0x56, "KC_KP_MINUS", "-", alias=["KC_PMNS"]),
-    K(0x57, "KC_KP_PLUS", "+", alias=["KC_PPLS"]),
-    K(0x58, "KC_KP_ENTER", "Num\nEnter", alias=["KC_PENT"]),
-    K(0x59, "KC_KP_1", "1", alias=["KC_P1"]),
-    K(0x5A, "KC_KP_2", "2", alias=["KC_P2"]),
-    K(0x5B, "KC_KP_3", "3", alias=["KC_P3"]),
-    K(0x5C, "KC_KP_4", "4", alias=["KC_P4"]),
-    K(0x5D, "KC_KP_5", "5", alias=["KC_P5"]),
-    K(0x5E, "KC_KP_6", "6", alias=["KC_P6"]),
-    K(0x5F, "KC_KP_7", "7", alias=["KC_P7"]),
-    K(0x60, "KC_KP_8", "8", alias=["KC_P8"]),
-    K(0x61, "KC_KP_9", "9", alias=["KC_P9"]),
-    K(0x62, "KC_KP_0", "0", alias=["KC_P0"]),
-    K(0x63, "KC_KP_DOT", ".", alias=["KC_PDOT"]),
-    K(0x65, "KC_APPLICATION", "Menu", recorder_alias=["menu", "left menu", "right menu"], alias=["KC_APP"]),
-    K(0x67, "KC_KP_EQUAL", "=", alias=["KC_PEQL"]),
-    K(0x85, "KC_KP_COMMA", ",", alias=["KC_PCMM"]),
 
+    K(0x65, "KC_APPLICATION", "Menu", recorder_alias=["menu", "left menu", "right menu"], alias=["KC_APP"]),
     K(0xE0, "KC_LCTRL", "LCtrl", recorder_alias=["left ctrl", "ctrl"], alias=["KC_LCTL"]),
     K(0xE1, "KC_LSHIFT", "LShift", recorder_alias=["left shift", "shift"], alias=["KC_LSFT"]),
     K(0xE2, "KC_LALT", "LAlt", recorder_alias=["alt"], alias=["KC_LOPT"]),
@@ -225,6 +228,9 @@ KEYCODES_BASIC = [
     K(0xE6, "KC_RALT", "RAlt", alias=["KC_ALGR", "KC_ROPT"]),
     K(0xE7, "KC_RGUI", "RGui", recorder_alias=["right windows"], alias=["KC_RCMD", "KC_RWIN"]),
 ]
+
+KEYCODES_BASIC.extend(KEYCODES_BASIC_NUMPAD)
+KEYCODES_BASIC.extend(KEYCODES_BASIC_NAV)
 
 KEYCODES_SHIFTED = [
     K(0x235, "KC_TILD", "~"),
@@ -258,9 +264,14 @@ KEYCODES_ISO = [
     K(0x89, "KC_JYEN", "|\n¥", alias=["KC_INT3"]),
     K(0x8A, "KC_HENK", "変換", "JIS Henkan", alias=["KC_INT4"]),
     K(0x8B, "KC_MHEN", "無変換", "JIS Muhenkan", alias=["KC_INT5"]),
+]
+
+KEYCODES_ISO_KR = [
     K(0x90, "KC_LANG1", "한영\nかな", "Korean Han/Yeong / JP Mac Kana", alias=["KC_HAEN"]),
     K(0x91, "KC_LANG2", "漢字\n英数", "Korean Hanja / JP Mac Eisu", alias=["KC_HANJ"]),
 ]
+
+KEYCODES_ISO.extend(KEYCODES_ISO_KR)
 
 KEYCODES_LAYERS = []
 
@@ -363,6 +374,8 @@ KEYCODES_QUANTUM = [
     K(MT(MOD_LGUI|MOD_LSFT), "SGUI_T(kc)", "SGUI_T\n(kc)", "LGUI + LSFT when held, kc when tapped", masked=True),
     K(MT(MOD_LCTL|MOD_LALT), "LCA_T(kc)", "LCA_T\n(kc)", "LCTL + LALT when held, kc when tapped", masked=True),
     K(MT(MOD_LSFT|MOD_LALT), "LSA_T(kc)", "LSA_T\n(kc)", "LSFT + LALT when held, kc when tapped", masked=True),
+    K(MT(MOD_LCTL|MOD_LGUI), "LCG_T(kc)", "LCG_T\n(kc)", "LCTL + LGUI when held, kc when tapped", masked=True),
+    K(MT(MOD_RCTL|MOD_RGUI), "RCG_T(kc)", "RCG_T\n(kc)", "RCTL + RGUI when held, kc when tapped", masked=True),
 
     K(QK_LCTL|QK_LSFT|QK_LALT|QK_LGUI, "HYPR(kc)", "Hyper\n(kc)", "LCTL + LSFT + LALT + LGUI", masked=True),
     K(QK_LCTL|QK_LSFT|QK_LALT, "MEH(kc)", "Meh\n(kc)", "LCTL + LSFT + LALT", masked=True),
@@ -371,6 +384,8 @@ KEYCODES_QUANTUM = [
     K(QK_LCTL|QK_LALT, "LCA(kc)", "LCA\n(kc)", "LCTL + LALT", masked=True),
     K(QK_LSFT|QK_LALT, "LSA(kc)", "LSA\n(kc)", "LSFT + LALT", masked=True),
     K(QK_LCTL|QK_LSFT, "C_S(kc)", "C_S\n(kc)", "LCTL + LSFT", masked=True),
+    K(QK_LCTL|QK_LGUI, "LCG(kc)", "LCG\n(kc)", "LCTL + LGUI", masked=True),
+    K(QK_RCTL|QK_RGUI, "RCG(kc)", "RCG\n(kc)", "RCTL + RGUI", masked=True),
 
     K(0x5C16, "KC_GESC", "~\nEsc", "Esc normally, but ~ when Shift or GUI is pressed"),
     K(0x5CD7, "KC_LSPO", "LS\n(", "Left Shift when held, ( when tapped"),
@@ -442,6 +457,17 @@ KEYCODES_QUANTUM = [
     K(0x5CF0, "HPT_COND", "Haptic\n-", "Decrease DRV2605L continous haptic strength"),
     K(0x5CF1, "HPT_DWLI", "Haptic\nDwell+", "Increase Solenoid dwell time"),
     K(0x5CF2, "HPT_DWLD", "Haptic\nDwell-", "Decrease Solenoid dwell time"),
+
+    K(0x5C18, "KC_ASDN", "Auto-\nshift\nDown", "Lower the Auto Shift timeout variable (down)"),
+    K(0x5C17, "KC_ASUP", "Auto-\nshift\nUp", "Raise the Auto Shift timeout variable (up)"),
+    K(0x5C19, "KC_ASRP", "Auto-\nshift\nReport", "Report your current Auto Shift timeout value"),
+    K(0x5C1B, "KC_ASON", "Auto-\nshift\nOn", "Turns on the Auto Shift Function"),
+    K(0x5C1C, "KC_ASOFF", "Auto-\nshift\nOff", "Turns off the Auto Shift Function"),
+    K(0x5C1A, "KC_ASTG", "Auto-\nshift\nToggle", "Toggles the state of the Auto Shift feature"),
+
+    K(0x5CF7, "CMB_ON", "Combo\nOn", "Turns on Combo feature"),
+    K(0x5CF8, "CMB_OFF", "Combo\nOff", "Turns off Combo feature"),
+    K(0x5CF9, "CMB_TOG", "Combo\nToggle", "Toggles Combo feature on and off"),
 ]
 
 KEYCODES_BACKLIGHT = [
@@ -731,6 +757,7 @@ for x in range(256):
     KEYCODES_HIDDEN.append(K(QK_TAP_DANCE | x, "TD({})".format(x), "TD({})".format(x)))
 
 KEYCODES = []
+KEYCODES_MAP = dict()
 
 K = None
 
@@ -742,6 +769,9 @@ def recreate_keycodes():
     KEYCODES.extend(KEYCODES_SPECIAL + KEYCODES_BASIC + KEYCODES_SHIFTED + KEYCODES_ISO + KEYCODES_LAYERS +
                     KEYCODES_QUANTUM + KEYCODES_BACKLIGHT + KEYCODES_MEDIA + KEYCODES_TAP_DANCE + KEYCODES_MACRO +
                     KEYCODES_USER + KEYCODES_HIDDEN + KEYCODES_MIDI)
+    KEYCODES_MAP.clear()
+    for keycode in KEYCODES:
+        KEYCODES_MAP[keycode.code] = keycode
 
 
 def create_user_keycodes():
@@ -769,6 +799,7 @@ def create_custom_user_keycodes(custom_keycodes):
             )
         )
 
+
 def create_midi_keycodes(midiSettingLevel):
     KEYCODES_MIDI.clear()
 
@@ -778,16 +809,17 @@ def create_midi_keycodes(midiSettingLevel):
     if midiSettingLevel == "advanced":
         KEYCODES_MIDI.extend(KEYCODES_MIDI_ADVANCED)
 
+
 def recreate_keyboard_keycodes(keyboard):
     """ Generates keycodes based on information the keyboard provides (e.g. layer keycodes, macros) """
 
     layers = keyboard.layers
 
-    def generate_keycodes_for_mask(label, mask):
+    def generate_keycodes_for_mask(label, mask, description):
         keycodes = []
         for layer in range(layers):
             lbl = "{}({})".format(label, layer)
-            keycodes.append(Keycode(mask | layer, lbl, lbl))
+            keycodes.append(Keycode(mask | layer, lbl, lbl, description))
         return keycodes
 
     KEYCODES_LAYERS.clear()
@@ -796,12 +828,24 @@ def recreate_keyboard_keycodes(keyboard):
         KEYCODES_LAYERS.append(Keycode(0x5F10, "FN_MO13", "Fn1\n(Fn3)"))
         KEYCODES_LAYERS.append(Keycode(0x5F11, "FN_MO23", "Fn2\n(Fn3)"))
 
-    KEYCODES_LAYERS.extend(generate_keycodes_for_mask("MO", 0x5100))
-    KEYCODES_LAYERS.extend(generate_keycodes_for_mask("DF", 0x5200))
-    KEYCODES_LAYERS.extend(generate_keycodes_for_mask("TG", 0x5300))
-    KEYCODES_LAYERS.extend(generate_keycodes_for_mask("TT", 0x5800))
-    KEYCODES_LAYERS.extend(generate_keycodes_for_mask("OSL", 0x5400))
-    KEYCODES_LAYERS.extend(generate_keycodes_for_mask("TO", 0x5000 | (1 << 4)))
+    KEYCODES_LAYERS.extend(
+        generate_keycodes_for_mask("MO", 0x5100,
+                                   "Momentarily turn on layer when pressed (requires KC_TRNS on destination layer)"))
+    KEYCODES_LAYERS.extend(
+        generate_keycodes_for_mask("DF", 0x5200,
+                                   "Set the base (default) layer"))
+    KEYCODES_LAYERS.extend(
+        generate_keycodes_for_mask("TG", 0x5300,
+                                   "Toggle layer on or off"))
+    KEYCODES_LAYERS.extend(
+        generate_keycodes_for_mask("TT", 0x5800,
+                                   "Normally acts like MO unless it's tapped multiple times, which toggles layer on"))
+    KEYCODES_LAYERS.extend(
+        generate_keycodes_for_mask("OSL", 0x5400,
+                                   "Momentarily activates layer until a key is pressed"))
+    KEYCODES_LAYERS.extend(
+        generate_keycodes_for_mask("TO", 0x5000 | (1 << 4),
+                                   "Turns on layer and turns off all other layers, except the default layer"))
 
     for x in range(layers):
         KEYCODES_LAYERS.append(Keycode(LT(x), "LT({}, kc)".format(x), "LT {}\n(kc)".format(x),
@@ -818,7 +862,7 @@ def recreate_keyboard_keycodes(keyboard):
     KEYCODES_TAP_DANCE.clear()
     for x in range(keyboard.tap_dance_count):
         lbl = "TD({})".format(x)
-        KEYCODES_TAP_DANCE.append(Keycode(QK_TAP_DANCE | x, lbl, lbl))
+        KEYCODES_TAP_DANCE.append(Keycode(QK_TAP_DANCE | x, lbl, lbl, "Tap dance keycode"))
 
     # Check if custom keycodes are defined in keyboard, and if so add them to user keycodes
     if keyboard.custom_keycodes is not None and len(keyboard.custom_keycodes) > 0:
