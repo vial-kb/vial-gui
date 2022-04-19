@@ -11,7 +11,7 @@ import sys
 from urllib.request import urlopen
 
 from about_keyboard import AboutKeyboard
-from autorefresh import Autorefresh
+from autorefresh.autorefresh import Autorefresh
 from editor.combos import Combos
 from constants import WINDOW_WIDTH, WINDOW_HEIGHT
 from widgets.editor_container import EditorContainer
