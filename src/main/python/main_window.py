@@ -40,6 +40,8 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.appctx = appctx
 
+        self.ui_lock_count = 0
+
         self.settings = QSettings("Vial", "Vial")
         if self.settings.value("size", None) and self.settings.value("pos", None):
             self.resize(self.settings.value("size"))
@@ -332,16 +334,20 @@ class MainWindow(QMainWindow):
             self.autorefresh.load_dummy(data)
 
     def lock_ui(self):
-        self.autorefresh._lock()
-        self.tabs.setEnabled(False)
-        self.combobox_devices.setEnabled(False)
-        self.btn_refresh_devices.setEnabled(False)
+        self.ui_lock_count += 1
+        if self.ui_lock_count == 1:
+            self.autorefresh._lock()
+            self.tabs.setEnabled(False)
+            self.combobox_devices.setEnabled(False)
+            self.btn_refresh_devices.setEnabled(False)
 
     def unlock_ui(self):
-        self.autorefresh._unlock()
-        self.tabs.setEnabled(True)
-        self.combobox_devices.setEnabled(True)
-        self.btn_refresh_devices.setEnabled(True)
+        self.ui_lock_count -= 1
+        if self.ui_lock_count == 0:
+            self.autorefresh._unlock()
+            self.tabs.setEnabled(True)
+            self.combobox_devices.setEnabled(True)
+            self.btn_refresh_devices.setEnabled(True)
 
     def unlock_keyboard(self):
         if isinstance(self.autorefresh.current_device, VialKeyboard):
