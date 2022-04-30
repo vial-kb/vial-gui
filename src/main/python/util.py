@@ -198,6 +198,10 @@ class KeycodeDisplay:
             widget.setColor(QApplication.palette().color(QPalette.Link))
         else:
             widget.setColor(None)
+        if mask and cls.code_is_overriden(code & 0xFF):
+            widget.setMaskColor(QApplication.palette().color(QPalette.Link))
+        else:
+            widget.setMaskColor(None)
 
     @classmethod
     def set_keymap_override(cls, override):

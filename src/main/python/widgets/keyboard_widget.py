@@ -19,6 +19,7 @@ class KeyWidget:
         self.mask_text = ""
         self.tooltip = ""
         self.color = None
+        self.mask_color = None
         self.scale = 0
 
         self.rotation_angle = desc.rotation_angle
@@ -122,6 +123,9 @@ class KeyWidget:
 
     def setColor(self, color):
         self.color = color
+
+    def setMaskColor(self, color):
+        self.mask_color = color
 
     def __repr__(self):
         qualifiers = ["KeyboardWidget"]
@@ -344,8 +348,8 @@ class KeyboardWidget(QWidget):
                 qp.drawRoundedRect(key.mask_rect,
                                    key.mask_rect.height()/KEY_ROUNDNESS,
                                    key.mask_rect.height()/KEY_ROUNDNESS)
-                if key.color is not None and not active:
-                    qp.setPen(key.color)
+                if key.mask_color is not None and not active:
+                    qp.setPen(key.mask_color)
                 qp.drawText(key.mask_rect, Qt.AlignCenter, key.mask_text)
             else:
                 # draw the legend
