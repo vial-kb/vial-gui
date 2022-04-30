@@ -151,7 +151,7 @@ class MacroTab(QVBoxLayout):
         self.changed.emit()
 
     def on_tap_enter(self):
-        self.add_action(ActionTapUI(self.container, ActionTap([Keycode.find_by_qmk_id("KC_ENTER")])))
+        self.add_action(ActionTapUI(self.container, ActionTap([Keycode.find_by_qmk_id("KC_ENTER").code])))
 
     def pre_record(self):
         self.btn_record.hide()
