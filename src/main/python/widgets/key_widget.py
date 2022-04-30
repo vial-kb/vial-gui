@@ -25,6 +25,15 @@ class KeyWidget(KeyboardWidget):
         self.set_keys([key], [])
 
         self.anykey.connect(self.on_anykey)
+        KeycodeDisplay.notify_keymap_override(self)
+
+    def delete(self):
+        KeycodeDisplay.unregister_keymap_override(self)
+        super().delete()
+
+    def deleteLater(self):
+        KeycodeDisplay.unregister_keymap_override(self)
+        super().deleteLater()
 
     def mousePressEvent(self, ev):
         super().mousePressEvent(ev)
@@ -55,14 +64,17 @@ class KeyWidget(KeyboardWidget):
         if dlg.exec_() and dlg.value >= 0:
             self.on_keycode_changed(dlg.value)
 
+    def update_display(self):
+        KeycodeDisplay.display_keycode(self.widgets[0], self.keycode)
+        self.update()
+
     def set_keycode(self, kc):
         if kc == self.keycode:
             return
         if self.keycode_filter and not self.keycode_filter(kc):
             return
         self.keycode = kc
-        KeycodeDisplay.display_keycode(self.widgets[0], self.keycode)
-        self.update()
+        self.update_display()
 
         self.changed.emit()
 
@@ -70,3 +82,6 @@ class KeyWidget(KeyboardWidget):
         if keycode_filter is None:
             keycode_filter = keycode_filter_any
         self.keycode_filter = keycode_filter
+
+    def on_keymap_override(self):
+        self.update_display()

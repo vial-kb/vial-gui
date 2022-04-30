@@ -215,6 +215,10 @@ class KeycodeDisplay:
         client.on_keymap_override()
 
     @classmethod
+    def unregister_keymap_override(cls, client):
+        cls.clients.remove(client)
+
+    @classmethod
     def relabel_buttons(cls, buttons):
         for widget in buttons:
             qmk_id = widget.keycode.qmk_id
