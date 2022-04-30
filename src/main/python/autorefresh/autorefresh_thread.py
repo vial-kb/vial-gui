@@ -1,6 +1,15 @@
 import json
 import time
-from multiprocessing import RLock
+import sys
+
+if sys.platform == "emscripten":
+    class RLock:
+        def __enter__(self):
+            pass
+        def __exit__(self, *args):
+            pass
+else:
+    from multiprocessing import RLock
 
 from PyQt5.QtCore import pyqtSignal, QThread
 

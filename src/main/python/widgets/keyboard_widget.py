@@ -38,17 +38,17 @@ class KeyWidget:
 
             self.shift_x = shift_x
             self.shift_y = shift_y
-            self.x = size * self.desc.x
-            self.y = size * self.desc.y
-            self.w = size * self.desc.width - spacing
-            self.h = size * self.desc.height - spacing
+            self.x = int(size * self.desc.x)
+            self.y = int(size * self.desc.y)
+            self.w = int(size * self.desc.width - spacing)
+            self.h = int(size * self.desc.height - spacing)
 
             self.rect = QRect(self.x, self.y, self.w, self.h)
 
-            self.x2 = self.x + size * self.desc.x2
-            self.y2 = self.y + size * self.desc.y2
-            self.w2 = size * self.desc.width2 - spacing
-            self.h2 = size * self.desc.height2 - spacing
+            self.x2 = int(self.x + size * self.desc.x2)
+            self.y2 = int(self.y + size * self.desc.y2)
+            self.w2 = int(size * self.desc.width2 - spacing)
+            self.h2 = int(size * self.desc.height2 - spacing)
 
             self.rect2 = QRect(self.x2, self.y2, self.w2, self.h2)
 
@@ -262,8 +262,8 @@ class KeyboardWidget(QWidget):
             max_w = max(max_w, p.x() * self.scale)
             max_h = max(max_h, p.y() * self.scale)
 
-        self.width = max_w + 2 * self.padding
-        self.height = max_h + 2 * self.padding
+        self.width = int(max_w + 2 * self.padding)
+        self.height = int(max_h + 2 * self.padding)
 
         self.update()
         self.updateGeometry()
@@ -302,7 +302,7 @@ class KeyboardWidget(QWidget):
         pressed_brush.setStyle(Qt.SolidPattern)
 
         mask_font = qp.font()
-        mask_font.setPointSize(mask_font.pointSize() * 0.8)
+        mask_font.setPointSize(int(mask_font.pointSize() * 0.8))
 
         for idx, key in enumerate(self.widgets):
             qp.save()
