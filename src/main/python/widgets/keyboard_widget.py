@@ -4,8 +4,9 @@ from PyQt5.QtGui import QPainter, QColor, QPainterPath, QTransform, QBrush, QPol
 from PyQt5.QtWidgets import QWidget, QToolTip, QApplication
 from PyQt5.QtCore import Qt, QSize, QRect, QPointF, pyqtSignal, QEvent, QRectF
 
-from constants import KEY_SIZE_RATIO, KEY_SPACING_RATIO, KEYBOARD_WIDGET_PADDING, KEYBOARD_WIDGET_MASK_PADDING,\
-    KEYBOARD_WIDGET_MASK_HEIGHT, KEY_ROUNDNESS
+from constants import KEY_SIZE_RATIO, KEY_SPACING_RATIO, KEYBOARD_WIDGET_PADDING, \
+    KEYBOARD_WIDGET_MASK_HEIGHT, KEY_ROUNDNESS, SHADOW_SIDE_PADDING, SHADOW_TOP_PADDING, SHADOW_BOTTOM_PADDING, \
+    KEYBOARD_WIDGET_NONMASK_PADDING
 
 
 class KeyWidget:
@@ -31,25 +32,31 @@ class KeyWidget:
     def update_position(self, scale, shift_x=0, shift_y=0):
         if self.scale != scale or self.shift_x != shift_x or self.shift_y != shift_y:
             self.scale = scale
-            size = self.scale * (KEY_SIZE_RATIO + KEY_SPACING_RATIO)
+            self.size = self.scale * (KEY_SIZE_RATIO + KEY_SPACING_RATIO)
             spacing = self.scale * KEY_SPACING_RATIO
 
-            self.rotation_x = size * self.desc.rotation_x
-            self.rotation_y = size * self.desc.rotation_y
+            self.rotation_x = self.size * self.desc.rotation_x
+            self.rotation_y = self.size * self.desc.rotation_y
 
             self.shift_x = shift_x
             self.shift_y = shift_y
-            self.x = size * self.desc.x
-            self.y = size * self.desc.y
-            self.w = size * self.desc.width - spacing
-            self.h = size * self.desc.height - spacing
+            self.x = self.size * self.desc.x
+            self.y = self.size * self.desc.y
+            self.w = self.size * self.desc.width - spacing
+            self.h = self.size * self.desc.height - spacing
 
             self.rect = QRect(self.x, self.y, self.w, self.h)
+            self.text_rect = QRect(
+                int(self.x),
+                int(self.y + self.size * SHADOW_TOP_PADDING),
+                int(self.w),
+                int(self.h - self.size * (SHADOW_BOTTOM_PADDING + SHADOW_TOP_PADDING))
+            )
 
-            self.x2 = self.x + size * self.desc.x2
-            self.y2 = self.y + size * self.desc.y2
-            self.w2 = size * self.desc.width2 - spacing
-            self.h2 = size * self.desc.height2 - spacing
+            self.x2 = self.x + self.size * self.desc.x2
+            self.y2 = self.y + self.size * self.desc.y2
+            self.w2 = self.size * self.desc.width2 - spacing
+            self.h2 = self.size * self.desc.height2 - spacing
 
             self.rect2 = QRect(self.x2, self.y2, self.w2, self.h2)
 
@@ -58,18 +65,26 @@ class KeyWidget:
             self.polygon = QPolygonF(self.bbox + [self.bbox[0]])
             self.polygon2 = QPolygonF(self.bbox2 + [self.bbox2[0]])
             self.polygon = self.polygon.united(self.polygon2)
-            self.draw_path = self.calculate_draw_path()
-            self.draw_path2 = self.calculate_draw_path2()
+            self.corner = self.size * KEY_ROUNDNESS
+            self.background_draw_path = self.calculate_background_draw_path()
+            self.foreground_draw_path = self.calculate_foreground_draw_path()
+            self.extra_draw_path = self.calculate_extra_draw_path()
 
             # calculate areas where the inner keycode will be located
             # nonmask = outer (e.g. Rsft_T)
             # mask = inner (e.g. KC_A)
-            self.nonmask_rect = QRectF(int(self.x), int(self.y), 
-                                       int(self.w), int(self.h * (1 - KEYBOARD_WIDGET_MASK_HEIGHT)))
-            self.mask_rect = QRectF(int(self.x + KEYBOARD_WIDGET_MASK_PADDING), 
-                                    int(self.y) + int(self.h * (1 - KEYBOARD_WIDGET_MASK_HEIGHT)),
-                                    int(self.w - 2 * KEYBOARD_WIDGET_MASK_PADDING), 
-                                    int(self.h * KEYBOARD_WIDGET_MASK_HEIGHT - KEYBOARD_WIDGET_MASK_PADDING))
+            self.nonmask_rect = QRectF(
+                int(self.x),
+                int(self.y + self.size * KEYBOARD_WIDGET_NONMASK_PADDING),
+                int(self.w),
+                int(self.h * (1 - KEYBOARD_WIDGET_MASK_HEIGHT))
+            )
+            self.mask_rect = QRectF(
+                int(self.x + self.size * SHADOW_SIDE_PADDING),
+                int(self.y + self.h * (1 - KEYBOARD_WIDGET_MASK_HEIGHT)),
+                int(self.w - 2 * self.size * SHADOW_SIDE_PADDING),
+                int(self.h * KEYBOARD_WIDGET_MASK_HEIGHT - self.size * SHADOW_BOTTOM_PADDING)
+            )
             self.mask_bbox = self.calculate_bbox(self.mask_rect)
             self.mask_polygon = QPolygonF(self.mask_bbox + [self.mask_bbox[0]])
 
@@ -90,20 +105,45 @@ class KeyWidget:
             bbox.append(p)
         return bbox
 
-    def calculate_draw_path(self):
+    def calculate_background_draw_path(self):
         path = QPainterPath()
-        corner = int(self.h/KEY_ROUNDNESS) if (self.w > self.h) else int(self.w/KEY_ROUNDNESS)
-        path.addRoundedRect(int(self.x), int(self.y), int(self.w), int(self.h), corner, corner)
+        path.addRoundedRect(int(self.x), int(self.y), int(self.w), int(self.h), self.corner, self.corner)
 
         # second part only considered if different from first
         if self.has2:
             path2 = QPainterPath()
-            path2.addRoundedRect(int(self.x2), int(self.y2), int(self.w2), int(self.h2), corner, corner)
+            path2.addRoundedRect(int(self.x2), int(self.y2), int(self.w2), int(self.h2), self.corner, self.corner)
             path = path.united(path2)
 
         return path
 
-    def calculate_draw_path2(self):
+    def calculate_foreground_draw_path(self):
+        path = QPainterPath()
+        path.addRoundedRect(
+            int(self.x + self.size * SHADOW_SIDE_PADDING),
+            int(self.y + self.size * SHADOW_TOP_PADDING),
+            int(self.w - 2 * self.size * SHADOW_SIDE_PADDING),
+            int(self.h - self.size * (SHADOW_BOTTOM_PADDING + SHADOW_TOP_PADDING)),
+            self.corner,
+            self.corner
+        )
+
+        # second part only considered if different from first
+        if self.has2:
+            path2 = QPainterPath()
+            path2.addRoundedRect(
+                int(self.x2 + self.size * SHADOW_SIDE_PADDING),
+                int(self.y2 + self.size * SHADOW_TOP_PADDING),
+                int(self.w2 - 2 * self.size * SHADOW_SIDE_PADDING),
+                int(self.h2 - self.size * (SHADOW_BOTTOM_PADDING + SHADOW_TOP_PADDING)),
+                self.corner,
+                self.corner
+            )
+            path = path.united(path2)
+
+        return path
+
+    def calculate_extra_draw_path(self):
         return QPainterPath()
 
     def setText(self, text):
@@ -138,12 +178,12 @@ class KeyWidget:
 
 class EncoderWidget(KeyWidget):
 
-    def calculate_draw_path(self):
+    def calculate_background_draw_path(self):
         path = QPainterPath()
         path.addEllipse(int(self.x), int(self.y), int(self.w), int(self.h))
         return path
 
-    def calculate_draw_path2(self):
+    def calculate_extra_draw_path(self):
         path = QPainterPath()
         if self.desc.encoder_dir == 0:
             path.moveTo(int(self.x), int(self.y + self.h / 2))
@@ -282,18 +322,22 @@ class KeyboardWidget(QWidget):
         regular_pen.setColor(QApplication.palette().color(QPalette.ButtonText))
         qp.setPen(regular_pen)
 
-        regular_brush = QBrush()
-        regular_brush.setColor(QApplication.palette().color(QPalette.Button))
-        regular_brush.setStyle(Qt.SolidPattern)
-        qp.setBrush(regular_brush)
+        background_brush = QBrush()
+        background_brush.setColor(QApplication.palette().color(QPalette.Button))
+        background_brush.setStyle(Qt.SolidPattern)
+
+        foreground_brush = QBrush()
+        foreground_brush.setColor(QApplication.palette().color(QPalette.Button).lighter(120))
+        foreground_brush.setStyle(Qt.SolidPattern)
+
+        mask_brush = QBrush()
+        mask_brush.setColor(QApplication.palette().color(QPalette.Button).lighter(150))
+        mask_brush.setStyle(Qt.SolidPattern)
 
         # for currently selected keycap
         active_pen = qp.pen()
-        active_pen.setColor(QApplication.palette().color(QPalette.HighlightedText))
-
-        active_brush = QBrush()
-        active_brush.setColor(QApplication.palette().color(QPalette.Highlight))
-        active_brush.setStyle(Qt.SolidPattern)
+        active_pen.setColor(QApplication.palette().color(QPalette.Highlight))
+        active_pen.setWidthF(1.5)
 
         # for pressed keycaps
         pressed_pen = qp.pen()
@@ -318,9 +362,6 @@ class KeyboardWidget(QWidget):
             qp.translate(-key.rotation_x, -key.rotation_y)
 
             active = key.active or (self.active_key == key and not self.active_mask)
-            if active:
-                qp.setPen(active_pen)
-                qp.setBrush(active_brush)
 
             if key.pressed:
                 # move key slightly down when pressed
@@ -328,34 +369,47 @@ class KeyboardWidget(QWidget):
                 qp.setPen(pressed_pen)
                 qp.setBrush(pressed_brush)
 
-            # draw the keycap
-            qp.drawPath(key.draw_path)
-            qp.strokePath(key.draw_path2, regular_pen)
+            # draw keycap background/drop-shadow
+            if active:
+                qp.setPen(active_pen)
+            else:
+                qp.setPen(Qt.NoPen)
+            qp.setBrush(background_brush)
+            qp.drawPath(key.background_draw_path)
 
-            # if this is a mask key, draw the inner key
+            # draw keycap foreground
+            qp.setPen(Qt.NoPen)
+            qp.setBrush(foreground_brush)
+            qp.drawPath(key.foreground_draw_path)
+            qp.strokePath(key.extra_draw_path, regular_pen)
+
+            # draw key text
             if key.masked:
+                # draw the outer legend
                 qp.setFont(mask_font)
-                qp.save()
-                if key.color is not None and not active:
+                qp.setPen(regular_pen)
+                if key.color is not None:
                     qp.setPen(key.color)
                 qp.drawText(key.nonmask_rect, Qt.AlignCenter, key.text)
-                qp.restore()
 
+                # draw the inner highlight rect
+                qp.setPen(Qt.NoPen)
                 if self.active_key == key and self.active_mask:
                     qp.setPen(active_pen)
-                    qp.setBrush(active_brush)
+                qp.setBrush(mask_brush)
+                qp.drawRoundedRect(key.mask_rect, key.corner, key.corner)
 
-                qp.drawRoundedRect(key.mask_rect,
-                                   key.mask_rect.height()/KEY_ROUNDNESS,
-                                   key.mask_rect.height()/KEY_ROUNDNESS)
-                if key.mask_color is not None and not active:
+                # draw the inner legend
+                qp.setPen(regular_pen)
+                if key.mask_color is not None:
                     qp.setPen(key.mask_color)
                 qp.drawText(key.mask_rect, Qt.AlignCenter, key.mask_text)
             else:
                 # draw the legend
-                if key.color is not None and not active:
+                qp.setPen(regular_pen)
+                if key.color is not None:
                     qp.setPen(key.color)
-                qp.drawText(key.rect, Qt.AlignCenter, key.text)
+                qp.drawText(key.text_rect, Qt.AlignCenter, key.text)
 
             qp.restore()
 
