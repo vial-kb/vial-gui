@@ -1,7 +1,9 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 import logging
+import platform
 from json import JSONDecodeError
 
+from PyQt5.Qt import QT_VERSION_STR
 from PyQt5.QtCore import Qt, QSettings, QStandardPaths, QTimer
 from PyQt5.QtWidgets import QWidget, QComboBox, QToolButton, QHBoxLayout, QVBoxLayout, QMainWindow, QAction, qApp, \
     QFileDialog, QDialog, QTabWidget, QActionGroup, QMessageBox, QLabel
@@ -400,10 +402,11 @@ class MainWindow(QMainWindow):
 
     def about_vial(self):
         title = "About Vial"
-        text = 'Vial {}<br><br>' \
+        text = 'Vial {}<br><br>Python {}<br>Qt {}<br><br>' \
                'Licensed under the terms of the<br>GNU General Public License (version 2 or later)<br><br>' \
                '<a href="https://get.vial.today/">https://get.vial.today/</a>' \
-               .format(self.appctx.build_settings["version"])
+               .format(self.appctx.build_settings["version"],
+                       platform.python_version(), QT_VERSION_STR)
 
         if sys.platform == "emscripten":
             self.msg_about = QMessageBox()
