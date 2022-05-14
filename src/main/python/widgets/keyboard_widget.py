@@ -187,18 +187,36 @@ class EncoderWidget(KeyWidget):
         path.addEllipse(int(self.x), int(self.y), int(self.w), int(self.h))
         return path
 
+    def calculate_foreground_draw_path(self):
+        path = QPainterPath()
+        path.addEllipse(
+            int(self.x + self.size * SHADOW_SIDE_PADDING),
+            int(self.y + self.size * SHADOW_TOP_PADDING),
+            int(self.w - 2 * self.size * SHADOW_SIDE_PADDING),
+            int(self.h - self.size * (SHADOW_BOTTOM_PADDING + SHADOW_TOP_PADDING))
+        )
+        return path
+
     def calculate_extra_draw_path(self):
         path = QPainterPath()
+        # midpoint of arrow triangle
+        p = self.h
+        x = self.x
+        y = self.y + p / 2
         if self.desc.encoder_dir == 0:
-            path.moveTo(int(self.x), int(self.y + self.h / 2))
-            path.lineTo(int(self.x - self.w / 5), int(self.y + self.h / 3))
-            path.moveTo(int(self.x), int(self.y + self.h / 2))
-            path.lineTo(int(self.x + self.w / 5), int(self.y + self.h / 3))
+            # counterclockwise - pointing down
+            path.moveTo(round(x), round(y))
+            path.lineTo(round(x + p / 10), round(y - p / 10))
+            path.lineTo(round(x), round(y + p / 10))
+            path.lineTo(round(x - p / 10), round(y - p / 10))
+            path.lineTo(round(x), round(y))
         else:
-            path.moveTo(int(self.x), int(self.y + self.h / 2))
-            path.lineTo(int(self.x - self.w / 5), int(self.y + self.h - self.h / 3))
-            path.moveTo(int(self.x), int(self.y + self.h / 2))
-            path.lineTo(int(self.x + self.w / 5), int(self.y + self.h - self.h / 3))
+            # clockwise - pointing up
+            path.moveTo(round(x), round(y))
+            path.lineTo(round(x + p / 10), round(y + p / 10))
+            path.lineTo(round(x), round(y - p / 10))
+            path.lineTo(round(x - p / 10), round(y + p / 10))
+            path.lineTo(round(x), round(y))
         return path
 
     def __repr__(self):
@@ -343,6 +361,12 @@ class KeyboardWidget(QWidget):
         active_pen.setColor(QApplication.palette().color(QPalette.Highlight))
         active_pen.setWidthF(1.5)
 
+        # for the encoder arrow
+        extra_pen = regular_pen
+        extra_brush = QBrush()
+        extra_brush.setColor(QApplication.palette().color(QPalette.ButtonText))
+        extra_brush.setStyle(Qt.SolidPattern)
+
         # for pressed keycaps
         background_pressed_brush = QBrush()
         background_pressed_brush.setColor(QApplication.palette().color(QPalette.Highlight))
@@ -393,7 +417,6 @@ class KeyboardWidget(QWidget):
                 brush = foreground_on_brush
             qp.setBrush(brush)
             qp.drawPath(key.foreground_draw_path)
-            qp.strokePath(key.extra_draw_path, regular_pen)
 
             # draw key text
             if key.masked:
@@ -414,6 +437,11 @@ class KeyboardWidget(QWidget):
                 # draw the legend
                 qp.setPen(key.color if key.color else regular_pen)
                 qp.drawText(key.text_rect, Qt.AlignCenter, key.text)
+
+            # draw the extra shape (encoder arrow)
+            qp.setPen(extra_pen)
+            qp.setBrush(extra_brush)
+            qp.drawPath(key.extra_draw_path)
 
             qp.restore()
 
