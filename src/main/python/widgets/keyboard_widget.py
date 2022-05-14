@@ -46,12 +46,17 @@ class KeyWidget:
             self.w = self.size * self.desc.width - spacing
             self.h = self.size * self.desc.height - spacing
 
-            self.rect = QRect(self.x, self.y, self.w, self.h)
+            self.rect = QRect(
+                round(self.x),
+                round(self.y),
+                round(self.w),
+                round(self.h)
+            )
             self.text_rect = QRect(
-                int(self.x),
-                int(self.y + self.size * SHADOW_TOP_PADDING),
-                int(self.w),
-                int(self.h - self.size * (SHADOW_BOTTOM_PADDING + SHADOW_TOP_PADDING))
+                round(self.x),
+                round(self.y + self.size * SHADOW_TOP_PADDING),
+                round(self.w),
+                round(self.h - self.size * (SHADOW_BOTTOM_PADDING + SHADOW_TOP_PADDING))
             )
 
             self.x2 = self.x + self.size * self.desc.x2
@@ -59,7 +64,12 @@ class KeyWidget:
             self.w2 = self.size * self.desc.width2 - spacing
             self.h2 = self.size * self.desc.height2 - spacing
 
-            self.rect2 = QRect(self.x2, self.y2, self.w2, self.h2)
+            self.rect2 = QRect(
+                round(self.x2),
+                round(self.y2),
+                round(self.w2),
+                round(self.h2)
+            )
 
             self.bbox = self.calculate_bbox(self.rect)
             self.bbox2 = self.calculate_bbox(self.rect2)
@@ -74,17 +84,17 @@ class KeyWidget:
             # calculate areas where the inner keycode will be located
             # nonmask = outer (e.g. Rsft_T)
             # mask = inner (e.g. KC_A)
-            self.nonmask_rect = QRectF(
-                int(self.x),
-                int(self.y + self.size * KEYBOARD_WIDGET_NONMASK_PADDING),
-                int(self.w),
-                int(self.h * (1 - KEYBOARD_WIDGET_MASK_HEIGHT))
+            self.nonmask_rect = QRect(
+                round(self.x),
+                round(self.y + self.size * KEYBOARD_WIDGET_NONMASK_PADDING),
+                round(self.w),
+                round(self.h * (1 - KEYBOARD_WIDGET_MASK_HEIGHT))
             )
-            self.mask_rect = QRectF(
-                int(self.x + self.size * SHADOW_SIDE_PADDING),
-                int(self.y + self.h * (1 - KEYBOARD_WIDGET_MASK_HEIGHT)),
-                int(self.w - 2 * self.size * SHADOW_SIDE_PADDING),
-                int(self.h * KEYBOARD_WIDGET_MASK_HEIGHT - self.size * SHADOW_BOTTOM_PADDING)
+            self.mask_rect = QRect(
+                round(self.x + self.size * SHADOW_SIDE_PADDING),
+                round(self.y + self.h * (1 - KEYBOARD_WIDGET_MASK_HEIGHT)),
+                round(self.w - 2 * self.size * SHADOW_SIDE_PADDING),
+                round(self.h * KEYBOARD_WIDGET_MASK_HEIGHT - self.size * SHADOW_BOTTOM_PADDING)
             )
             self.mask_bbox = self.calculate_bbox(self.mask_rect)
             self.mask_polygon = QPolygonF(self.mask_bbox + [self.mask_bbox[0]])
@@ -108,23 +118,11 @@ class KeyWidget:
 
     def calculate_background_draw_path(self):
         path = QPainterPath()
-        path.addRoundedRect(int(self.x), int(self.y), int(self.w), int(self.h), self.corner, self.corner)
-
-        # second part only considered if different from first
-        if self.has2:
-            path2 = QPainterPath()
-            path2.addRoundedRect(int(self.x2), int(self.y2), int(self.w2), int(self.h2), self.corner, self.corner)
-            path = path.united(path2)
-
-        return path
-
-    def calculate_foreground_draw_path(self):
-        path = QPainterPath()
         path.addRoundedRect(
-            int(self.x + self.size * SHADOW_SIDE_PADDING),
-            int(self.y + self.size * SHADOW_TOP_PADDING),
-            int(self.w - 2 * self.size * SHADOW_SIDE_PADDING),
-            int(self.h - self.size * (SHADOW_BOTTOM_PADDING + SHADOW_TOP_PADDING)),
+            round(self.x),
+            round(self.y),
+            round(self.w),
+            round(self.h),
             self.corner,
             self.corner
         )
@@ -133,10 +131,36 @@ class KeyWidget:
         if self.has2:
             path2 = QPainterPath()
             path2.addRoundedRect(
-                int(self.x2 + self.size * SHADOW_SIDE_PADDING),
-                int(self.y2 + self.size * SHADOW_TOP_PADDING),
-                int(self.w2 - 2 * self.size * SHADOW_SIDE_PADDING),
-                int(self.h2 - self.size * (SHADOW_BOTTOM_PADDING + SHADOW_TOP_PADDING)),
+                round(self.x2),
+                round(self.y2),
+                round(self.w2),
+                round(self.h2),
+                self.corner,
+                self.corner
+            )
+            path = path.united(path2)
+
+        return path
+
+    def calculate_foreground_draw_path(self):
+        path = QPainterPath()
+        path.addRoundedRect(
+            round(self.x + self.size * SHADOW_SIDE_PADDING),
+            round(self.y + self.size * SHADOW_TOP_PADDING),
+            round(self.w - 2 * self.size * SHADOW_SIDE_PADDING),
+            round(self.h - self.size * (SHADOW_BOTTOM_PADDING + SHADOW_TOP_PADDING)),
+            self.corner,
+            self.corner
+        )
+
+        # second part only considered if different from first
+        if self.has2:
+            path2 = QPainterPath()
+            path2.addRoundedRect(
+                round(self.x2 + self.size * SHADOW_SIDE_PADDING),
+                round(self.y2 + self.size * SHADOW_TOP_PADDING),
+                round(self.w2 - 2 * self.size * SHADOW_SIDE_PADDING),
+                round(self.h2 - self.size * (SHADOW_BOTTOM_PADDING + SHADOW_TOP_PADDING)),
                 self.corner,
                 self.corner
             )
@@ -184,16 +208,16 @@ class EncoderWidget(KeyWidget):
 
     def calculate_background_draw_path(self):
         path = QPainterPath()
-        path.addEllipse(int(self.x), int(self.y), int(self.w), int(self.h))
+        path.addEllipse(round(self.x), round(self.y), round(self.w), round(self.h))
         return path
 
     def calculate_foreground_draw_path(self):
         path = QPainterPath()
         path.addEllipse(
-            int(self.x + self.size * SHADOW_SIDE_PADDING),
-            int(self.y + self.size * SHADOW_TOP_PADDING),
-            int(self.w - 2 * self.size * SHADOW_SIDE_PADDING),
-            int(self.h - self.size * (SHADOW_BOTTOM_PADDING + SHADOW_TOP_PADDING))
+            round(self.x + self.size * SHADOW_SIDE_PADDING),
+            round(self.y + self.size * SHADOW_TOP_PADDING),
+            round(self.w - 2 * self.size * SHADOW_SIDE_PADDING),
+            round(self.h - self.size * (SHADOW_BOTTOM_PADDING + SHADOW_TOP_PADDING))
         )
         return path
 
@@ -328,8 +352,8 @@ class KeyboardWidget(QWidget):
             max_w = max(max_w, p.x() * self.scale)
             max_h = max(max_h, p.y() * self.scale)
 
-        self.width = int(max_w + 2 * self.padding)
-        self.height = int(max_h + 2 * self.padding)
+        self.width = round(max_w + 2 * self.padding)
+        self.height = round(max_h + 2 * self.padding)
 
         self.update()
         self.updateGeometry()
@@ -385,7 +409,7 @@ class KeyboardWidget(QWidget):
         foreground_on_brush.setStyle(Qt.SolidPattern)
 
         mask_font = qp.font()
-        mask_font.setPointSize(int(mask_font.pointSize() * 0.8))
+        mask_font.setPointSize(round(mask_font.pointSize() * 0.8))
 
         for idx, key in enumerate(self.widgets):
             qp.save()
