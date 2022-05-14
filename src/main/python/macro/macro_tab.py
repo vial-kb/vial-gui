@@ -124,10 +124,14 @@ class MacroTab(QVBoxLayout):
         macro_text.append([act.save() for act in self.actions()])
         macro_text = json.dumps(macro_text[0])
 
-        textbox = TextboxWindow(macro_text, "vim", "Vial macro")
+        self.dlg_textbox = TextboxWindow(macro_text, "vim", "Vial macro")
+        self.dlg_textbox.setModal(True)
+        self.dlg_textbox.finished.connect(self.on_dlg_finished)
+        self.dlg_textbox.show()
 
-        if textbox.exec():
-            macro_text = textbox.getText()
+    def on_dlg_finished(self, res):
+        if res > 0:
+            macro_text = self.dlg_textbox.getText()
             if len(macro_text) < 6:
                 macro_text = "[]"
             macro_load = json.loads(macro_text)

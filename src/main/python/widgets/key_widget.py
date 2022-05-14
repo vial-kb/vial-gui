@@ -60,9 +60,14 @@ class KeyWidget(KeyboardWidget):
     def on_anykey(self):
         if self.active_key is None:
             return
-        dlg = AnyKeycodeDialog((self.keycode & 0xFF) if self.active_mask else self.keycode)
-        if dlg.exec_() and dlg.value >= 0:
-            self.on_keycode_changed(dlg.value)
+        self.dlg = AnyKeycodeDialog((self.keycode & 0xFF) if self.active_mask else self.keycode)
+        self.dlg.finished.connect(self.on_dlg_finished)
+        self.dlg.setModal(True)
+        self.dlg.show()
+
+    def on_dlg_finished(self, res):
+        if res > 0:
+            self.on_keycode_changed(self.dlg.value)
 
     def update_display(self):
         KeycodeDisplay.display_keycode(self.widgets[0], self.keycode)

@@ -140,9 +140,15 @@ class KeymapEditor(BasicEditor):
         current_code = self.code_for_widget(self.container.active_key)
         if self.container.active_mask:
             current_code &= 0xFF
-        dlg = AnyKeycodeDialog(current_code)
-        if dlg.exec_() and dlg.value >= 0:
-            self.on_keycode_changed(dlg.value)
+
+        self.dlg = AnyKeycodeDialog(current_code)
+        self.dlg.finished.connect(self.on_dlg_finished)
+        self.dlg.setModal(True)
+        self.dlg.show()
+
+    def on_dlg_finished(self, res):
+        if res > 0:
+            self.on_keycode_changed(self.dlg.value)
 
     def code_for_widget(self, widget):
         if widget.desc.row is not None:

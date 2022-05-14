@@ -328,8 +328,8 @@ class KeyboardWidget(QWidget):
             max_w = max(max_w, p.x() * self.scale)
             max_h = max(max_h, p.y() * self.scale)
 
-        self.width = max_w + 2 * self.padding
-        self.height = max_h + 2 * self.padding
+        self.width = int(max_w + 2 * self.padding)
+        self.height = int(max_h + 2 * self.padding)
 
         self.update()
         self.updateGeometry()
@@ -385,7 +385,7 @@ class KeyboardWidget(QWidget):
         foreground_on_brush.setStyle(Qt.SolidPattern)
 
         mask_font = qp.font()
-        mask_font.setPointSize(mask_font.pointSize() * 0.8)
+        mask_font.setPointSize(int(mask_font.pointSize() * 0.8))
 
         for idx, key in enumerate(self.widgets):
             qp.save()

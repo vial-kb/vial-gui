@@ -51,7 +51,7 @@ class VialKeyboard(VialDevice):
         self.keyboard.reload(override_json)
 
     def title(self):
-        s = "{} {}".format(self.desc["manufacturer_string"], self.desc["product_string"])
+        s = "{} {}".format(self.desc["manufacturer_string"], self.desc["product_string"]).strip()
         if self.sideload:
             s += " [sideload]"
         elif self.via_stack:

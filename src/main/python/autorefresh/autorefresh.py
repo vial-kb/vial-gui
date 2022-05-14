@@ -28,7 +28,11 @@ class Autorefresh(QObject):
 
         Autorefresh.instance = self
 
-        if sys.platform.startswith("win"):
+        if sys.platform == "emscripten":
+            from autorefresh.autorefresh_thread_web import AutorefreshThreadWeb
+
+            self.thread = AutorefreshThreadWeb()
+        elif sys.platform.startswith("win"):
             from autorefresh.autorefresh_thread_win import AutorefreshThreadWin
 
             self.thread = AutorefreshThreadWin()
