@@ -1,7 +1,8 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 from PyQt5.QtCore import Qt, QTimer
-from PyQt5.QtWidgets import QVBoxLayout, QLabel, QProgressBar, QDialog
+from PyQt5.QtGui import QPalette
+from PyQt5.QtWidgets import QVBoxLayout, QLabel, QProgressBar, QDialog, QApplication
 
 from widgets.keyboard_widget import KeyboardWidget
 from util import tr
@@ -11,6 +12,9 @@ class Unlocker(QDialog):
 
     def __init__(self, layout_editor, keyboard):
         super().__init__()
+
+        self.setStyleSheet("background-color: {}".format(
+            QApplication.palette().color(QPalette.Button).lighter(130).name()))
 
         self.keyboard = keyboard
 
@@ -50,7 +54,7 @@ class Unlocker(QDialog):
         lock_keys = self.keyboard.get_unlock_keys()
         for w in self.keyboard_reference.widgets:
             if (w.desc.row, w.desc.col) in lock_keys:
-                w.setActive(True)
+                w.setOn(True)
 
         self.keyboard_reference.update_layout()
         self.keyboard_reference.update()
