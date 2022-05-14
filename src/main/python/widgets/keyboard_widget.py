@@ -13,6 +13,7 @@ class KeyWidget:
 
     def __init__(self, desc, scale, shift_x=0, shift_y=0):
         self.active = False
+        self.on = False
         self.masked = False
         self.pressed = False
         self.desc = desc
@@ -157,6 +158,9 @@ class KeyWidget:
 
     def setActive(self, active):
         self.active = active
+
+    def setOn(self, on):
+        self.on = on
 
     def setPressed(self, pressed):
         self.pressed = pressed
@@ -340,14 +344,21 @@ class KeyboardWidget(QWidget):
         active_pen.setWidthF(1.5)
 
         # for pressed keycaps
-        pressed_pen = qp.pen()
-        pressed_pen_color = QApplication.palette().color(QPalette.HighlightedText).lighter(75)
-        pressed_pen.setColor(pressed_pen_color)
+        background_pressed_brush = QBrush()
+        background_pressed_brush.setColor(QApplication.palette().color(QPalette.Highlight))
+        background_pressed_brush.setStyle(Qt.SolidPattern)
 
-        pressed_brush = QBrush()
-        pressed_brush_color = QApplication.palette().color(QPalette.Highlight).lighter(75)
-        pressed_brush.setColor(pressed_brush_color)
-        pressed_brush.setStyle(Qt.SolidPattern)
+        foreground_pressed_brush = QBrush()
+        foreground_pressed_brush.setColor(QApplication.palette().color(QPalette.Highlight).lighter(120))
+        foreground_pressed_brush.setStyle(Qt.SolidPattern)
+
+        background_on_brush = QBrush()
+        background_on_brush.setColor(QApplication.palette().color(QPalette.Highlight).darker(150))
+        background_on_brush.setStyle(Qt.SolidPattern)
+
+        foreground_on_brush = QBrush()
+        foreground_on_brush.setColor(QApplication.palette().color(QPalette.Highlight).darker(120))
+        foreground_on_brush.setStyle(Qt.SolidPattern)
 
         mask_font = qp.font()
         mask_font.setPointSize(mask_font.pointSize() * 0.8)
@@ -363,23 +374,24 @@ class KeyboardWidget(QWidget):
 
             active = key.active or (self.active_key == key and not self.active_mask)
 
-            if key.pressed:
-                # move key slightly down when pressed
-                qp.translate(0, 5)
-                qp.setPen(pressed_pen)
-                qp.setBrush(pressed_brush)
-
             # draw keycap background/drop-shadow
-            if active:
-                qp.setPen(active_pen)
-            else:
-                qp.setPen(Qt.NoPen)
-            qp.setBrush(background_brush)
+            qp.setPen(active_pen if active else Qt.NoPen)
+            brush = background_brush
+            if key.pressed:
+                brush = background_pressed_brush
+            elif key.on:
+                brush = background_on_brush
+            qp.setBrush(brush)
             qp.drawPath(key.background_draw_path)
 
             # draw keycap foreground
             qp.setPen(Qt.NoPen)
-            qp.setBrush(foreground_brush)
+            brush = foreground_brush
+            if key.pressed:
+                brush = foreground_pressed_brush
+            elif key.on:
+                brush = foreground_on_brush
+            qp.setBrush(brush)
             qp.drawPath(key.foreground_draw_path)
             qp.strokePath(key.extra_draw_path, regular_pen)
 
@@ -387,28 +399,20 @@ class KeyboardWidget(QWidget):
             if key.masked:
                 # draw the outer legend
                 qp.setFont(mask_font)
-                qp.setPen(regular_pen)
-                if key.color is not None:
-                    qp.setPen(key.color)
+                qp.setPen(key.color if key.color else regular_pen)
                 qp.drawText(key.nonmask_rect, Qt.AlignCenter, key.text)
 
                 # draw the inner highlight rect
-                qp.setPen(Qt.NoPen)
-                if self.active_key == key and self.active_mask:
-                    qp.setPen(active_pen)
+                qp.setPen(active_pen if self.active_key == key and self.active_mask else Qt.NoPen)
                 qp.setBrush(mask_brush)
                 qp.drawRoundedRect(key.mask_rect, key.corner, key.corner)
 
                 # draw the inner legend
-                qp.setPen(regular_pen)
-                if key.mask_color is not None:
-                    qp.setPen(key.mask_color)
+                qp.setPen(key.mask_color if key.mask_color else regular_pen)
                 qp.drawText(key.mask_rect, Qt.AlignCenter, key.mask_text)
             else:
                 # draw the legend
-                qp.setPen(regular_pen)
-                if key.color is not None:
-                    qp.setPen(key.color)
+                qp.setPen(key.color if key.color else regular_pen)
                 qp.drawText(key.text_rect, Qt.AlignCenter, key.text)
 
             qp.restore()
