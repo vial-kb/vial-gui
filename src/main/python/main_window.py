@@ -3,8 +3,7 @@ import logging
 import platform
 from json import JSONDecodeError
 
-from PyQt5.Qt import QT_VERSION_STR
-from PyQt5.QtCore import Qt, QSettings, QStandardPaths, QTimer
+from PyQt5.QtCore import Qt, QSettings, QStandardPaths, QTimer, QT_VERSION_STR
 from PyQt5.QtWidgets import QWidget, QComboBox, QToolButton, QHBoxLayout, QVBoxLayout, QMainWindow, QAction, qApp, \
     QFileDialog, QDialog, QTabWidget, QActionGroup, QMessageBox, QLabel
 
