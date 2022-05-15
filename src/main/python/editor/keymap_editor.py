@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 import json
 
-from PyQt5.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QMessageBox
-from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QMessageBox, QWidget
+from PyQt5.QtCore import Qt, pyqtSignal
 
 from any_keycode_dialog import AnyKeycodeDialog
 from editor.basic_editor import BasicEditor
@@ -12,6 +12,15 @@ from widgets.square_button import SquareButton
 from tabbed_keycodes import TabbedKeycodes, keycode_filter_masked
 from util import tr, KeycodeDisplay
 from vial_device import VialKeyboard
+
+
+class ClickableWidget(QWidget):
+
+    clicked = pyqtSignal()
+
+    def mousePressEvent(self, evt):
+        super().mousePressEvent(evt)
+        self.clicked.emit()
 
 
 class KeymapEditor(BasicEditor):
@@ -40,6 +49,9 @@ class KeymapEditor(BasicEditor):
         layout.addLayout(layout_labels_container)
         layout.addWidget(self.container)
         layout.setAlignment(self.container, Qt.AlignHCenter)
+        w = ClickableWidget()
+        w.setLayout(layout)
+        w.clicked.connect(self.on_empty_space_clicked)
 
         self.layer_buttons = []
         self.keyboard = None
@@ -53,14 +65,13 @@ class KeymapEditor(BasicEditor):
         self.tabbed_keycodes.keycode_changed.connect(self.on_keycode_changed)
         self.tabbed_keycodes.anykey.connect(self.on_any_keycode)
 
-        self.addLayout(layout)
+        self.addWidget(w)
         self.addWidget(self.tabbed_keycodes)
 
         self.device = None
         KeycodeDisplay.notify_keymap_override(self)
 
-    def on_container_clicked(self):
-        """ Called when a mouse click event is bubbled up to the editor's container """
+    def on_empty_space_clicked(self):
         self.container.deselect()
         self.container.update()
 
