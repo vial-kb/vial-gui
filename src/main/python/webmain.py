@@ -57,6 +57,10 @@ def web_get_resource(name):
 
 
 def main(app):
+    font = app.font()
+    font.setPointSize(10)
+    app.setFont(font)
+
     app.get_resource = web_get_resource
     with open(app.get_resource("build_settings.json"), "r") as inf:
         app.build_settings = json.loads(inf.read())
