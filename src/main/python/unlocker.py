@@ -100,7 +100,7 @@ class Unlocker(QDialog):
             pixmap.save(buff, "PNG")
             pixmap_bytes = ba.data()
 
-            vialglue.unlock_start(pixmap_bytes)
+            vialglue.unlock_start(pixmap_bytes, pixmap.width(), pixmap.height())
 
     @classmethod
     def on_dialog_finished(cls, retval):
