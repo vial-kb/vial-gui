@@ -70,7 +70,7 @@ class AlternativeDisplay(QWidget):
         KeycodeDisplay.relabel_buttons(self.buttons)
 
     def required_width(self):
-        return self.kb_display.width() if self.kb_display else 0
+        return self.kb_display.sizeHint().width() if self.kb_display else 0
 
     def has_buttons(self):
         return len(self.buttons) > 0
@@ -187,13 +187,6 @@ class FilteredTabbedKeycodes(QTabWidget):
         self.recreate_keycode_buttons()
         KeycodeDisplay.notify_keymap_override(self)
 
-        # we don't get resize events for non-current tab so when switching to it, it can display old alternative
-        # (e.g. attempts to display fullsize which doesn't fit)
-        self.currentChanged.connect(self.on_current_changed)
-
-    def on_current_changed(self):
-        self.select_alternative()
-
     def on_keycode_changed(self, code):
         if code == -1:
             self.anykey.emit()
@@ -215,10 +208,6 @@ class FilteredTabbedKeycodes(QTabWidget):
     def on_keymap_override(self):
         for tab in self.tabs:
             tab.relabel_buttons()
-
-    def select_alternative(self):
-        for tab in self.tabs:
-            tab.select_alternative()
 
 
 class TabbedKeycodes(QWidget):
