@@ -137,9 +137,25 @@ for name, colors in themes:
     palettes[name] = palette
 
 
-def set_theme(theme):
-    if theme in palettes:
-        QApplication.setPalette(palettes[theme])
-        QApplication.setStyle("Fusion")
-    # For default/system theme, do nothing
-    # User will have to restart the application for it to be applied
+class Theme:
+
+    theme = ""
+
+    @classmethod
+    def set_theme(cls, theme):
+        cls.theme = theme
+        if theme in palettes:
+            QApplication.setPalette(palettes[theme])
+            QApplication.setStyle("Fusion")
+        # For default/system theme, do nothing
+        # User will have to restart the application for it to be applied
+
+    @classmethod
+    def get_theme(cls):
+        return cls.theme
+
+    @classmethod
+    def mask_light_factor(cls):
+        if cls.theme == "Light":
+            return 103
+        return 150

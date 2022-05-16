@@ -7,6 +7,7 @@ from PyQt5.QtCore import Qt, QSize, QRect, QPointF, pyqtSignal, QEvent, QRectF
 from constants import KEY_SIZE_RATIO, KEY_SPACING_RATIO, KEYBOARD_WIDGET_PADDING, \
     KEYBOARD_WIDGET_MASK_HEIGHT, KEY_ROUNDNESS, SHADOW_SIDE_PADDING, SHADOW_TOP_PADDING, SHADOW_BOTTOM_PADDING, \
     KEYBOARD_WIDGET_NONMASK_PADDING
+from themes import Theme
 
 
 class KeyWidget:
@@ -377,7 +378,7 @@ class KeyboardWidget(QWidget):
         foreground_brush.setStyle(Qt.SolidPattern)
 
         mask_brush = QBrush()
-        mask_brush.setColor(QApplication.palette().color(QPalette.Button).lighter(150))
+        mask_brush.setColor(QApplication.palette().color(QPalette.Button).lighter(Theme.mask_light_factor()))
         mask_brush.setStyle(Qt.SolidPattern)
 
         # for currently selected keycap

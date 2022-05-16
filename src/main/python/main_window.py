@@ -48,7 +48,7 @@ class MainWindow(QMainWindow):
             self.move(self.settings.value("pos"))
         else:
             self.resize(WINDOW_WIDTH, WINDOW_HEIGHT)
-        themes.set_theme(self.get_theme())
+        themes.Theme.set_theme(self.get_theme())
 
         self.combobox_devices = QComboBox()
         self.combobox_devices.currentIndexChanged.connect(self.on_device_selected)
@@ -379,7 +379,7 @@ class MainWindow(QMainWindow):
         return self.settings.value("theme", "Dark")
 
     def set_theme(self, theme):
-        themes.set_theme(theme)
+        themes.Theme.set_theme(theme)
         self.settings.setValue("theme", theme)
         msg = QMessageBox()
         msg.setText(tr("MainWindow", "In order to fully apply the theme you should restart the application."))
