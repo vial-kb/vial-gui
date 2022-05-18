@@ -1,7 +1,10 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
+import sys
+import time
 
-from PyQt5.QtCore import Qt, QTimer
-from PyQt5.QtWidgets import QVBoxLayout, QLabel, QProgressBar, QDialog
+from PyQt5.QtCore import Qt, QTimer, QCoreApplication, QByteArray, QBuffer, QIODevice
+from PyQt5.QtGui import QPalette
+from PyQt5.QtWidgets import QVBoxLayout, QLabel, QProgressBar, QDialog, QApplication
 
 from widgets.keyboard_widget import KeyboardWidget
 from util import tr
@@ -11,6 +14,9 @@ class Unlocker(QDialog):
 
     def __init__(self, layout_editor, keyboard):
         super().__init__()
+
+        self.setStyleSheet("background-color: {}".format(
+            QApplication.palette().color(QPalette.Button).lighter(130).name()))
 
         self.keyboard = keyboard
 
@@ -50,7 +56,7 @@ class Unlocker(QDialog):
         lock_keys = self.keyboard.get_unlock_keys()
         for w in self.keyboard_reference.widgets:
             if (w.desc.row, w.desc.col) in lock_keys:
-                w.setActive(True)
+                w.setOn(True)
 
         self.keyboard_reference.update_layout()
         self.keyboard_reference.update()
@@ -64,7 +70,15 @@ class Unlocker(QDialog):
         self.progress.setMaximum(max(self.progress.maximum(), unlock_counter))
         self.progress.setValue(self.progress.maximum() - unlock_counter)
 
+        if sys.platform == "emscripten":
+            import vialglue
+            vialglue.unlock_status(unlock_counter)
+
         if unlocked == 1:
+            if sys.platform == "emscripten":
+                import vialglue
+                vialglue.unlock_done()
+
             self.accept()
 
     def perform_unlock(self):
@@ -74,14 +88,39 @@ class Unlocker(QDialog):
         self.keyboard.unlock_start()
         self.timer.start(200)
 
+        if sys.platform == "emscripten":
+            import vialglue
+
+            pixmap = self.keyboard_reference.grab()
+
+            # convert QPixmap to bytes
+            ba = QByteArray()
+            buff = QBuffer(ba)
+            buff.open(QIODevice.WriteOnly)
+            pixmap.save(buff, "PNG")
+            pixmap_bytes = ba.data()
+
+            vialglue.unlock_start(pixmap_bytes, pixmap.width(), pixmap.height())
+
+    @classmethod
+    def on_dialog_finished(cls, retval):
+        cls.dlg_retval = retval
+
     @classmethod
     def unlock(cls, keyboard):
         if keyboard.get_unlock_status() == 1:
             return True
 
+        cls.dlg_retval = None
         dlg = cls(cls.global_layout_editor, keyboard)
+        dlg.finished.connect(cls.on_dialog_finished)
         cls.global_main_window.lock_ui()
-        ret = bool(dlg.exec_())
+        dlg.setModal(True)
+        dlg.show()
+        while cls.dlg_retval is None:
+            time.sleep(0.05)
+            QCoreApplication.processEvents()
+        ret = cls.dlg_retval
         cls.global_main_window.unlock_ui()
         return ret
 

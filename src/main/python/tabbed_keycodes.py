@@ -70,7 +70,7 @@ class AlternativeDisplay(QWidget):
         KeycodeDisplay.relabel_buttons(self.buttons)
 
     def required_width(self):
-        return self.kb_display.width() if self.kb_display else 0
+        return self.kb_display.sizeHint().width() if self.kb_display else 0
 
     def has_buttons(self):
         return len(self.buttons) > 0
@@ -147,17 +147,15 @@ def keycode_filter_masked(kc):
     return kc < 256
 
 
-class TabbedKeycodes(QTabWidget):
+class FilteredTabbedKeycodes(QTabWidget):
 
     keycode_changed = pyqtSignal(int)
     anykey = pyqtSignal()
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, keycode_filter=keycode_filter_any):
         super().__init__(parent)
 
-        self.target = None
-        self.is_tray = False
-        self.keycode_filter = keycode_filter_any
+        self.keycode_filter = keycode_filter
 
         self.tabs = [
             Tab(self, "Basic", [
@@ -189,14 +187,6 @@ class TabbedKeycodes(QTabWidget):
         self.recreate_keycode_buttons()
         KeycodeDisplay.notify_keymap_override(self)
 
-        # we don't get resize events for non-current tab so when switching to it, it can display old alternative
-        # (e.g. attempts to display fullsize which doesn't fit)
-        self.currentChanged.connect(self.on_current_changed)
-
-    def on_current_changed(self):
-        for tab in self.tabs:
-            tab.select_alternative()
-
     def on_keycode_changed(self, code):
         if code == -1:
             self.anykey.emit()
@@ -218,6 +208,30 @@ class TabbedKeycodes(QTabWidget):
     def on_keymap_override(self):
         for tab in self.tabs:
             tab.relabel_buttons()
+
+
+class TabbedKeycodes(QWidget):
+
+    keycode_changed = pyqtSignal(int)
+    anykey = pyqtSignal()
+
+    def __init__(self):
+        super().__init__()
+
+        self.target = None
+        self.is_tray = False
+
+        self.layout = QVBoxLayout()
+
+        self.all_keycodes = FilteredTabbedKeycodes()
+        self.basic_keycodes = FilteredTabbedKeycodes(keycode_filter=keycode_filter_masked)
+        for opt in [self.all_keycodes, self.basic_keycodes]:
+            opt.keycode_changed.connect(self.keycode_changed)
+            opt.anykey.connect(self.anykey)
+            self.layout.addWidget(opt)
+
+        self.setLayout(self.layout)
+        self.set_keycode_filter(keycode_filter_any)
 
     @classmethod
     def set_tray(cls, tray):
@@ -253,10 +267,14 @@ class TabbedKeycodes(QTabWidget):
         if self.target is not None:
             self.target.on_anykey()
 
-    def set_keycode_filter(self, keycode_filter):
-        if keycode_filter is None:
-            keycode_filter = keycode_filter_any
+    def recreate_keycode_buttons(self):
+        for opt in [self.all_keycodes, self.basic_keycodes]:
+            opt.recreate_keycode_buttons()
 
-        if keycode_filter != self.keycode_filter:
-            self.keycode_filter = keycode_filter
-            self.recreate_keycode_buttons()
+    def set_keycode_filter(self, keycode_filter):
+        if keycode_filter == keycode_filter_masked:
+            self.all_keycodes.hide()
+            self.basic_keycodes.show()
+        else:
+            self.all_keycodes.show()
+            self.basic_keycodes.hide()

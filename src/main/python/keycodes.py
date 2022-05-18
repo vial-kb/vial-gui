@@ -2,6 +2,9 @@
 
 # SPDX-License-Identifier: GPL-2.0-or-later
 
+import sys
+
+
 class Keycode:
 
     masked_keycodes = set()
@@ -14,6 +17,10 @@ class Keycode:
         self.qmk_id = qmk_id
         self.qmk_id_to_keycode[qmk_id] = self
         self.label = label
+        # we cannot embed full CJK fonts due to large size, workaround like this for now
+        if sys.platform == "emscripten" and not label.isascii() and qmk_id != "KC_TRNS":
+            self.label = qmk_id.replace("KC_", "")
+
         self.tooltip = tooltip
         # whether this keycode requires another sub-keycode
         self.masked = masked
