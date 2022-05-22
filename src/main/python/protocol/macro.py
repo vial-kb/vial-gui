@@ -192,7 +192,6 @@ class ProtocolMacro(BaseProtocol):
         if data != self.macro:
             Unlocker.unlock(self)
             self.set_macro(data)
-            self.lock()
 
     def macro_serialize(self, macro):
         """
