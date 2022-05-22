@@ -1,10 +1,11 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 import struct
 
-from keycodes import Keycode
+from keycodes import Keycode, RESET_KEYCODE
 from protocol.base_protocol import BaseProtocol
 from protocol.constants import CMD_VIA_VIAL_PREFIX, CMD_VIAL_DYNAMIC_ENTRY_OP, DYNAMIC_VIAL_COMBO_GET, \
     DYNAMIC_VIAL_COMBO_SET
+from unlocker import Unlocker
 
 
 class ProtocolCombo(BaseProtocol):
@@ -19,6 +20,9 @@ class ProtocolCombo(BaseProtocol):
     def combo_set(self, idx, entry):
         if self.combo_entries[idx] == entry:
             return
+        # for the replacement key
+        if entry[-1] == RESET_KEYCODE:
+            Unlocker.unlock(self)
         self.combo_entries[idx] = entry
         serialized = struct.pack("<HHHHH", *self.combo_entries[idx])
         self.usb_send(self.dev, struct.pack("BBBB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_DYNAMIC_ENTRY_OP,
