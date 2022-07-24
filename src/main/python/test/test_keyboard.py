@@ -3,7 +3,7 @@ import lzma
 import struct
 
 
-from keyboard_comm import Keyboard
+from protocol.keyboard_comm import Keyboard
 from util import chunks, MSG_LEN
 
 LAYOUT_2x2 = """

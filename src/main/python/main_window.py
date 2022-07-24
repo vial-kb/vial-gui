@@ -1,34 +1,35 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 import logging
+import platform
 from json import JSONDecodeError
 
-from PyQt5.QtCore import Qt, QSettings, QStandardPaths
+from PyQt5.QtCore import Qt, QSettings, QStandardPaths, QTimer, QT_VERSION_STR
 from PyQt5.QtWidgets import QWidget, QComboBox, QToolButton, QHBoxLayout, QVBoxLayout, QMainWindow, QAction, qApp, \
     QFileDialog, QDialog, QTabWidget, QActionGroup, QMessageBox, QLabel
 
-import json
 import os
 import sys
-from urllib.request import urlopen
 
-from autorefresh import Autorefresh
-from combos import Combos
+from about_keyboard import AboutKeyboard
+from autorefresh.autorefresh import Autorefresh
+from editor.combos import Combos
 from constants import WINDOW_WIDTH, WINDOW_HEIGHT
-from editor_container import EditorContainer
-from firmware_flasher import FirmwareFlasher
-from keyboard_comm import ProtocolError
-from keymap_editor import KeymapEditor
+from widgets.editor_container import EditorContainer
+from editor.firmware_flasher import FirmwareFlasher
+from editor.key_override import KeyOverride
+from protocol.keyboard_comm import ProtocolError
+from editor.keymap_editor import KeymapEditor
 from keymaps import KEYMAPS
-from layout_editor import LayoutEditor
-from macro_recorder import MacroRecorder
-from qmk_settings import QmkSettings
-from rgb_configurator import RGBConfigurator
+from editor.layout_editor import LayoutEditor
+from editor.macro_recorder import MacroRecorder
+from editor.qmk_settings import QmkSettings
+from editor.rgb_configurator import RGBConfigurator
 from tabbed_keycodes import TabbedKeycodes
-from tap_dance import TapDance
+from editor.tap_dance import TapDance
 from unlocker import Unlocker
-from util import tr, find_vial_devices, EXAMPLE_KEYBOARDS, KeycodeDisplay
+from util import tr, EXAMPLE_KEYBOARDS, KeycodeDisplay
 from vial_device import VialKeyboard
-from matrix_test import MatrixTest
+from editor.matrix_test import MatrixTest
 
 import themes
 
@@ -39,13 +40,15 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.appctx = appctx
 
+        self.ui_lock_count = 0
+
         self.settings = QSettings("Vial", "Vial")
         if self.settings.value("size", None) and self.settings.value("pos", None):
             self.resize(self.settings.value("size"))
             self.move(self.settings.value("pos"))
         else:
             self.resize(WINDOW_WIDTH, WINDOW_HEIGHT)
-        themes.set_theme(self.get_theme())
+        themes.Theme.set_theme(self.get_theme())
 
         self.combobox_devices = QComboBox()
         self.combobox_devices.currentIndexChanged.connect(self.on_device_selected)
@@ -57,7 +60,8 @@ class MainWindow(QMainWindow):
 
         layout_combobox = QHBoxLayout()
         layout_combobox.addWidget(self.combobox_devices)
-        layout_combobox.addWidget(self.btn_refresh_devices)
+        if sys.platform != "emscripten":
+            layout_combobox.addWidget(self.btn_refresh_devices)
 
         self.layout_editor = LayoutEditor()
         self.keymap_editor = KeymapEditor(self.layout_editor)
@@ -65,6 +69,7 @@ class MainWindow(QMainWindow):
         self.macro_recorder = MacroRecorder()
         self.tap_dance = TapDance()
         self.combos = Combos()
+        self.key_override = KeyOverride()
         QmkSettings.initialize(appctx)
         self.qmk_settings = QmkSettings()
         self.matrix_tester = MatrixTest(self.layout_editor)
@@ -72,10 +77,11 @@ class MainWindow(QMainWindow):
 
         self.editors = [(self.keymap_editor, "Keymap"), (self.layout_editor, "Layout"), (self.macro_recorder, "Macros"),
                         (self.rgb_configurator, "Lighting"), (self.tap_dance, "Tap Dance"), (self.combos, "Combos"),
-                        (self.qmk_settings, "QMK Settings"),
+                        (self.key_override, "Key Overrides"), (self.qmk_settings, "QMK Settings"),
                         (self.matrix_tester, "Matrix tester"), (self.firmware_flasher, "Firmware updater")]
 
         Unlocker.global_layout_editor = self.layout_editor
+        Unlocker.global_main_window = self
 
         self.current_tab = None
         self.tabs = QTabWidget()
@@ -94,12 +100,12 @@ class MainWindow(QMainWindow):
 
         layout = QVBoxLayout()
         layout.addLayout(layout_combobox)
-        layout.addWidget(self.tabs)
+        layout.addWidget(self.tabs, 1)
         layout.addWidget(self.lbl_no_devices)
         layout.setAlignment(self.lbl_no_devices, Qt.AlignHCenter)
         self.tray_keycodes = TabbedKeycodes()
         self.tray_keycodes.make_tray()
-        layout.addWidget(self.tray_keycodes)
+        layout.addWidget(self.tray_keycodes, 1)
         self.tray_keycodes.hide()
         w = QWidget()
         w.setLayout(layout)
@@ -128,6 +134,10 @@ class MainWindow(QMainWindow):
         # make sure initial state is valid
         self.on_click_refresh()
 
+        if sys.platform == "emscripten":
+            import vialglue
+            QTimer.singleShot(100, vialglue.notify_ready)
+
     def init_menu(self):
         layout_load_act = QAction(tr("MenuFile", "Load saved layout..."), self)
         layout_load_act.setShortcut("Ctrl+O")
@@ -150,15 +160,16 @@ class MainWindow(QMainWindow):
         exit_act.setShortcut("Ctrl+Q")
         exit_act.triggered.connect(qApp.exit)
 
-        file_menu = self.menuBar().addMenu(tr("Menu", "File"))
-        file_menu.addAction(layout_load_act)
-        file_menu.addAction(layout_save_act)
-        file_menu.addSeparator()
-        file_menu.addAction(sideload_json_act)
-        file_menu.addAction(download_via_stack_act)
-        file_menu.addAction(load_dummy_act)
-        file_menu.addSeparator()
-        file_menu.addAction(exit_act)
+        if sys.platform != "emscripten":
+            file_menu = self.menuBar().addMenu(tr("Menu", "File"))
+            file_menu.addAction(layout_load_act)
+            file_menu.addAction(layout_save_act)
+            file_menu.addSeparator()
+            file_menu.addAction(sideload_json_act)
+            file_menu.addAction(download_via_stack_act)
+            file_menu.addAction(load_dummy_act)
+            file_menu.addSeparator()
+            file_menu.addAction(exit_act)
 
         keyboard_unlock_act = QAction(tr("MenuSecurity", "Unlock"), self)
         keyboard_unlock_act.triggered.connect(self.unlock_keyboard)
@@ -191,23 +202,27 @@ class MainWindow(QMainWindow):
         self.security_menu.addSeparator()
         self.security_menu.addAction(keyboard_reset_act)
 
-        self.theme_menu = self.menuBar().addMenu(tr("Menu", "Theme"))
-        theme_group = QActionGroup(self)
-        selected_theme = self.get_theme()
-        for name, _ in [("System", None)] + themes.themes:
-            act = QAction(tr("MenuTheme", name), self)
-            act.triggered.connect(lambda x,name=name: self.set_theme(name))
-            act.setCheckable(True)
-            act.setChecked(selected_theme == name)
-            theme_group.addAction(act)
-            self.theme_menu.addAction(act)
-        # check "System" if nothing else is selected
-        if theme_group.checkedAction() is None:
-            theme_group.actions()[0].setChecked(True)
+        if sys.platform != "emscripten":
+            self.theme_menu = self.menuBar().addMenu(tr("Menu", "Theme"))
+            theme_group = QActionGroup(self)
+            selected_theme = self.get_theme()
+            for name, _ in [("System", None)] + themes.themes:
+                act = QAction(tr("MenuTheme", name), self)
+                act.triggered.connect(lambda x,name=name: self.set_theme(name))
+                act.setCheckable(True)
+                act.setChecked(selected_theme == name)
+                theme_group.addAction(act)
+                self.theme_menu.addAction(act)
+            # check "System" if nothing else is selected
+            if theme_group.checkedAction() is None:
+                theme_group.actions()[0].setChecked(True)
 
         about_vial_act = QAction(tr("MenuAbout", "About Vial..."), self)
         about_vial_act.triggered.connect(self.about_vial)
+        self.about_keyboard_act = QAction("", self)
+        self.about_keyboard_act.triggered.connect(self.about_keyboard)
         self.about_menu = self.menuBar().addMenu(tr("Menu", "About"))
+        self.about_menu.addAction(self.about_keyboard_act)
         self.about_menu.addAction(about_vial_act)
 
     def on_layout_load(self):
@@ -231,9 +246,7 @@ class MainWindow(QMainWindow):
                 outf.write(self.keymap_editor.save_layout())
 
     def on_click_refresh(self):
-        # we don't do check_protocol here either because if the matrix test tab is active,
-        # that ends up corrupting usb hid packets
-        self.autorefresh.update(check_protocol=False)
+        self.autorefresh.update(quiet=False, hard=True)
 
     def on_devices_updated(self, devices, hard_refresh):
         self.combobox_devices.blockSignals(True)
@@ -275,13 +288,19 @@ class MainWindow(QMainWindow):
         # don't show "Security" menu for bootloader mode, as the bootloader is inherently insecure
         self.security_menu.menuAction().setVisible(isinstance(self.autorefresh.current_device, VialKeyboard))
 
+        self.about_keyboard_act.setVisible(False)
+        if isinstance(self.autorefresh.current_device, VialKeyboard):
+            self.about_keyboard_act.setText("About {}...".format(self.autorefresh.current_device.title()))
+            self.about_keyboard_act.setVisible(True)
+
         # if unlock process was interrupted, we must finish it first
         if isinstance(self.autorefresh.current_device, VialKeyboard) and self.autorefresh.current_device.keyboard.get_unlock_in_progress():
             Unlocker.unlock(self.autorefresh.current_device.keyboard)
             self.autorefresh.current_device.keyboard.reload()
 
         for e in [self.layout_editor, self.keymap_editor, self.firmware_flasher, self.macro_recorder,
-                  self.tap_dance, self.combos, self.qmk_settings, self.matrix_tester, self.rgb_configurator]:
+                  self.tap_dance, self.combos, self.key_override, self.qmk_settings, self.matrix_tester,
+                  self.rgb_configurator]:
             e.rebuild(self.autorefresh.current_device)
 
     def refresh_tabs(self):
@@ -294,6 +313,8 @@ class MainWindow(QMainWindow):
             self.tabs.addTab(c, tr("MainWindow", lbl))
 
     def load_via_stack_json(self):
+        from urllib.request import urlopen
+
         with urlopen("https://github.com/vial-kb/via-keymap-precompiled/raw/main/via_keyboard_stack.json") as resp:
             data = resp.read()
         self.autorefresh.load_via_stack(data)
@@ -322,16 +343,20 @@ class MainWindow(QMainWindow):
             self.autorefresh.load_dummy(data)
 
     def lock_ui(self):
-        self.autorefresh._lock()
-        self.tabs.setEnabled(False)
-        self.combobox_devices.setEnabled(False)
-        self.btn_refresh_devices.setEnabled(False)
+        self.ui_lock_count += 1
+        if self.ui_lock_count == 1:
+            self.autorefresh._lock()
+            self.tabs.setEnabled(False)
+            self.combobox_devices.setEnabled(False)
+            self.btn_refresh_devices.setEnabled(False)
 
     def unlock_ui(self):
-        self.autorefresh._unlock()
-        self.tabs.setEnabled(True)
-        self.combobox_devices.setEnabled(True)
-        self.btn_refresh_devices.setEnabled(True)
+        self.ui_lock_count -= 1
+        if self.ui_lock_count == 0:
+            self.autorefresh._unlock()
+            self.tabs.setEnabled(True)
+            self.combobox_devices.setEnabled(True)
+            self.btn_refresh_devices.setEnabled(True)
 
     def unlock_keyboard(self):
         if isinstance(self.autorefresh.current_device, VialKeyboard):
@@ -354,7 +379,7 @@ class MainWindow(QMainWindow):
         return self.settings.value("theme", "Dark")
 
     def set_theme(self, theme):
-        themes.set_theme(theme)
+        themes.Theme.set_theme(theme)
         self.settings.setValue("theme", theme)
         msg = QMessageBox()
         msg.setText(tr("MainWindow", "In order to fully apply the theme you should restart the application."))
@@ -375,14 +400,26 @@ class MainWindow(QMainWindow):
         self.current_tab = new_tab
 
     def about_vial(self):
-        QMessageBox.about(
-            self,
-            "About Vial",
-            'Vial {}<br><br>'
-            'Licensed under the terms of the<br>GNU General Public License (version 2 or later)<br><br>'
-            '<a href="https://get.vial.today/">https://get.vial.today/</a>'
-            .format(self.appctx.build_settings["version"])
-        )
+        title = "About Vial"
+        text = 'Vial {}<br><br>Python {}<br>Qt {}<br><br>' \
+               'Licensed under the terms of the<br>GNU General Public License (version 2 or later)<br><br>' \
+               '<a href="https://get.vial.today/">https://get.vial.today/</a>' \
+               .format(self.appctx.build_settings["version"],
+                       platform.python_version(), QT_VERSION_STR)
+
+        if sys.platform == "emscripten":
+            self.msg_about = QMessageBox()
+            self.msg_about.setWindowTitle(title)
+            self.msg_about.setText(text)
+            self.msg_about.setModal(True)
+            self.msg_about.show()
+        else:
+            QMessageBox.about(self, title, text)
+
+    def about_keyboard(self):
+        self.about_dialog = AboutKeyboard(self.autorefresh.current_device)
+        self.about_dialog.setModal(True)
+        self.about_dialog.show()
 
     def closeEvent(self, e):
         self.settings.setValue("size", self.size())

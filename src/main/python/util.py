@@ -1,12 +1,13 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 import logging
 import os
+import sys
 import time
 from logging.handlers import RotatingFileHandler
 
 from PyQt5.QtCore import QCoreApplication, QStandardPaths
 from PyQt5.QtGui import QPalette
-from PyQt5.QtWidgets import QApplication
+from PyQt5.QtWidgets import QApplication, QWidget, QScrollArea, QFrame
 
 from hidproxy import hid
 from keycodes import Keycode
@@ -62,12 +63,18 @@ def hid_send(dev, msg, retries=1):
     return data
 
 
-def is_rawhid(desc, quiet, check_protocol):
+def is_rawhid(desc, quiet):
     if desc["usage_page"] != 0xFF60 or desc["usage"] != 0x61:
         if not quiet:
             logging.warning("is_rawhid: {} does not match - usage_page={:04X} usage={:02X}".format(
                 desc["path"], desc["usage_page"], desc["usage"]))
         return False
+
+    # there's no reason to check for permission issues on mac or windows
+    # and mac won't let us reopen an opened device
+    # so skip the rest of the checks for non-linux
+    if not sys.platform.startswith("linux"):
+        return True
 
     dev = hid.device()
 
@@ -78,34 +85,11 @@ def is_rawhid(desc, quiet, check_protocol):
             logging.warning("is_rawhid: {} does not match - open_path error {}".format(desc["path"], e))
         return False
 
-    # if caller didn't ask to check protocol level support we're all done
-    if not check_protocol:
-        dev.close()
-        return True
-
-    # probe VIA version and ensure it is supported
-    data = b""
-    try:
-        data = hid_send(dev, b"\x01", retries=3)
-    except RuntimeError as e:
-        if not quiet:
-            logging.warning("is_rawhid: {} does not match - hid_send error {}".format(desc["path"], e))
-        pass
     dev.close()
-
-    # must have VIA protocol version = 9
-    if data[0:3] != b"\x01\x00\x09":
-        if not quiet:
-            logging.warning("is_rawhid: {} does not match - unexpected data in response {}".format(
-                desc["path"], data.hex()))
-        return False
-
-    if not quiet:
-        logging.info("is_rawhid: {} matched OK".format(desc["path"]))
     return True
 
 
-def find_vial_devices(via_stack_json, sideload_vid=None, sideload_pid=None, quiet=False, check_protocol=True):
+def find_vial_devices(via_stack_json, sideload_vid=None, sideload_pid=None, quiet=False):
     from vial_device import VialBootloader, VialKeyboard, VialDummyKeyboard
 
     filtered = []
@@ -115,14 +99,14 @@ def find_vial_devices(via_stack_json, sideload_vid=None, sideload_pid=None, quie
                 logging.info("Trying VID={:04X}, PID={:04X}, serial={}, path={} - sideload".format(
                     dev["vendor_id"], dev["product_id"], dev["serial_number"], dev["path"]
                 ))
-            if is_rawhid(dev, quiet, check_protocol):
+            if is_rawhid(dev, quiet):
                 filtered.append(VialKeyboard(dev, sideload=True))
         elif VIAL_SERIAL_NUMBER_MAGIC in dev["serial_number"]:
             if not quiet:
                 logging.info("Matching VID={:04X}, PID={:04X}, serial={}, path={} - vial serial magic".format(
                     dev["vendor_id"], dev["product_id"], dev["serial_number"], dev["path"]
                 ))
-            if is_rawhid(dev, quiet, check_protocol):
+            if is_rawhid(dev, quiet):
                 filtered.append(VialKeyboard(dev))
         elif VIBL_SERIAL_NUMBER_MAGIC in dev["serial_number"]:
             if not quiet:
@@ -135,7 +119,7 @@ def find_vial_devices(via_stack_json, sideload_vid=None, sideload_pid=None, quie
                 logging.info("Matching VID={:04X}, PID={:04X}, serial={}, path={} - VIA stack".format(
                     dev["vendor_id"], dev["product_id"], dev["serial_number"], dev["path"]
                 ))
-            if is_rawhid(dev, quiet, check_protocol):
+            if is_rawhid(dev, quiet):
                 filtered.append(VialKeyboard(dev, via_stack=True))
 
     if sideload_vid == sideload_pid == 0:
@@ -165,6 +149,19 @@ def init_logger():
     handler = RotatingFileHandler(path, maxBytes=5 * 1024 * 1024, backupCount=5)
     handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(module)s:%(lineno)d - %(message)s"))
     logging.getLogger().addHandler(handler)
+
+
+def make_scrollable(layout):
+    w = QWidget()
+    w.setLayout(layout)
+    w.setObjectName("w")
+    scroll = QScrollArea()
+    scroll.setFrameShape(QFrame.NoFrame)
+    scroll.setStyleSheet("QScrollArea { background-color:transparent; }")
+    w.setStyleSheet("#w { background-color:transparent; }")
+    scroll.setWidgetResizable(True)
+    scroll.setWidget(w)
+    return scroll
 
 
 class KeycodeDisplay:
@@ -201,6 +198,10 @@ class KeycodeDisplay:
             widget.setColor(QApplication.palette().color(QPalette.Link))
         else:
             widget.setColor(None)
+        if mask and cls.code_is_overriden(code & 0xFF):
+            widget.setMaskColor(QApplication.palette().color(QPalette.Link))
+        else:
+            widget.setMaskColor(None)
 
     @classmethod
     def set_keymap_override(cls, override):
@@ -212,3 +213,20 @@ class KeycodeDisplay:
     def notify_keymap_override(cls, client):
         cls.clients.append(client)
         client.on_keymap_override()
+
+    @classmethod
+    def unregister_keymap_override(cls, client):
+        cls.clients.remove(client)
+
+    @classmethod
+    def relabel_buttons(cls, buttons):
+        for widget in buttons:
+            qmk_id = widget.keycode.qmk_id
+            if qmk_id in KeycodeDisplay.keymap_override:
+                label = KeycodeDisplay.keymap_override[qmk_id]
+                highlight_color = QApplication.palette().color(QPalette.Link).getRgb()
+                widget.setStyleSheet("QPushButton {color: rgb%s;}" % str(highlight_color))
+            else:
+                label = widget.keycode.label
+                widget.setStyleSheet("QPushButton {}")
+            widget.setText(label.replace("&", "&&"))

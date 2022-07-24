@@ -124,6 +124,26 @@ themes = [
         (QPalette.Disabled, QPalette.Text): "#f8f8f2",
         (QPalette.Disabled, QPalette.Light): "#8be9fd",
     }),
+    ("Bliss", {
+        QPalette.Window: "#343434",
+        QPalette.WindowText: "#cbc8c9",
+        QPalette.Base: "#343434",
+        QPalette.AlternateBase: "#3b3b3b",
+        QPalette.ToolTipBase: "#424242",
+        QPalette.ToolTipText: "#cbc8c9",
+        QPalette.Text: "#cbc8c9",
+        QPalette.Button: "#343434",
+        QPalette.ButtonText: "#cbc8c9",
+        QPalette.BrightText: "#f5d1c8",
+        QPalette.Link: "#f5d1c8",
+        QPalette.Highlight: "#f5d1c8",
+        QPalette.HighlightedText: "#424242",
+        (QPalette.Active, QPalette.Button): "#343434",
+        (QPalette.Disabled, QPalette.ButtonText): "#cbc8c9",
+        (QPalette.Disabled, QPalette.WindowText): "#cbc8c9",
+        (QPalette.Disabled, QPalette.Text): "#cbc8c9",
+        (QPalette.Disabled, QPalette.Light): "#f5d1c8",
+    }),
 ]
 
 palettes = dict()
@@ -137,9 +157,25 @@ for name, colors in themes:
     palettes[name] = palette
 
 
-def set_theme(theme):
-    if theme in palettes:
-        QApplication.setPalette(palettes[theme])
-        QApplication.setStyle("Fusion")
-    # For default/system theme, do nothing
-    # User will have to restart the application for it to be applied
+class Theme:
+
+    theme = ""
+
+    @classmethod
+    def set_theme(cls, theme):
+        cls.theme = theme
+        if theme in palettes:
+            QApplication.setPalette(palettes[theme])
+            QApplication.setStyle("Fusion")
+        # For default/system theme, do nothing
+        # User will have to restart the application for it to be applied
+
+    @classmethod
+    def get_theme(cls):
+        return cls.theme
+
+    @classmethod
+    def mask_light_factor(cls):
+        if cls.theme == "Light":
+            return 103
+        return 150

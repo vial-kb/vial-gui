@@ -2,7 +2,8 @@
 import time
 
 from hidproxy import hid
-from keyboard_comm import Keyboard, DummyKeyboard
+from protocol.keyboard_comm import Keyboard
+from protocol.dummy_keyboard import DummyKeyboard
 from util import MSG_LEN, pad_for_vibl
 
 
@@ -50,7 +51,7 @@ class VialKeyboard(VialDevice):
         self.keyboard.reload(override_json)
 
     def title(self):
-        s = "{} {}".format(self.desc["manufacturer_string"], self.desc["product_string"])
+        s = "{} {}".format(self.desc["manufacturer_string"], self.desc["product_string"]).strip()
         if self.sideload:
             s += " [sideload]"
         elif self.via_stack:
