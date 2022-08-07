@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+FILE=$(readlink "$0" || echo "$0")
+DIR=$(dirname $FILE)
+$DIR/venv/bin/python $DIR/src/main/python/main.py

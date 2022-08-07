@@ -1,13 +1,11 @@
-altgraph==0.17
-fbs==0.9.0
-future==0.18.2
 git+https://github.com/vial-kb/cython-hidapi@88d8983b3dc65b9ef84238abe3f46004b0ef2fd0#egg=hidapi
+# fork of fbs that is py 3.10 compatible
+git+https://github.com/rnbwdsh/fbs
+certifi==2022.6.15
 keyboard==0.13.5
-macholib==1.14
-pefile==2019.4.18
-PyInstaller==3.4
-PyQt5==5.9.2
-https://github.com/danthedeckie/simpleeval/archive/41c99b8e224a7a0ae0ac59c773598fe79a4470db.zip
-sip==4.19.8
-pywin32==303; sys_platform == 'win32'
-certifi
+macholib==1.16
+pefile==2022.5.30
+pyqt5==5.15.7
+simpleeval==0.9.12
+pyinstaller==4.10
+pywin32==304; sys_platform == 'win32'
