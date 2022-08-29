@@ -6,11 +6,12 @@ from PyQt5.QtGui import QPalette
 
 from constants import KEYCODE_BTN_RATIO
 from widgets.display_keyboard import DisplayKeyboard
-from widgets.display_keyboard_defs import ansi_100, ansi_80, ansi_70, iso_100, iso_80, iso_70, mods
+from widgets.display_keyboard_defs import ansi_100, ansi_80, ansi_70, iso_100, iso_80, iso_70, mods, mods_narrow
 from widgets.flowlayout import FlowLayout
 from keycodes import KEYCODES_BASIC, KEYCODES_ISO, KEYCODES_MACRO, KEYCODES_LAYERS, KEYCODES_QUANTUM, \
     KEYCODES_BACKLIGHT, KEYCODES_MEDIA, KEYCODES_SPECIAL, KEYCODES_SHIFTED, KEYCODES_USER, Keycode, \
-    KEYCODES_TAP_DANCE, KEYCODES_MIDI, KEYCODES_BASIC_NUMPAD, KEYCODES_BASIC_NAV, KEYCODES_ISO_KR
+    KEYCODES_TAP_DANCE, KEYCODES_MIDI, KEYCODES_BASIC_NUMPAD, KEYCODES_BASIC_NAV, KEYCODES_ISO_KR, \
+    KEYCODES_RESET, KEYCODES_MODIFIERS
 from widgets.square_button import SquareButton
 from util import tr, KeycodeDisplay
 
@@ -172,7 +173,9 @@ class FilteredTabbedKeycodes(QTabWidget):
                 (None, KEYCODES_ISO),
             ], prefix_buttons=[("Any", -1)]),
             SimpleTab(self, "Layers", KEYCODES_LAYERS),
-            Tab(self, "Quantum", [(mods, []), (None, KEYCODES_QUANTUM)]),
+            Tab(self, "Quantum", [(mods, (KEYCODES_RESET + KEYCODES_QUANTUM)),
+                                  (mods_narrow, (KEYCODES_RESET + KEYCODES_QUANTUM)),
+                                  (None, (KEYCODES_RESET + KEYCODES_MODIFIERS + KEYCODES_QUANTUM))]),
             SimpleTab(self, "Backlight", KEYCODES_BACKLIGHT),
             SimpleTab(self, "App, Media and Mouse", KEYCODES_MEDIA),
             SimpleTab(self, "MIDI", KEYCODES_MIDI),
