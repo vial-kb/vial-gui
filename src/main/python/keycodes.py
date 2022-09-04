@@ -319,7 +319,7 @@ def LT(layer):
 RESET_KEYCODE = 0x5C00
 
 
-KEYCODES_RESET = [
+KEYCODES_BOOT = [
     K(RESET_KEYCODE, "RESET", "Reset", "Reboot to bootloader")
 ]
 
