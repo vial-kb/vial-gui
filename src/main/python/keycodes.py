@@ -319,8 +319,11 @@ def LT(layer):
 RESET_KEYCODE = 0x5C00
 
 
-KEYCODES_QUANTUM = [
-    K(RESET_KEYCODE, "RESET", "Reset", "Reboot to bootloader"),
+KEYCODES_BOOT = [
+    K(RESET_KEYCODE, "RESET", "Reset", "Reboot to bootloader")
+]
+
+KEYCODES_MODIFIERS = [
     K(QK_ONE_SHOT_MOD | MOD_LSFT, "OSM(MOD_LSFT)", "OSM\nLSft", "Enable Left Shift for one keypress"),
     K(QK_ONE_SHOT_MOD | MOD_LCTL, "OSM(MOD_LCTL)", "OSM\nLCtl", "Enable Left Control for one keypress"),
     K(QK_ONE_SHOT_MOD | MOD_LALT, "OSM(MOD_LALT)", "OSM\nLAlt", "Enable Left Alt for one keypress"),
@@ -402,7 +405,9 @@ KEYCODES_QUANTUM = [
     K(0x5CF5, "KC_LAPO", "LA\n(", "Left Alt when held, ( when tapped"),
     K(0x5CF6, "KC_RAPC", "RA\n)", "Right Alt when held, ) when tapped"),
     K(0x5CD9, "KC_SFTENT", "RS\nEnter", "Right Shift when held, Enter when tapped"),
+]
 
+KEYCODES_QUANTUM = [
     K(23554, "MAGIC_SWAP_CONTROL_CAPSLOCK", "Swap\nCtrl\nCaps", "Swap Caps Lock and Left Control", alias=["CL_SWAP"]),
     K(23563, "MAGIC_UNSWAP_CONTROL_CAPSLOCK", "Unswap\nCtrl\nCaps", "Unswap Caps Lock and Left Control",
       alias=["CL_NORM"]),
@@ -774,8 +779,8 @@ def recreate_keycodes():
 
     KEYCODES.clear()
     KEYCODES.extend(KEYCODES_SPECIAL + KEYCODES_BASIC + KEYCODES_SHIFTED + KEYCODES_ISO + KEYCODES_LAYERS +
-                    KEYCODES_QUANTUM + KEYCODES_BACKLIGHT + KEYCODES_MEDIA + KEYCODES_TAP_DANCE + KEYCODES_MACRO +
-                    KEYCODES_USER + KEYCODES_HIDDEN + KEYCODES_MIDI)
+                    KEYCODES_BOOT + KEYCODES_MODIFIERS + KEYCODES_QUANTUM + KEYCODES_BACKLIGHT + KEYCODES_MEDIA +
+                    KEYCODES_TAP_DANCE + KEYCODES_MACRO + KEYCODES_USER + KEYCODES_HIDDEN + KEYCODES_MIDI)
     KEYCODES_MAP.clear()
     for keycode in KEYCODES:
         KEYCODES_MAP[keycode.code] = keycode
