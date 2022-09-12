@@ -32,6 +32,9 @@ EXAMPLE_KEYBOARDS = [
     0xBED2D31EC59A0BD8,  # vial_stm32f401
 ]
 
+# anything starting with this prefix should not be allowed
+EXAMPLE_KEYBOARD_PREFIX = 0xA6867BDFD3B00F
+
 
 def hid_send(dev, msg, retries=1):
     if len(msg) > MSG_LEN:
