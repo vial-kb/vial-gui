@@ -7,6 +7,7 @@ KEYMAPS = [
     ("Danish (QWERTY)", danish.keymap),
     ("EurKey (QWERTY)", eurkey.keymap),
     ("French (AZERTY)", french.keymap),
+    ("French (MAC)", french.keymap_mac),
     ("German (QWERTZ)", german.keymap),
     ("Hebrew (Standard)", hebrew.keymap),
     ("Hungarian (QWERTZ)", hungarian.keymap),
