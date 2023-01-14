@@ -805,8 +805,8 @@ def create_custom_user_keycodes(custom_keycodes):
         KEYCODES_USER.append(
             Keycode(
                 0x5F80 + x,
-                c_keycode.get("shortName", "USER{:02}".format(x)),
                 c_keycode.get("name", "USER{:02}".format(x)),
+                c_keycode.get("shortName", "USER{:02}".format(x)),
                 c_keycode.get("title", "USER{:02}".format(x))
             )
         )
