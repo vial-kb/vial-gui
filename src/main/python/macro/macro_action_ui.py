@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import QLineEdit, QToolButton, QWidget, QSizePolicy, QSpinB
 from constants import KEY_SIZE_RATIO
 from tabbed_keycodes import TabbedKeycodes
 from widgets.flowlayout import FlowLayout
-from keycodes import KEYCODES_SPECIAL
+from keycodes.keycodes import KEYCODES_SPECIAL
 from macro.macro_action import ActionText, ActionSequence, ActionDown, ActionUp, ActionTap, ActionDelay
 from widgets.key_widget import KeyWidget
 

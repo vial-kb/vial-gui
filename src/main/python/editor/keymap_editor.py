@@ -7,7 +7,7 @@ from PyQt5.QtCore import Qt, pyqtSignal
 from any_keycode_dialog import AnyKeycodeDialog
 from editor.basic_editor import BasicEditor
 from widgets.keyboard_widget import KeyboardWidget, EncoderWidget
-from keycodes import recreate_keyboard_keycodes
+from keycodes.keycodes import recreate_keyboard_keycodes
 from widgets.square_button import SquareButton
 from tabbed_keycodes import TabbedKeycodes, keycode_filter_masked
 from util import tr, KeycodeDisplay

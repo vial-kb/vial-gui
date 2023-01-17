@@ -4,7 +4,7 @@ import json
 import lzma
 from collections import OrderedDict
 
-from keycodes import RESET_KEYCODE, Keycode
+from keycodes.keycodes import RESET_KEYCODE, Keycode
 from kle_serial import Serial as KleSerial
 from protocol.combo import ProtocolCombo
 from protocol.constants import CMD_VIA_GET_PROTOCOL_VERSION, CMD_VIA_GET_KEYBOARD_VALUE, CMD_VIA_SET_KEYBOARD_VALUE, \

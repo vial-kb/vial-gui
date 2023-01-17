@@ -10,7 +10,7 @@ from PyQt5.QtGui import QPalette
 from PyQt5.QtWidgets import QApplication, QWidget, QScrollArea, QFrame
 
 from hidproxy import hid
-from keycodes import Keycode
+from keycodes.keycodes import Keycode
 from keymaps import KEYMAPS
 
 tr = QCoreApplication.translate

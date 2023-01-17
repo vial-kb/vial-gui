@@ -5,7 +5,7 @@ from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QGridLayout, QWidget, QSizePolicy
 
 from constants import KEYCODE_BTN_RATIO
-from keycodes import Keycode
+from keycodes.keycodes import Keycode
 from util import KeycodeDisplay
 from widgets.square_button import SquareButton
 from kle_serial import Serial as KleSerial

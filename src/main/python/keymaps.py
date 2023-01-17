@@ -1,4 +1,4 @@
-from keycodes import Keycode
+from keycodes.keycodes import Keycode
 from keymap import brazilian, danish, eurkey, french, german, hebrew, hungarian, latam, norwegian, russian, slovak, spanish, swedish, swedish_swerty, swiss
 
 KEYMAPS = [

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
-from keycodes import Keycode
+from keycodes.keycodes import Keycode
 
 
 class BasicKey:
