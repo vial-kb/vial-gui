@@ -190,7 +190,10 @@ class KeycodeDisplay:
         text = cls.get_label(code)
         tooltip = Keycode.tooltip(code)
         mask = Keycode.is_mask(code)
-        mask_text = cls.get_label(code & 0xFF)
+        mask_text = ""
+        inner = Keycode.find_inner_keycode(code)
+        if inner:
+            mask_text = cls.get_label(inner.qmk_id)
         if mask:
             text = text.split("\n")[0]
         widget.masked = mask
@@ -201,7 +204,7 @@ class KeycodeDisplay:
             widget.setColor(QApplication.palette().color(QPalette.Link))
         else:
             widget.setColor(None)
-        if mask and cls.code_is_overriden(code & 0xFF):
+        if mask and cls.code_is_overriden(inner.qmk_id):
             widget.setMaskColor(QApplication.palette().color(QPalette.Link))
         else:
             widget.setMaskColor(None)

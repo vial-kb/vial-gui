@@ -39,6 +39,8 @@ class KeyOverrideEntry:
             args = [0] * 7
         self.trigger, self.replacement, self.layers, self.trigger_mods, self.negative_mod_mask, \
             self.suppressed_mods, opt = args
+        self.trigger = Keycode.serialize(self.trigger)
+        self.replacement = Keycode.serialize(self.replacement)
         self.options = KeyOverrideOptions(opt)
 
     def serialize(self):

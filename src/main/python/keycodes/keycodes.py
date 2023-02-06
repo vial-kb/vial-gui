@@ -8,12 +8,13 @@ import sys
 class Keycode:
 
     masked_keycodes = set()
+    masked_rawcodes = set()
     recorder_alias_to_keycode = dict()
     qmk_id_to_keycode = dict()
 
     def __init__(self, code, qmk_id, label, tooltip=None, masked=False, printable=None, recorder_alias=None,
                  alias=None):
-        self.code = code
+        self.rawcode = code
         self.qmk_id = qmk_id
         self.qmk_id_to_keycode[qmk_id] = self
         self.label = label
@@ -39,20 +40,31 @@ class Keycode:
                 self.recorder_alias_to_keycode[alias] = self
 
         if masked:
-            self.masked_keycodes.add(code)
+            assert qmk_id.endswith("(kc)")
+            self.masked_keycodes.add(qmk_id.replace("(kc)", ""))
+            self.masked_rawcodes.add(code)
 
     @classmethod
     def find(cls, code):
         return KEYCODES_MAP.get(code)
 
     @classmethod
-    def find_outer_keycode(cls, code):
+    def find_outer_keycode(cls, qmk_id):
         """
         Finds outer keycode, i.e. if it is masked like 0x5Fxx, just return the 0x5F00 portion
         """
-        if cls.is_mask(code):
-            code = code & 0xFF00
-        return cls.find(code)
+        if cls.is_mask(qmk_id):
+            qmk_id = qmk_id[:qmk_id.find("(")]
+        return cls.find(qmk_id)
+
+    @classmethod
+    def find_inner_keycode(cls, qmk_id):
+        """
+        Finds inner keycode, i.e. if it is masked like 0x5F12, just return the 0x12 portion
+        """
+        if cls.is_mask(qmk_id):
+            qmk_id = qmk_id[qmk_id.find("(")+1:-1]
+        return cls.find(qmk_id)
 
     @classmethod
     def find_by_recorder_alias(cls, alias):
@@ -63,19 +75,19 @@ class Keycode:
         return cls.qmk_id_to_keycode.get(qmk_id)
 
     @classmethod
-    def is_mask(cls, code):
-        return (code & 0xFF00) in cls.masked_keycodes
+    def is_mask(cls, qmk_id):
+        return "(" in qmk_id and qmk_id[:qmk_id.find("(")] in cls.masked_keycodes
 
     @classmethod
-    def label(cls, code):
-        keycode = cls.find_outer_keycode(code)
+    def label(cls, qmk_id):
+        keycode = cls.find_outer_keycode(qmk_id)
         if keycode is None:
-            return "0x{:X}".format(code)
+            return qmk_id
         return keycode.label
 
     @classmethod
-    def tooltip(cls, code):
-        keycode = cls.find_outer_keycode(code)
+    def tooltip(cls, qmk_id):
+        keycode = cls.find_outer_keycode(qmk_id)
         if keycode is None:
             return None
         tooltip = keycode.qmk_id
@@ -85,25 +97,29 @@ class Keycode:
 
     @classmethod
     def serialize(cls, code):
-        if not cls.is_mask(code):
-            kc = cls.find(code)
+        """ Converts integer keycode to string """
+
+        if (code & 0xFF00) not in cls.masked_rawcodes:
+            kc = RAWCODES_MAP.get(code)
             if kc is not None:
                 return kc.qmk_id
-        elif cls.is_mask(code):
-            outer = cls.find_outer_keycode(code)
-            inner = cls.find(code & 0xFF)
+        else:
+            outer = RAWCODES_MAP.get(code & 0xFF00)
+            inner = RAWCODES_MAP.get(code & 0xFF)
             if outer is not None and inner is not None:
                 return outer.qmk_id.replace("kc", inner.qmk_id)
-        return code
+        return hex(code)
 
     @classmethod
     def deserialize(cls, val, reraise=False):
+        """ Converts string keycode to integer """
+
         from any_keycode import AnyKeycode
 
         if isinstance(val, int):
             return val
         if "(" not in val and val in cls.qmk_id_to_keycode:
-            return cls.qmk_id_to_keycode[val].code
+            return cls.qmk_id_to_keycode[val].rawcode
         anykc = AnyKeycode()
         try:
             return anykc.decode(val)
@@ -316,11 +332,11 @@ def LT(layer):
     return QK_LAYER_TAP | (((layer) & 0xF) << 8)
 
 
-RESET_KEYCODE = 0x5C00
+RESET_KEYCODE = "RESET"
 
 
 KEYCODES_BOOT = [
-    K(RESET_KEYCODE, "RESET", "Reset", "Reboot to bootloader")
+    K(0x5C00, "RESET", "Reset", "Reboot to bootloader")
 ]
 
 KEYCODES_MODIFIERS = [
@@ -770,6 +786,7 @@ for x in range(256):
 
 KEYCODES = []
 KEYCODES_MAP = dict()
+RAWCODES_MAP = dict()
 
 K = None
 
@@ -782,8 +799,11 @@ def recreate_keycodes():
                     KEYCODES_BOOT + KEYCODES_MODIFIERS + KEYCODES_QUANTUM + KEYCODES_BACKLIGHT + KEYCODES_MEDIA +
                     KEYCODES_TAP_DANCE + KEYCODES_MACRO + KEYCODES_USER + KEYCODES_HIDDEN + KEYCODES_MIDI)
     KEYCODES_MAP.clear()
+    RAWCODES_MAP.clear()
     for keycode in KEYCODES:
-        KEYCODES_MAP[keycode.code] = keycode
+        KEYCODES_MAP[keycode.qmk_id.replace("(kc)", "")] = keycode
+        # TODO: need better interface for multi-fw
+        RAWCODES_MAP[keycode.rawcode] = keycode
 
 
 def create_user_keycodes():
@@ -860,7 +880,7 @@ def recreate_keyboard_keycodes(keyboard):
                                    "Turns on layer and turns off all other layers, except the default layer"))
 
     for x in range(layers):
-        KEYCODES_LAYERS.append(Keycode(LT(x), "LT({}, kc)".format(x), "LT {}\n(kc)".format(x),
+        KEYCODES_LAYERS.append(Keycode(LT(x), "LT{}(kc)".format(x), "LT {}\n(kc)".format(x),
                                        "kc on tap, switch to layer {} while held".format(x), masked=True))
 
     KEYCODES_MACRO.clear()

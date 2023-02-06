@@ -18,7 +18,7 @@ from util import tr, KeycodeDisplay
 
 class AlternativeDisplay(QWidget):
 
-    keycode_changed = pyqtSignal(int)
+    keycode_changed = pyqtSignal(str)
 
     def __init__(self, kbdef, keycodes, prefix_buttons):
         super().__init__()
@@ -52,12 +52,12 @@ class AlternativeDisplay(QWidget):
         self.buttons = []
 
         for keycode in self.keycodes:
-            if not keycode_filter(keycode.code):
+            if not keycode_filter(keycode.qmk_id):
                 continue
             btn = SquareButton()
             btn.setRelSize(KEYCODE_BTN_RATIO)
-            btn.setToolTip(Keycode.tooltip(keycode.code))
-            btn.clicked.connect(lambda st, k=keycode: self.keycode_changed.emit(k.code))
+            btn.setToolTip(Keycode.tooltip(keycode.qmk_id))
+            btn.clicked.connect(lambda st, k=keycode: self.keycode_changed.emit(k.qmk_id))
             btn.keycode = keycode
             self.key_layout.addWidget(btn)
             self.buttons.append(btn)
@@ -79,7 +79,7 @@ class AlternativeDisplay(QWidget):
 
 class Tab(QScrollArea):
 
-    keycode_changed = pyqtSignal(int)
+    keycode_changed = pyqtSignal(str)
 
     def __init__(self, parent, label, alts, prefix_buttons=None):
         super().__init__(parent)
@@ -145,12 +145,14 @@ def keycode_filter_any(kc):
 
 
 def keycode_filter_masked(kc):
-    return kc < 256
+    # TODO: list of basic keycodes?
+    # return kc < 256
+    return kc in ["KC_A"]
 
 
 class FilteredTabbedKeycodes(QTabWidget):
 
-    keycode_changed = pyqtSignal(int)
+    keycode_changed = pyqtSignal(str)
     anykey = pyqtSignal()
 
     def __init__(self, parent=None, keycode_filter=keycode_filter_any):
@@ -215,7 +217,7 @@ class FilteredTabbedKeycodes(QTabWidget):
 
 class TabbedKeycodes(QWidget):
 
-    keycode_changed = pyqtSignal(int)
+    keycode_changed = pyqtSignal(str)
     anykey = pyqtSignal()
 
     def __init__(self):

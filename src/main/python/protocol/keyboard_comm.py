@@ -203,7 +203,7 @@ class Keyboard(ProtocolMacro, ProtocolDynamic, ProtocolTapDance, ProtocolCombo, 
                                        .format(row, col, self.rows, self.cols))
                 # determine where this (layer, row, col) will be located in keymap array
                 offset = layer * self.rows * self.cols * 2 + row * self.cols * 2 + col * 2
-                keycode = struct.unpack(">H", keymap[offset:offset+2])[0]
+                keycode = Keycode.serialize(struct.unpack(">H", keymap[offset:offset+2])[0])
                 self.layout[(layer, row, col)] = keycode
 
         for layer in range(self.layers):
@@ -302,15 +302,13 @@ class Keyboard(ProtocolMacro, ProtocolDynamic, ProtocolTapDance, ProtocolCombo, 
                 self.settings[qsid] = QmkSettings.qsid_deserialize(qsid, data[1:])
 
     def set_key(self, layer, row, col, code):
-        if code < 0:
-            return
-
         key = (layer, row, col)
         if self.layout[key] != code:
             if code == RESET_KEYCODE:
                 Unlocker.unlock(self)
 
-            self.usb_send(self.dev, struct.pack(">BBBBH", CMD_VIA_SET_KEYCODE, layer, row, col, code), retries=20)
+            self.usb_send(self.dev, struct.pack(">BBBBH", CMD_VIA_SET_KEYCODE, layer, row, col,
+                                                Keycode.deserialize(code)), retries=20)
             self.layout[key] = code
 
     def set_encoder(self, layer, index, direction, code):

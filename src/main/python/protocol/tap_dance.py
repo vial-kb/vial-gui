@@ -13,6 +13,10 @@ class ProtocolTapDance(BaseProtocol):
     def reload_tap_dance(self):
         self.tap_dance_entries = self._retrieve_dynamic_entries(DYNAMIC_VIAL_TAP_DANCE_GET,
                                                                 self.tap_dance_count, "<HHHHH")
+        for x, entry in enumerate(self.tap_dance_entries):
+            self.tap_dance_entries[x] = (Keycode.serialize(entry[0]), Keycode.serialize(entry[1]),
+                                         Keycode.serialize(entry[2]), Keycode.serialize(entry[3]),
+                                         entry[4])
 
     def tap_dance_get(self, idx):
         return self.tap_dance_entries[idx]

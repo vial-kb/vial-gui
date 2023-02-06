@@ -13,6 +13,10 @@ class ProtocolCombo(BaseProtocol):
     def reload_combo(self):
         self.combo_entries = self._retrieve_dynamic_entries(DYNAMIC_VIAL_COMBO_GET,
                                                             self.combo_count, "<HHHHH")
+        for x, entry in enumerate(self.combo_entries):
+            self.combo_entries[x] = (Keycode.serialize(entry[0]), Keycode.serialize(entry[1]),
+                                     Keycode.serialize(entry[2]), Keycode.serialize(entry[3]),
+                                     Keycode.serialize(entry[4]))
 
     def combo_get(self, idx):
         return self.combo_entries[idx]

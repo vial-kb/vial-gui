@@ -107,6 +107,10 @@ functions = {
     "LCG": LCG, "RCG": RCG, "LCG_T": LCG_T, "RCG_T": RCG_T,
 }
 
+# TODO: need a better impl for this hack? may have issues with over 32 layers
+for x in range(32):
+    functions["LT{}".format(x)] = lambda kc, layer=x: (QK_LAYER_TAP | (((layer)&0xF) << 8) | ((kc)&0xFF))
+
 
 class AnyKeycode:
 
@@ -124,7 +128,7 @@ class AnyKeycode:
         for kc in KEYCODES_SPECIAL + KEYCODES_BASIC + KEYCODES_SHIFTED + KEYCODES_ISO + KEYCODES_BACKLIGHT + \
                   KEYCODES_MEDIA + KEYCODES_USER:
             for qmk_id in kc.alias:
-                self.names[qmk_id] = kc.code
+                self.names[qmk_id] = kc.rawcode
         self.names.update({
             "MOD_LCTL": MOD_LCTL,
             "MOD_LSFT": MOD_LSFT,
