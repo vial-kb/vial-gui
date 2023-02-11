@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 from PyQt5 import QtCore
-from PyQt5.QtCore import pyqtSignal, QObject
-from PyQt5.QtWidgets import QWidget, QSizePolicy, QGridLayout, QVBoxLayout, QLabel, QCheckBox, QScrollArea, QFrame
+from PyQt5.QtCore import Qt, pyqtSignal, QObject
+from PyQt5.QtWidgets import QWidget, QSizePolicy, QGridLayout, QHBoxLayout, QVBoxLayout, QLabel, QCheckBox, QScrollArea, QFrame, QToolButton
 
 from protocol.constants import VIAL_PROTOCOL_DYNAMIC
-from util import make_scrollable
+from util import make_scrollable, tr
 from widgets.key_widget import KeyWidget
 from protocol.key_override import KeyOverrideOptions, KeyOverrideEntry
 from vial_device import VialKeyboard
@@ -117,13 +117,27 @@ class LayersUI(QWidget):
     def __init__(self):
         super().__init__()
         container = QGridLayout()
+        buttons = QHBoxLayout()
         self.layer_chks = [CheckBoxNoPadding(str(x)) for x in range(16)]
         for w in self.layer_chks:
             w.stateChanged.connect(self.on_change)
+        btn_all_layers = QToolButton()
+        btn_all_layers.setText(tr("KeyOverride", "Enable all"))
+        btn_all_layers.setToolButtonStyle(Qt.ToolButtonTextOnly)
+        btn_no_layers = QToolButton()
+        btn_no_layers.setText(tr("KeyOverride", "Enable none"))
+        btn_no_layers.setToolButtonStyle(Qt.ToolButtonTextOnly)
+        btn_all_layers.clicked.connect(self.on_all_layers)
+        btn_no_layers.clicked.connect(self.on_no_layers)
 
         for x in range(8):
             container.addWidget(self.layer_chks[x], 0, x)
             container.addWidget(self.layer_chks[x + 8], 1, x)
+
+        buttons.addWidget(btn_all_layers)
+        buttons.addWidget(btn_no_layers)
+        buttons.addStretch()
+        container.addLayout(buttons, 2, 0, 1, -1)
 
         self.setLayout(container)
 
@@ -139,6 +153,14 @@ class LayersUI(QWidget):
 
     def on_change(self):
         self.changed.emit()
+
+    def on_all_layers(self):
+        for x, w in enumerate(self.layer_chks):
+            w.setChecked(True)
+
+    def on_no_layers(self):
+        for x, w in enumerate(self.layer_chks):
+            w.setChecked(False)
 
 
 class KeyOverrideEntryUI(QObject):
