@@ -127,8 +127,8 @@ class LayersUI(QWidget):
         btn_no_layers = QToolButton()
         btn_no_layers.setText(tr("KeyOverride", "Enable none"))
         btn_no_layers.setToolButtonStyle(Qt.ToolButtonTextOnly)
-        btn_all_layers.clicked.connect(self.on_all_layers)
-        btn_no_layers.clicked.connect(self.on_no_layers)
+        btn_all_layers.clicked.connect(self.on_enable_all_layers)
+        btn_no_layers.clicked.connect(self.on_disable_all_layers)
 
         for x in range(8):
             container.addWidget(self.layer_chks[x], 0, x)
@@ -154,11 +154,11 @@ class LayersUI(QWidget):
     def on_change(self):
         self.changed.emit()
 
-    def on_all_layers(self):
+    def on_enable_all_layers(self):
         for x, w in enumerate(self.layer_chks):
             w.setChecked(True)
 
-    def on_no_layers(self):
+    def on_disable_all_layers(self):
         for x, w in enumerate(self.layer_chks):
             w.setChecked(False)
 
