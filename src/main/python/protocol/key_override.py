@@ -39,14 +39,13 @@ class KeyOverrideEntry:
             args = [0] * 7
         self.trigger, self.replacement, self.layers, self.trigger_mods, self.negative_mod_mask, \
             self.suppressed_mods, opt = args
-        self.trigger = Keycode.serialize(self.trigger)
-        self.replacement = Keycode.serialize(self.replacement)
         self.options = KeyOverrideOptions(opt)
 
     def serialize(self):
         """ Serializes into a vial_key_override_entry_t object """
-        return struct.pack("<HHHBBBB", self.trigger, self.replacement, self.layers, self.trigger_mods,
-                           self.negative_mod_mask, self.suppressed_mods, self.options.serialize())
+        return struct.pack("<HHHBBBB", Keycode.deserialize(self.trigger), Keycode.deserialize(self.replacement),
+                           self.layers, self.trigger_mods, self.negative_mod_mask, self.suppressed_mods,
+                           self.options.serialize())
 
     def __repr__(self):
         return "KeyOverride<trigger={} replacement={} layers={} trigger_mods={} negative_mod_mask={} " \
@@ -60,8 +59,8 @@ class KeyOverrideEntry:
         """ Serializes into Vial layout file """
 
         return {
-            "trigger": Keycode.serialize(self.trigger),
-            "replacement": Keycode.serialize(self.replacement),
+            "trigger": self.trigger,
+            "replacement": self.replacement,
             "layers": self.layers,
             "trigger_mods": self.trigger_mods,
             "negative_mod_mask": self.negative_mod_mask,
@@ -72,8 +71,8 @@ class KeyOverrideEntry:
     def restore(self, data):
         """ Restores from a Vial layout file """
 
-        self.trigger = Keycode.deserialize(data["trigger"])
-        self.replacement = Keycode.deserialize(data["replacement"])
+        self.trigger = data["trigger"]
+        self.replacement = data["replacement"]
         self.layers = data["layers"]
         self.trigger_mods = data["trigger_mods"]
         self.negative_mod_mask = data["negative_mod_mask"]
@@ -86,7 +85,10 @@ class ProtocolKeyOverride(BaseProtocol):
     def reload_key_override(self):
         entries = self._retrieve_dynamic_entries(DYNAMIC_VIAL_KEY_OVERRIDE_GET,
                                                  self.key_override_count, "<HHHBBBB")
-        self.key_override_entries = [KeyOverrideEntry(e) for e in entries]
+        self.key_override_entries = []
+        for e in entries:
+            e = (Keycode.serialize(e[0]), Keycode.serialize(e[1]), e[2], e[3], e[4], e[5], e[6])
+            self.key_override_entries.append(KeyOverrideEntry(e))
 
     def key_override_get(self, idx):
         return self.key_override_entries[idx]

@@ -374,7 +374,7 @@ class Keyboard(ProtocolMacro, ProtocolDynamic, ProtocolTapDance, ProtocolCombo, 
                 layer.append(row)
                 for c in range(self.cols):
                     val = self.layout.get((l, r, c), -1)
-                    row.append(Keycode.serialize(val))
+                    row.append(val)
 
         encoder_layout = []
         for l in range(self.layers):
@@ -382,8 +382,8 @@ class Keyboard(ProtocolMacro, ProtocolDynamic, ProtocolTapDance, ProtocolCombo, 
             for e in range(self.encoder_count):
                 cw = (l, e, 0)
                 ccw = (l, e, 1)
-                layer.append([Keycode.serialize(self.encoder_layout.get(cw, -1)),
-                              Keycode.serialize(self.encoder_layout.get(ccw, -1))])
+                layer.append([self.encoder_layout.get(cw, -1),
+                              self.encoder_layout.get(ccw, -1)])
             encoder_layout.append(layer)
 
         data["layout"] = layout
@@ -409,13 +409,13 @@ class Keyboard(ProtocolMacro, ProtocolDynamic, ProtocolTapDance, ProtocolCombo, 
             for r, row in enumerate(layer):
                 for c, code in enumerate(row):
                     if (l, r, c) in self.layout:
-                        self.set_key(l, r, c, Keycode.deserialize(code))
+                        self.set_key(l, r, c, Keycode.serialize(Keycode.deserialize(code)))
 
         # restore encoders
         for l, layer in enumerate(data["encoder_layout"]):
             for e, encoder in enumerate(layer):
-                self.set_encoder(l, e, 0, Keycode.deserialize(encoder[0]))
-                self.set_encoder(l, e, 1, Keycode.deserialize(encoder[1]))
+                self.set_encoder(l, e, 0, Keycode.serialize(Keycode.deserialize(encoder[0])))
+                self.set_encoder(l, e, 1, Keycode.serialize(Keycode.deserialize(encoder[1])))
 
         self.set_layout_options(data["layout_options"])
         self.restore_macros(data.get("macro"))
