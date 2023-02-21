@@ -75,6 +75,7 @@ class ActionSequence(BasicAction):
         for kc in self.sequence:
             if vial_protocol >= VIAL_PROTOCOL_ADVANCED_MACROS:
                 out += struct.pack("B", SS_QMK_PREFIX)
+            kc = Keycode.deserialize(kc)
             out += self.serialize_prefix(kc)
             if kc < 256:
                 out += struct.pack("B", kc)
@@ -88,13 +89,13 @@ class ActionSequence(BasicAction):
     def save(self):
         out = super().save()
         for kc in self.sequence:
-            out.append(Keycode.serialize(kc))
+            out.append(kc)
         return out
 
     def restore(self, act):
         super().restore(act)
         for kc in act[1:]:
-            self.sequence.append(Keycode.deserialize(kc))
+            self.sequence.append(kc)
 
     def __eq__(self, other):
         return super().__eq__(other) and self.sequence == other.sequence

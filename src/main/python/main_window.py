@@ -302,7 +302,7 @@ class MainWindow(QMainWindow):
             Unlocker.unlock(self.autorefresh.current_device.keyboard)
             self.autorefresh.current_device.keyboard.reload()
 
-        for e in [self.layout_editor, self.keymap_editor, self.firmware_flasher, # self.macro_recorder,
+        for e in [self.layout_editor, self.keymap_editor, self.firmware_flasher, self.macro_recorder,
                   self.tap_dance, self.combos, self.key_override, self.qmk_settings, self.matrix_tester,
                   self.rgb_configurator]:
             e.rebuild(self.autorefresh.current_device)
