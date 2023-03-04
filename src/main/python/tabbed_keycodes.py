@@ -11,7 +11,7 @@ from widgets.flowlayout import FlowLayout
 from keycodes.keycodes import KEYCODES_BASIC, KEYCODES_ISO, KEYCODES_MACRO, KEYCODES_LAYERS, KEYCODES_QUANTUM, \
     KEYCODES_BOOT, KEYCODES_MODIFIERS, \
     KEYCODES_BACKLIGHT, KEYCODES_MEDIA, KEYCODES_SPECIAL, KEYCODES_SHIFTED, KEYCODES_USER, Keycode, \
-    KEYCODES_TAP_DANCE, KEYCODES_MIDI, KEYCODES_BASIC_NUMPAD, KEYCODES_BASIC_NAV, KEYCODES_ISO_KR
+    KEYCODES_TAP_DANCE, KEYCODES_MIDI, KEYCODES_BASIC_NUMPAD, KEYCODES_BASIC_NAV, KEYCODES_ISO_KR, BASIC_KEYCODES
 from widgets.square_button import SquareButton
 from util import tr, KeycodeDisplay
 
@@ -145,9 +145,7 @@ def keycode_filter_any(kc):
 
 
 def keycode_filter_masked(kc):
-    # TODO: list of basic keycodes?
-    # return kc < 256
-    return kc in ["KC_A"]
+    return kc in BASIC_KEYCODES
 
 
 class FilteredTabbedKeycodes(QTabWidget):
