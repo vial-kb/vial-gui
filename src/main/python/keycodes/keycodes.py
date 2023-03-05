@@ -128,6 +128,51 @@ class Keycode:
                 raise
         return 0
 
+    # TODO: this should handle different fw
+    macros = {
+        "QK_LAYER_TAP": 0x4000,
+        "MOD_LCTL": 0x01,
+        "MOD_LSFT": 0x02,
+        "MOD_LALT": 0x04,
+        "MOD_LGUI": 0x08,
+        "MOD_RCTL": 0x11,
+        "MOD_RSFT": 0x12,
+        "MOD_RALT": 0x14,
+        "MOD_RGUI": 0x18,
+        "MOD_HYPR": 0xF,
+        "MOD_MEH": 0x7,
+        "QK_TO": 0x5000,
+        "QK_MOMENTARY": 0x5100,
+        "QK_DEF_LAYER": 0x5200,
+        "QK_TOGGLE_LAYER": 0x5300,
+        "QK_ONE_SHOT_LAYER": 0x5400,
+        "QK_ONE_SHOT_MOD": 0x5500,
+        "QK_TAP_DANCE": 0x5700,
+        "QK_LAYER_TAP_TOGGLE": 0x5800,
+        "QK_LAYER_MOD": 0x5900,
+        "QK_MOD_TAP": 0x6000,
+        "ON_PRESS": 1,
+        "QK_LCTL": 0x0100,
+        "QK_LSFT": 0x0200,
+        "QK_LALT": 0x0400,
+        "QK_LGUI": 0x0800,
+        "QK_RCTL": 0x1100,
+        "QK_RSFT": 0x1200,
+        "QK_RALT": 0x1400,
+        "QK_RGUI": 0x1800,
+    }
+
+    @classmethod
+    def resolve(cls, qmk_constant):
+        """ Translates a qmk_constant into firmware-specific integer keycode or macro constant """
+        if qmk_constant in cls.macros:
+            return cls.macros[qmk_constant]
+
+        kc = cls.find_by_qmk_id(qmk_constant)
+        if kc is None:
+            raise RuntimeError("unable to resolve qmk_id={}".format(qmk_constant))
+        return kc.rawcode
+
 
 K = Keycode
 
@@ -484,6 +529,7 @@ MOD_RSFT = 0x12
 MOD_RALT = 0x14
 MOD_RGUI = 0x18
 
+# TODO: get rid of these constants, should go into fw-specific file
 MOD_HYPR = 0xF
 MOD_MEH = 0x7
 
@@ -953,9 +999,7 @@ KEYCODES_MIDI_ADVANCED = [
 
 KEYCODES_HIDDEN = []
 for x in range(256):
-    from any_keycode import QK_TAP_DANCE
-
-    KEYCODES_HIDDEN.append(K(QK_TAP_DANCE | x, "TD({})".format(x), "TD({})".format(x)))
+    KEYCODES_HIDDEN.append(K(Keycode.resolve("QK_TAP_DANCE") | x, "TD({})".format(x), "TD({})".format(x)))
 
 KEYCODES = []
 KEYCODES_MAP = dict()
@@ -1067,7 +1111,7 @@ def recreate_keyboard_keycodes(keyboard):
     KEYCODES_TAP_DANCE.clear()
     for x in range(keyboard.tap_dance_count):
         lbl = "TD({})".format(x)
-        KEYCODES_TAP_DANCE.append(Keycode(QK_TAP_DANCE | x, lbl, lbl, "Tap dance keycode"))
+        KEYCODES_TAP_DANCE.append(Keycode(Keycode.resolve("QK_TAP_DANCE") | x, lbl, lbl, "Tap dance keycode"))
 
     # Check if custom keycodes are defined in keyboard, and if so add them to user keycodes
     if keyboard.custom_keycodes is not None and len(keyboard.custom_keycodes) > 0:

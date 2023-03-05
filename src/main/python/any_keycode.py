@@ -4,86 +4,65 @@ import simpleeval
 import operator
 
 from keycodes.keycodes import KEYCODES_SPECIAL, KEYCODES_BASIC, KEYCODES_SHIFTED, KEYCODES_ISO, KEYCODES_BACKLIGHT, \
-    KEYCODES_MEDIA, KEYCODES_USER, QK_LCTL, QK_LSFT, QK_LALT, QK_LGUI, QK_RCTL, QK_RSFT, QK_RALT, QK_RGUI, QK_LAYER_TAP, \
-    MOD_MEH, MOD_HYPR
+    KEYCODES_MEDIA, KEYCODES_USER, Keycode
+
+r = Keycode.resolve
 
 
-QK_TO = 0x5000
-QK_MOMENTARY = 0x5100
-QK_DEF_LAYER = 0x5200
-QK_TOGGLE_LAYER = 0x5300
-QK_ONE_SHOT_LAYER = 0x5400
-QK_ONE_SHOT_MOD = 0x5500
-QK_TAP_DANCE = 0x5700
-QK_LAYER_TAP_TOGGLE = 0x5800
-QK_LAYER_MOD = 0x5900
-QK_MOD_TAP = 0x6000
-ON_PRESS = 1
+def LCTL(kc): return (r("QK_LCTL") | (kc))
+def LSFT(kc): return (r("QK_LSFT") | (kc))
+def LALT(kc): return (r("QK_LALT") | (kc))
+def LGUI(kc): return (r("QK_LGUI") | (kc))
+def RCTL(kc): return (r("QK_RCTL") | (kc))
+def RSFT(kc): return (r("QK_RSFT") | (kc))
+def RALT(kc): return (r("QK_RALT") | (kc))
+def RGUI(kc): return (r("QK_RGUI") | (kc))
+def C_S(kc): return (r("QK_LCTL") | r("QK_LSFT") | (kc))
+def HYPR(kc): return (r("QK_LCTL") | r("QK_LSFT") | r("QK_LALT") | r("QK_LGUI") | (kc))
+def MEH(kc): return (r("QK_LCTL") | r("QK_LSFT") | r("QK_LALT") | (kc))
+def LCAG(kc): return (r("QK_LCTL") | r("QK_LALT") | r("QK_LGUI") | (kc))
+def SGUI(kc): return (r("QK_LGUI") | r("QK_LSFT") | (kc))
+def LCA(kc): return (r("QK_LCTL") | r("QK_LALT") | (kc))
+def LSA(kc): return (r("QK_LSFT") | r("QK_LALT") | (kc))
+def RSA(kc): return (r("QK_RSFT") | r("QK_RALT") | (kc))
+def RCS(kc): return (r("QK_RCTL") | r("QK_RSFT") | (kc))
+def LCG(kc): return (r("QK_LCTL") | r("QK_LGUI") | (kc))
+def RCG(kc): return (r("QK_RCTL") | r("QK_RGUI") | (kc))
 
-MOD_LCTL = 0x01
-MOD_LSFT = 0x02
-MOD_LALT = 0x04
-MOD_LGUI = 0x08
-MOD_RCTL = 0x11
-MOD_RSFT = 0x12
-MOD_RALT = 0x14
-MOD_RGUI = 0x18
-
-
-def LCTL(kc): return (QK_LCTL | (kc))
-def LSFT(kc): return (QK_LSFT | (kc))
-def LALT(kc): return (QK_LALT | (kc))
-def LGUI(kc): return (QK_LGUI | (kc))
-def RCTL(kc): return (QK_RCTL | (kc))
-def RSFT(kc): return (QK_RSFT | (kc))
-def RALT(kc): return (QK_RALT | (kc))
-def RGUI(kc): return (QK_RGUI | (kc))
-def C_S(kc): return (QK_LCTL | QK_LSFT | (kc))
-def HYPR(kc): return (QK_LCTL | QK_LSFT | QK_LALT | QK_LGUI | (kc))
-def MEH(kc): return (QK_LCTL | QK_LSFT | QK_LALT | (kc))
-def LCAG(kc): return (QK_LCTL | QK_LALT | QK_LGUI | (kc))
-def SGUI(kc): return (QK_LGUI | QK_LSFT | (kc))
-def LCA(kc): return (QK_LCTL | QK_LALT | (kc))
-def LSA(kc): return (QK_LSFT | QK_LALT | (kc))
-def RSA(kc): return (QK_RSFT | QK_RALT | (kc))
-def RCS(kc): return (QK_RCTL | QK_RSFT | (kc))
-def LCG(kc): return (QK_LCTL | QK_LGUI | (kc))
-def RCG(kc): return (QK_RCTL | QK_RGUI | (kc))
+# TODO: make sure bit packing is the same in new fw
+def LT(layer, kc): return (r("QK_LAYER_TAP") | (((layer)&0xF) << 8) | ((kc)&0xFF))
+def TO(layer): return (r("QK_TO") | (r("ON_PRESS") << 0x4) | ((layer)&0xFF))
+def MO(layer): return (r("QK_MOMENTARY") | ((layer)&0xFF))
+def DF(layer): return (r("QK_DEF_LAYER") | ((layer)&0xFF))
+def TG(layer): return (r("QK_TOGGLE_LAYER") | ((layer)&0xFF))
+def OSL(layer): return (r("QK_ONE_SHOT_LAYER") | ((layer)&0xFF))
+def LM(layer, mod): return (r("QK_LAYER_MOD") | (((layer)&0xF) << 4) | ((mod)&0xF))
+def OSM(mod): return (r("QK_ONE_SHOT_MOD") | ((mod)&0xFF))
+def TT(layer): return (r("QK_LAYER_TAP_TOGGLE") | ((layer)&0xFF))
+def MT(mod, kc): return (r("QK_MOD_TAP") | (((mod)&0x1F) << 8) | ((kc)&0xFF))
+def TD(n): return (r("QK_TAP_DANCE") | ((n)&0xFF))
 
 
-def LT(layer, kc): return (QK_LAYER_TAP | (((layer)&0xF) << 8) | ((kc)&0xFF))
-def TO(layer): return (QK_TO | (ON_PRESS << 0x4) | ((layer)&0xFF))
-def MO(layer): return (QK_MOMENTARY | ((layer)&0xFF))
-def DF(layer): return (QK_DEF_LAYER | ((layer)&0xFF))
-def TG(layer): return (QK_TOGGLE_LAYER | ((layer)&0xFF))
-def OSL(layer): return (QK_ONE_SHOT_LAYER | ((layer)&0xFF))
-def LM(layer, mod): return (QK_LAYER_MOD | (((layer)&0xF) << 4) | ((mod)&0xF))
-def OSM(mod): return (QK_ONE_SHOT_MOD | ((mod)&0xFF))
-def TT(layer): return (QK_LAYER_TAP_TOGGLE | ((layer)&0xFF))
-def MT(mod, kc): return (QK_MOD_TAP | (((mod)&0x1F) << 8) | ((kc)&0xFF))
-def TD(n): return (QK_TAP_DANCE | ((n)&0xFF))
-
-
-def LCTL_T(kc): return MT(MOD_LCTL, kc)
-def RCTL_T(kc): return MT(MOD_RCTL, kc)
-def LSFT_T(kc): return MT(MOD_LSFT, kc)
-def RSFT_T(kc): return MT(MOD_RSFT, kc)
-def LALT_T(kc): return MT(MOD_LALT, kc)
-def RALT_T(kc): return MT(MOD_RALT, kc)
-def LGUI_T(kc): return MT(MOD_LGUI, kc)
-def RGUI_T(kc): return MT(MOD_RGUI, kc)
-def C_S_T(kc): return MT(MOD_LCTL | MOD_LSFT, kc)
-def MEH_T(kc): return MT(MOD_LCTL | MOD_LSFT | MOD_LALT, kc)
-def LCAG_T(kc): return MT(MOD_LCTL | MOD_LALT | MOD_LGUI, kc)
-def RCAG_T(kc): return MT(MOD_RCTL | MOD_RALT | MOD_RGUI, kc)
-def HYPR_T(kc): return MT(MOD_LCTL | MOD_LSFT | MOD_LALT | MOD_LGUI, kc)
-def SGUI_T(kc): return MT(MOD_LGUI | MOD_LSFT, kc)
-def LCA_T(kc): return MT(MOD_LCTL | MOD_LALT, kc)
-def LSA_T(kc): return MT(MOD_LSFT | MOD_LALT, kc)
-def RSA_T(kc): return MT(MOD_RSFT | MOD_RALT, kc)
-def RCS_T(kc): return MT(MOD_RCTL | MOD_RSFT, kc)
-def LCG_T(kc): return MT(MOD_LCTL | MOD_LGUI, kc)
-def RCG_T(kc): return MT(MOD_RCTL | MOD_RGUI, kc)
+def LCTL_T(kc): return MT(r("MOD_LCTL"), kc)
+def RCTL_T(kc): return MT(r("MOD_RCTL"), kc)
+def LSFT_T(kc): return MT(r("MOD_LSFT"), kc)
+def RSFT_T(kc): return MT(r("MOD_RSFT"), kc)
+def LALT_T(kc): return MT(r("MOD_LALT"), kc)
+def RALT_T(kc): return MT(r("MOD_RALT"), kc)
+def LGUI_T(kc): return MT(r("MOD_LGUI"), kc)
+def RGUI_T(kc): return MT(r("MOD_RGUI"), kc)
+def C_S_T(kc): return MT(r("MOD_LCTL") | r("MOD_LSFT"), kc)
+def MEH_T(kc): return MT(r("MOD_LCTL") | r("MOD_LSFT") | r("MOD_LALT"), kc)
+def LCAG_T(kc): return MT(r("MOD_LCTL") | r("MOD_LALT") | r("MOD_LGUI"), kc)
+def RCAG_T(kc): return MT(r("MOD_RCTL") | r("MOD_RALT") | r("MOD_RGUI"), kc)
+def HYPR_T(kc): return MT(r("MOD_LCTL") | r("MOD_LSFT") | r("MOD_LALT") | r("MOD_LGUI"), kc)
+def SGUI_T(kc): return MT(r("MOD_LGUI") | r("MOD_LSFT"), kc)
+def LCA_T(kc): return MT(r("MOD_LCTL") | r("MOD_LALT"), kc)
+def LSA_T(kc): return MT(r("MOD_LSFT") | r("MOD_LALT"), kc)
+def RSA_T(kc): return MT(r("MOD_RSFT") | r("MOD_RALT"), kc)
+def RCS_T(kc): return MT(r("MOD_RCTL") | r("MOD_RSFT"), kc)
+def LCG_T(kc): return MT(r("MOD_LCTL") | r("MOD_LGUI"), kc)
+def RCG_T(kc): return MT(r("MOD_RCTL") | r("MOD_RGUI"), kc)
 
 
 functions = {
@@ -107,9 +86,8 @@ functions = {
     "LCG": LCG, "RCG": RCG, "LCG_T": LCG_T, "RCG_T": RCG_T,
 }
 
-# TODO: need a better impl for this hack? may have issues with over 32 layers
 for x in range(32):
-    functions["LT{}".format(x)] = lambda kc, layer=x: (QK_LAYER_TAP | (((layer)&0xF) << 8) | ((kc)&0xFF))
+    functions["LT{}".format(x)] = lambda kc, layer=x: (r("QK_LAYER_TAP") | (((layer)&0xF) << 8) | ((kc)&0xFF))
 
 
 class AnyKeycode:
@@ -128,19 +106,12 @@ class AnyKeycode:
         for kc in KEYCODES_SPECIAL + KEYCODES_BASIC + KEYCODES_SHIFTED + KEYCODES_ISO + KEYCODES_BACKLIGHT + \
                   KEYCODES_MEDIA + KEYCODES_USER:
             for qmk_id in kc.alias:
-                self.names[qmk_id] = kc.rawcode
-        self.names.update({
-            "MOD_LCTL": MOD_LCTL,
-            "MOD_LSFT": MOD_LSFT,
-            "MOD_LALT": MOD_LALT,
-            "MOD_LGUI": MOD_LGUI,
-            "MOD_RCTL": MOD_RCTL,
-            "MOD_RSFT": MOD_RSFT,
-            "MOD_RALT": MOD_RALT,
-            "MOD_RGUI": MOD_RGUI,
-            "MOD_MEH": MOD_MEH,
-            "MOD_HYPR": MOD_HYPR,
-        })
+                self.names[qmk_id] = Keycode.resolve(kc.qmk_id)
+        macros = dict()
+        for s in ["MOD_LCTL", "MOD_LSFT", "MOD_LALT", "MOD_LGUI", "MOD_RCTL", "MOD_RSFT", "MOD_RALT", "MOD_RGUI",
+                  "MOD_MEH", "MOD_HYPR"]:
+            macros[s] = Keycode.resolve(s)
+        self.names.update(macros)
 
     def decode(self, s):
         return simpleeval.simple_eval(s, names=self.names, functions=functions, operators=self.ops)
