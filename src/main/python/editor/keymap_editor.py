@@ -88,8 +88,9 @@ class KeymapEditor(BasicEditor):
         # create new layer labels
         for x in range(self.keyboard.layers):
             lbl = str(x)
-            if lbl in self.keyboard.layer_labels:
-                lbl = self.keyboard.layer_labels[lbl]
+            if self.keyboard.layer_alias != None:
+                if lbl in self.keyboard.layer_alias:
+                    lbl = str(x)+": "+self.keyboard.layer_alias[lbl]
             btn = SquareButton(lbl)
             width = btn.fontMetrics().boundingRect(lbl).width() + 18
             btn.setMinimumWidth(width);

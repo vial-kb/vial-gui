@@ -53,7 +53,7 @@ class Keyboard(ProtocolMacro, ProtocolDynamic, ProtocolTapDance, ProtocolCombo, 
         self.vibl = False
         self.custom_keycodes = None
         self.midi = None
-        self.layer_labels = None
+        self.layer_alias = None
 
         self.lighting_qmk_rgblight = self.lighting_qmk_backlight = self.lighting_vialrgb = False
 
@@ -185,7 +185,8 @@ class Keyboard(ProtocolMacro, ProtocolDynamic, ProtocolTapDance, ProtocolCombo, 
                 idx, opt = key.labels[8].split(",")
                 key.layout_index, key.layout_option = int(idx), int(opt)
 
-        self.layer_labels = payload["layers"]["alias"]
+        if "layer_alias" in payload:
+            self.layer_alias = payload["layer_alias"]
 
     def reload_keymap(self):
         """ Load current key mapping from the keyboard """
