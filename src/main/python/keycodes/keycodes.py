@@ -4,6 +4,8 @@
 
 import sys
 
+from keycodes.keycodes_v5 import keycodes_v5
+
 
 class Keycode:
 
@@ -119,7 +121,7 @@ class Keycode:
         if isinstance(val, int):
             return val
         if "(" not in val and val in cls.qmk_id_to_keycode:
-            return cls.qmk_id_to_keycode[val].rawcode
+            return cls.resolve(cls.qmk_id_to_keycode[val].qmk_id)
         anykc = AnyKeycode()
         try:
             return anykc.decode(val)
@@ -128,50 +130,12 @@ class Keycode:
                 raise
         return 0
 
-    # TODO: this should handle different fw
-    macros = {
-        "QK_LAYER_TAP": 0x4000,
-        "MOD_LCTL": 0x01,
-        "MOD_LSFT": 0x02,
-        "MOD_LALT": 0x04,
-        "MOD_LGUI": 0x08,
-        "MOD_RCTL": 0x11,
-        "MOD_RSFT": 0x12,
-        "MOD_RALT": 0x14,
-        "MOD_RGUI": 0x18,
-        "MOD_HYPR": 0xF,
-        "MOD_MEH": 0x7,
-        "QK_TO": 0x5000,
-        "QK_MOMENTARY": 0x5100,
-        "QK_DEF_LAYER": 0x5200,
-        "QK_TOGGLE_LAYER": 0x5300,
-        "QK_ONE_SHOT_LAYER": 0x5400,
-        "QK_ONE_SHOT_MOD": 0x5500,
-        "QK_TAP_DANCE": 0x5700,
-        "QK_LAYER_TAP_TOGGLE": 0x5800,
-        "QK_LAYER_MOD": 0x5900,
-        "QK_MOD_TAP": 0x6000,
-        "ON_PRESS": 1,
-        "QK_LCTL": 0x0100,
-        "QK_LSFT": 0x0200,
-        "QK_LALT": 0x0400,
-        "QK_LGUI": 0x0800,
-        "QK_RCTL": 0x1100,
-        "QK_RSFT": 0x1200,
-        "QK_RALT": 0x1400,
-        "QK_RGUI": 0x1800,
-    }
-
     @classmethod
     def resolve(cls, qmk_constant):
         """ Translates a qmk_constant into firmware-specific integer keycode or macro constant """
-        if qmk_constant in cls.macros:
-            return cls.macros[qmk_constant]
-
-        kc = cls.find_by_qmk_id(qmk_constant)
-        if kc is None:
+        if qmk_constant not in keycodes_v5:
             raise RuntimeError("unable to resolve qmk_id={}".format(qmk_constant))
-        return kc.rawcode
+        return keycodes_v5[qmk_constant]
 
 
 K = Keycode
