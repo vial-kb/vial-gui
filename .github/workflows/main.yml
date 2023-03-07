@@ -101,11 +101,12 @@ jobs:
       run: |
         . .\venv\Scripts\activate.ps1
         fbs freeze
+        Compress-Archive -Path "target\Vial" -DestinationPath vial-win.zip
 
     - uses: actions/upload-artifact@v3
       with:
         name: vial-win
-        path: target\Vial
+        path: vial-win.zip
 
     - name: Create installer
       run: |
