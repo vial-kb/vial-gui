@@ -4,7 +4,7 @@
 
 import sys
 
-from keycodes.keycodes_v5 import keycodes_v5, keycodes_v5_masked
+from keycodes.keycodes_v5 import keycodes_v5
 
 
 class Keycode:
@@ -97,7 +97,7 @@ class Keycode:
     def serialize(cls, code):
         """ Converts integer keycode to string """
 
-        if (code & 0xFF00) not in keycodes_v5_masked:
+        if (code & 0xFF00) not in keycodes_v5.masked:
             kc = RAWCODES_MAP.get(code)
             if kc is not None:
                 return kc.qmk_id
@@ -129,9 +129,9 @@ class Keycode:
     @classmethod
     def resolve(cls, qmk_constant):
         """ Translates a qmk_constant into firmware-specific integer keycode or macro constant """
-        if qmk_constant not in keycodes_v5:
+        if qmk_constant not in keycodes_v5.kc:
             raise RuntimeError("unable to resolve qmk_id={}".format(qmk_constant))
-        return keycodes_v5[qmk_constant]
+        return keycodes_v5.kc[qmk_constant]
 
 
 K = Keycode
