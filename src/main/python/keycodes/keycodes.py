@@ -120,7 +120,7 @@ class Keycode:
 
         if isinstance(val, int):
             return val
-        if "(" not in val and val in cls.qmk_id_to_keycode:
+        if val in cls.qmk_id_to_keycode:
             return cls.resolve(cls.qmk_id_to_keycode[val].qmk_id)
         anykc = AnyKeycode()
         try:
@@ -983,8 +983,7 @@ def recreate_keycodes():
     RAWCODES_MAP.clear()
     for keycode in KEYCODES:
         KEYCODES_MAP[keycode.qmk_id.replace("(kc)", "")] = keycode
-        # TODO: need better interface for multi-fw
-        RAWCODES_MAP[keycode.rawcode] = keycode
+        RAWCODES_MAP[Keycode.deserialize(keycode.qmk_id)] = keycode
 
 
 def create_user_keycodes():
@@ -1006,9 +1005,10 @@ def create_custom_user_keycodes(custom_keycodes):
         KEYCODES_USER.append(
             Keycode(
                 0x5F80 + x,
-                c_keycode.get("name", "USER{:02}".format(x)),
+                "USER{:02}".format(x),
                 c_keycode.get("shortName", "USER{:02}".format(x)),
-                c_keycode.get("title", "USER{:02}".format(x))
+                c_keycode.get("title", "USER{:02}".format(x)),
+                alias=[c_keycode.get("name", "USER{:02}".format(x))]
             )
         )
 

@@ -31,6 +31,62 @@ keycodes_v5 = {
     "QK_RALT": 0x1400,
     "QK_RGUI": 0x1800,
 
+    "ALL_T(kc)": 0x6f00,
+    "C_S_T(kc)": 0x6300,
+    "C_S(kc)": 0x300,
+    "HYPR(kc)": 0xf00,
+    "LALT_T(kc)": 0x6400,
+    "LALT(kc)": 0x400,
+    "LCA_T(kc)": 0x6500,
+    "LCA(kc)": 0x500,
+    "LCAG_T(kc)": 0x6d00,
+    "LCAG(kc)": 0xd00,
+    "LCG_T(kc)": 0x6900,
+    "LCG(kc)": 0x900,
+    "LCTL_T(kc)": 0x6100,
+    "LCTL(kc)": 0x100,
+    "LGUI_T(kc)": 0x6800,
+    "LGUI(kc)": 0x800,
+    "LSA_T(kc)": 0x6600,
+    "LSA(kc)": 0x600,
+    "LSFT_T(kc)": 0x6200,
+    "LSFT(kc)": 0x200,
+    "MEH_T(kc)": 0x6700,
+    "MEH(kc)": 0x700,
+    "RALT_T(kc)": 0x7400,
+    "RALT(kc)": 0x1400,
+    "RCAG_T(kc)": 0x7d00,
+    "RCG_T(kc)": 0x7900,
+    "RCG(kc)": 0x1900,
+    "RCTL_T(kc)": 0x7100,
+    "RCTL(kc)": 0x1100,
+    "RGUI_T(kc)": 0x7800,
+    "RGUI(kc)": 0x1800,
+    "RSFT_T(kc)": 0x7200,
+    "RSFT(kc)": 0x1200,
+    "SGUI_T(kc)": 0x6a00,
+    "SGUI(kc)": 0xa00,
+
+    "OSM(MOD_LSFT)": 0x5502,
+    "OSM(MOD_LCTL)": 0x5501,
+    "OSM(MOD_LALT)": 0x5504,
+    "OSM(MOD_LGUI)": 0x5508,
+    "OSM(MOD_RSFT)": 0x5512,
+    "OSM(MOD_RCTL)": 0x5511,
+    "OSM(MOD_RALT)": 0x5514,
+    "OSM(MOD_RGUI)": 0x5518,
+    "OSM(MOD_LCTL|MOD_LSFT)": 0x5503,
+    "OSM(MOD_LCTL|MOD_LALT)": 0x5505,
+    "OSM(MOD_LCTL|MOD_LGUI)": 0x5509,
+    "OSM(MOD_LSFT|MOD_LALT)": 0x5506,
+    "OSM(MOD_LSFT|MOD_LGUI)": 0x550A,
+    "OSM(MOD_LALT|MOD_LGUI)": 0x550C,
+    "OSM(MOD_LCTL|MOD_LSFT|MOD_LGUI)": 0x550B,
+    "OSM(MOD_LCTL|MOD_LALT|MOD_LGUI)": 0x550D,
+    "OSM(MOD_LSFT|MOD_LALT|MOD_LGUI)": 0x550E,
+    "OSM(MOD_MEH)": 0x5507,
+    "OSM(MOD_HYPR)": 0x550F,
+
     "KC_NO": 0x00,
     "KC_TRNS": 0x01,
     "KC_NUMLOCK": 0x53,
@@ -506,3 +562,13 @@ keycodes_v5 = {
 
 for x in range(256):
     keycodes_v5["M{}".format(x)] = 0x5F12 + x
+    keycodes_v5["TD({})".format(x)] = 0x5700 + x
+
+for x in range(32):
+    keycodes_v5["MO({})".format(x)] = 0x5100 | x
+    keycodes_v5["DF({})".format(x)] = 0x5200 | x
+    keycodes_v5["TG({})".format(x)] = 0x5300 | x
+    keycodes_v5["TT({})".format(x)] = 0x5800 | x
+    keycodes_v5["OSL({})".format(x)] = 0x5400 | x
+    keycodes_v5["TO({})".format(x)] = 0x5000 | (1 << 4) | x
+    keycodes_v5["LT{}(kc)".format(x)] = 0x4000 | (((x) & 0xF) << 8)
