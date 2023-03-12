@@ -4,19 +4,17 @@
 
 import sys
 
-from keycodes.keycodes_v5 import keycodes_v5
+from keycodes.keycodes_v5 import keycodes_v5, keycodes_v5_masked
 
 
 class Keycode:
 
     masked_keycodes = set()
-    masked_rawcodes = set()
     recorder_alias_to_keycode = dict()
     qmk_id_to_keycode = dict()
 
     def __init__(self, code, qmk_id, label, tooltip=None, masked=False, printable=None, recorder_alias=None,
                  alias=None):
-        self.rawcode = code
         self.qmk_id = qmk_id
         self.qmk_id_to_keycode[qmk_id] = self
         self.label = label
@@ -44,7 +42,6 @@ class Keycode:
         if masked:
             assert qmk_id.endswith("(kc)")
             self.masked_keycodes.add(qmk_id.replace("(kc)", ""))
-            self.masked_rawcodes.add(code)
 
     @classmethod
     def find(cls, code):
@@ -101,7 +98,7 @@ class Keycode:
     def serialize(cls, code):
         """ Converts integer keycode to string """
 
-        if (code & 0xFF00) not in cls.masked_rawcodes:
+        if (code & 0xFF00) not in keycodes_v5_masked:
             kc = RAWCODES_MAP.get(code)
             if kc is not None:
                 return kc.qmk_id
