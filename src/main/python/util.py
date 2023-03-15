@@ -204,7 +204,7 @@ class KeycodeDisplay:
             widget.setColor(QApplication.palette().color(QPalette.Link))
         else:
             widget.setColor(None)
-        if mask and cls.code_is_overriden(inner.qmk_id):
+        if inner and mask and cls.code_is_overriden(inner.qmk_id):
             widget.setMaskColor(QApplication.palette().color(QPalette.Link))
         else:
             widget.setMaskColor(None)

@@ -5,6 +5,7 @@
 import sys
 
 from keycodes.keycodes_v5 import keycodes_v5
+from keycodes.keycodes_v6 import keycodes_v6
 
 
 class Keycode:
@@ -12,6 +13,7 @@ class Keycode:
     masked_keycodes = set()
     recorder_alias_to_keycode = dict()
     qmk_id_to_keycode = dict()
+    protocol = 0
 
     def __init__(self, qmk_id, label, tooltip=None, masked=False, printable=None, recorder_alias=None, alias=None):
         self.qmk_id = qmk_id
@@ -44,6 +46,9 @@ class Keycode:
 
     @classmethod
     def find(cls, code):
+        # this is to handle cases of qmk_id LCTL(kc) propagated here from find_inner_keycode
+        if code == "kc":
+            code = "KC_NO"
         return KEYCODES_MAP.get(code)
 
     @classmethod
@@ -96,8 +101,12 @@ class Keycode:
     @classmethod
     def serialize(cls, code):
         """ Converts integer keycode to string """
+        if cls.protocol == 6:
+            masked = keycodes_v6.masked
+        else:
+            masked = keycodes_v5.masked
 
-        if (code & 0xFF00) not in keycodes_v5.masked:
+        if (code & 0xFF00) not in masked:
             kc = RAWCODES_MAP.get(code)
             if kc is not None:
                 return kc.qmk_id
@@ -129,14 +138,19 @@ class Keycode:
     @classmethod
     def resolve(cls, qmk_constant):
         """ Translates a qmk_constant into firmware-specific integer keycode or macro constant """
-        if qmk_constant not in keycodes_v5.kc:
+        if cls.protocol == 6:
+            kc = keycodes_v6.kc
+        else:
+            kc = keycodes_v5.kc
+
+        if qmk_constant not in kc:
             raise RuntimeError("unable to resolve qmk_id={}".format(qmk_constant))
-        return keycodes_v5.kc[qmk_constant]
+        return kc[qmk_constant]
 
 
 K = Keycode
 
-BASIC_KEYCODES = [
+BASIC_KEYCODES = {
     "KC_NO",
     "KC_TRNS",
     "KC_A",
@@ -307,7 +321,7 @@ BASIC_KEYCODES = [
     "KC_RSHIFT",
     "KC_RALT",
     "KC_RGUI",
-]
+}
 
 KEYCODES_SPECIAL = [
     K("KC_NO", ""),
@@ -963,6 +977,8 @@ def create_midi_keycodes(midiSettingLevel):
 
 def recreate_keyboard_keycodes(keyboard):
     """ Generates keycodes based on information the keyboard provides (e.g. layer keycodes, macros) """
+
+    Keycode.protocol = keyboard.vial_protocol
 
     layers = keyboard.layers
 
