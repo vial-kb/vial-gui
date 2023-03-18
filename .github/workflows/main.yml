@@ -14,6 +14,7 @@ jobs:
 
     - name: Install dependencies
       run: |
+        sudo apt-get update
         sudo apt-get install libusb-1.0-0-dev libudev-dev ruby ruby-dev rubygems build-essential desktop-file-utils
         wget https://github.com/AppImage/pkg2appimage/archive/38603d92359a48189c35debad9005e8e902e6070.zip
         unzip *.zip
