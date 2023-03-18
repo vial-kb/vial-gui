@@ -539,42 +539,33 @@ class keycodes_v5:
 
         "RESET": 0x5C00,
 
-        "USER00": 0x5F80,
-        "USER01": 0x5F81,
-        "USER02": 0x5F82,
-        "USER03": 0x5F83,
-        "USER04": 0x5F84,
-        "USER05": 0x5F85,
-        "USER06": 0x5F86,
-        "USER07": 0x5F87,
-        "USER08": 0x5F88,
-        "USER09": 0x5F89,
-        "USER10": 0x5F8A,
-        "USER11": 0x5F8B,
-        "USER12": 0x5F8C,
-        "USER13": 0x5F8D,
-        "USER14": 0x5F8E,
-        "USER15": 0x5F8F,
-
         "FN_MO13": 0x5F10,
         "FN_MO23": 0x5F11,
+
+        "QK_KB": 0x5F80,
+        "QK_MACRO": 0x5F12,
     }
 
     masked = set()
 
 
 for x in range(256):
-    keycodes_v5.kc["M{}".format(x)] = 0x5F12 + x
-    keycodes_v5.kc["TD({})".format(x)] = 0x5700 + x
+    keycodes_v5.kc["M{}".format(x)] = keycodes_v5.kc["QK_MACRO"] + x
+    keycodes_v5.kc["TD({})".format(x)] = keycodes_v5.kc["QK_TAP_DANCE"] + x
 
 for x in range(32):
-    keycodes_v5.kc["MO({})".format(x)] = 0x5100 | x
-    keycodes_v5.kc["DF({})".format(x)] = 0x5200 | x
-    keycodes_v5.kc["TG({})".format(x)] = 0x5300 | x
-    keycodes_v5.kc["TT({})".format(x)] = 0x5800 | x
-    keycodes_v5.kc["OSL({})".format(x)] = 0x5400 | x
-    keycodes_v5.kc["TO({})".format(x)] = 0x5000 | (1 << 4) | x
-    keycodes_v5.kc["LT{}(kc)".format(x)] = 0x4000 | (((x) & 0xF) << 8)
+    keycodes_v5.kc["MO({})".format(x)] = keycodes_v5.kc["QK_MOMENTARY"] | x
+    keycodes_v5.kc["DF({})".format(x)] = keycodes_v5.kc["QK_DEF_LAYER"] | x
+    keycodes_v5.kc["TG({})".format(x)] = keycodes_v5.kc["QK_TOGGLE_LAYER"] | x
+    keycodes_v5.kc["TT({})".format(x)] = keycodes_v5.kc["QK_LAYER_TAP_TOGGLE"] | x
+    keycodes_v5.kc["OSL({})".format(x)] = keycodes_v5.kc["QK_ONE_SHOT_LAYER"] | x
+    keycodes_v5.kc["TO({})".format(x)] = keycodes_v5.kc["QK_TO"] | (1 << 4) | x
+
+for x in range(16):
+    keycodes_v5.kc["LT{}(kc)".format(x)] = keycodes_v5.kc["QK_LAYER_TAP"] | (((x) & 0xF) << 8)
+
+for x in range(16):
+    keycodes_v5.kc["USER{:02}".format(x)] = keycodes_v5.kc["QK_KB"] + x
 
 for name, val in keycodes_v5.kc.items():
     if name.endswith("(kc)"):
