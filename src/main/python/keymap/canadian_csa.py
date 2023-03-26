@@ -1,7 +1,7 @@
 # coding: utf-8
 
-# Includes the subset of the Canadian Multilingual Standard layout
-# that's implemented in both Windows and MacOS.
+# Includes the subset of the Canadian Multilingual Standard (CSA)
+# layout that's implemented in both Windows and MacOS.
 # https://en.wikipedia.org/wiki/CSA_keyboard
 
 keymap = {
