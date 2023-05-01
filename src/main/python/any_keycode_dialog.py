@@ -106,7 +106,7 @@ class AnyKeycodeDialog(QDialog):
             self.value = ""
             self.lbl_computed.setText(tr("AnyKeycodeDialog", "Enter an expression"))
             if self.toggleModify.checkState():
-                self.keycode_computed.setText("Computer keycode: None")
+                self.keycode_computed.setText("Computed keycode: None")
             self.modifyEnable = True
             self.toggleModify.setEnabled(self.modifyEnable)
         elif err:
@@ -118,7 +118,7 @@ class AnyKeycodeDialog(QDialog):
             self.value = Keycode.serialize(value)
             self.lbl_computed.setText(tr("AnyKeycodeDialog", "Computed value: 0x{:X}").format(value))
             if self.toggleModify.checkState():
-                self.keycode_computed.setText("Computer keycode: "+self.value)
+                self.keycode_computed.setText("Computed keycode: "+self.value)
             self.modifyEnable = self.is_modifiable(value)
             self.toggleModify.setEnabled(self.modifyEnable)
             if self.modifyEnable == False:
