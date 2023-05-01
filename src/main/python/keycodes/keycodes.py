@@ -524,8 +524,8 @@ KEYCODES_MODIFIERS = [
     K("OSM(MOD_RCTL|MOD_RSFT|MOD_RGUI)", "OSM\nRCSG", "Enable Right Control, Shift, and GUI for one keypress"),
     K("OSM(MOD_RCTL|MOD_RALT|MOD_RGUI)", "OSM\nRCAG", "Enable Right Control, Alt, and GUI for one keypress"),
     K("OSM(MOD_RSFT|MOD_RALT|MOD_RGUI)", "OSM\nRSAG", "Enable Right Shift, Alt, and GUI for one keypress"),
-    K("OSM(MOD_MEH)", "OSM\nRMeh", "Enable Right Control, Shift, and Alt for one keypress"),
-    K("OSM(MOD_HYPR)", "OSM\nRHyp", "Enable Right Control, Shift, Alt, and GUI for one keypress"),
+    K("OSM(MOD_RCTL|MOD_RSFT|MOD_RALT)", "OSM\nRMeh", "Enable Right Control, Shift, and Alt for one keypress"),
+    K("OSM(MOD_RCTL|MOD_RSFT|MOD_RALT|MOD_RGUI)", "OSM\nRHyp", "Enable Right Control, Shift, Alt, and GUI for one keypress"),
 
     K("LSFT(kc)", "LSft\n(kc)", masked=True),
     K("LCTL(kc)", "LCtl\n(kc)", masked=True),
@@ -544,7 +544,7 @@ KEYCODES_MODIFIERS = [
     K("RCTL_T(kc)", "RCtl_T\n(kc)", "Right Control when held, kc when tapped", masked=True),
     K("RALT_T(kc)", "RAlt_T\n(kc)", "Right Alt when held, kc when tapped", masked=True),
     K("RGUI_T(kc)", "RGui_T\n(kc)", "Right GUI when held, kc when tapped", masked=True),
-    K("C_S_T(kc)", "C_S_T\n(kc)", "Left Control + Left Shift when held, kc when tapped", masked=True),
+    K("LCS_T(kc)", "LCS_T\n(kc)", "Left Control + Left Shift when held, kc when tapped", masked=True),
     K("ALL_T(kc)", "ALL_T\n(kc)", "LCTL + LSFT + LALT + LGUI when held, kc when tapped", masked=True),
     K("MEH_T(kc)", "Meh_T\n(kc)", "LCTL + LSFT + LALT when held, kc when tapped", masked=True),
     K("LCAG_T(kc)", "LCAG_T\n(kc)", "LCTL + LALT + LGUI when held, kc when tapped", masked=True),
@@ -561,7 +561,7 @@ KEYCODES_MODIFIERS = [
     K("SGUI(kc)", "SGUI\n(kc)", "LGUI + LSFT", masked=True),
     K("LCA(kc)", "LCA\n(kc)", "LCTL + LALT", masked=True),
     K("LSA(kc)", "LSA\n(kc)", "LSFT + LALT", masked=True),
-    K("C_S(kc)", "C_S\n(kc)", "LCTL + LSFT", masked=True),
+    K("LCS(kc)", "LCS\n(kc)", "LCTL + LSFT", masked=True),
     K("LCG(kc)", "LCG\n(kc)", "LCTL + LGUI", masked=True),
     K("RCG(kc)", "RCG\n(kc)", "RCTL + RGUI", masked=True),
 
