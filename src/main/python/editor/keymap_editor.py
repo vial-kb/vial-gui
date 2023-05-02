@@ -207,7 +207,7 @@ class KeymapEditor(BasicEditor):
 
         # if masked, ensure that this is a byte-sized keycode
         if self.container.active_mask:
-            if keycode not in BASIC_KEYCODES:
+            if Keycode.deserialize(keycode) > 0x00FF:
                 return
             kc = Keycode.find_outer_keycode(self.keyboard.encoder_layout[(l, i, d)])
             if kc is None:
