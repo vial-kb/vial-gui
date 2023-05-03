@@ -34,7 +34,7 @@ class AlternativeDisplay(QWidget):
                 btn = SquareButton()
                 btn.setRelSize(KEYCODE_BTN_RATIO)
                 btn.setText(title)
-                btn.clicked.connect(lambda st, k=code: self.keycode_changed.emit(k))
+                btn.clicked.connect(lambda st, k=code: self.keycode_changed.emit(title))
                 self.key_layout.addWidget(btn)
 
         layout = QVBoxLayout()
@@ -191,7 +191,7 @@ class FilteredTabbedKeycodes(QTabWidget):
         KeycodeDisplay.notify_keymap_override(self)
 
     def on_keycode_changed(self, code):
-        if code == -1:
+        if code == "Any":
             self.anykey.emit()
         else:
             self.keycode_changed.emit(code)

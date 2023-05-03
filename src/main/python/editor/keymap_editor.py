@@ -150,7 +150,8 @@ class KeymapEditor(BasicEditor):
             return
         current_code = self.code_for_widget(self.container.active_key)
         if self.container.active_mask:
-            current_code &= 0xFF
+            kc = Keycode.find_inner_keycode(current_code)
+            current_code = kc.qmk_id
 
         self.dlg = AnyKeycodeDialog(current_code)
         self.dlg.finished.connect(self.on_dlg_finished)
@@ -223,7 +224,7 @@ class KeymapEditor(BasicEditor):
         if r >= 0 and c >= 0:
             # if masked, ensure that this is a byte-sized keycode
             if self.container.active_mask:
-                if keycode not in BASIC_KEYCODES:
+                if Keycode.deserialize(keycode) > 0x00FF:
                     return
                 kc = Keycode.find_outer_keycode(self.keyboard.layout[(l, r, c)])
                 if kc is None:
