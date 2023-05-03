@@ -41,7 +41,7 @@ jobs:
         path: out/Vial-x86_64.AppImage
 
   build-mac:
-    runs-on: macos-11
+    runs-on: macos-10.15
     env:
       PYTHON_VERSION: 3.6.8
       MACOSX_DEPLOYMENT_TARGET: 10.9
