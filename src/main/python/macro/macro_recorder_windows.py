@@ -41,7 +41,7 @@ class WindowsRecorder(QWidget):
         self.show()
 
         center = QApplication.desktop().availableGeometry(self).center()
-        self.move(center.x() - self.width() * 0.5, 0)
+        self.move(round(center.x() - self.width() * 0.5), 0)
 
         keyboard.hook(self.on_key)
 
