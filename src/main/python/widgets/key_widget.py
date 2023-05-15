@@ -64,7 +64,11 @@ class KeyWidget(KeyboardWidget):
     def on_anykey(self):
         if self.active_key is None:
             return
-        self.dlg = AnyKeycodeDialog(Keycode.find_inner_keycode(self.keycode) if self.active_mask else self.keycode)
+        if self.active_mask:
+            kc = Keycode.find_inner_keycode(self.keycode).qmk_id
+        else:
+            kc = self.keycode
+        self.dlg = AnyKeycodeDialog(kc)
         self.dlg.finished.connect(self.on_dlg_finished)
         self.dlg.setModal(True)
         self.dlg.show()
