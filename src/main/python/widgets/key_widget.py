@@ -53,7 +53,7 @@ class KeyWidget(KeyboardWidget):
         """ Unlike set_keycode, this handles setting masked keycode inside the mask """
 
         if self.active_mask:
-            if Keycode.deserialize(keycode) > 0x00FF:
+            if not Keycode.is_basic(keycode):
                 return
             kc = Keycode.find_outer_keycode(self.keycode)
             if kc is None:

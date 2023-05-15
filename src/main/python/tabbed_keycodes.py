@@ -145,7 +145,7 @@ def keycode_filter_any(kc):
 
 
 def keycode_filter_masked(kc):
-    return kc in BASIC_KEYCODES
+    return Keycode.is_basic(kc)
 
 
 class FilteredTabbedKeycodes(QTabWidget):

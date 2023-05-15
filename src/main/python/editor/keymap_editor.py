@@ -7,7 +7,7 @@ from PyQt5.QtCore import Qt, pyqtSignal
 from any_keycode_dialog import AnyKeycodeDialog
 from editor.basic_editor import BasicEditor
 from widgets.keyboard_widget import KeyboardWidget, EncoderWidget
-from keycodes.keycodes import recreate_keyboard_keycodes, BASIC_KEYCODES, Keycode
+from keycodes.keycodes import recreate_keyboard_keycodes, Keycode
 from widgets.square_button import SquareButton
 from tabbed_keycodes import TabbedKeycodes, keycode_filter_masked
 from util import tr, KeycodeDisplay
@@ -208,7 +208,7 @@ class KeymapEditor(BasicEditor):
 
         # if masked, ensure that this is a byte-sized keycode
         if self.container.active_mask:
-            if Keycode.deserialize(keycode) > 0x00FF:
+            if not Keycode.is_basic(keycode):
                 return
             kc = Keycode.find_outer_keycode(self.keyboard.encoder_layout[(l, i, d)])
             if kc is None:
@@ -224,7 +224,7 @@ class KeymapEditor(BasicEditor):
         if r >= 0 and c >= 0:
             # if masked, ensure that this is a byte-sized keycode
             if self.container.active_mask:
-                if Keycode.deserialize(keycode) > 0x00FF:
+                if not Keycode.is_basic(keycode):
                     return
                 kc = Keycode.find_outer_keycode(self.keyboard.layout[(l, r, c)])
                 if kc is None:
