@@ -1,5 +1,6 @@
 from PyQt5.QtCore import pyqtSignal
 
+from keycodes.keycodes import Keycode
 from any_keycode_dialog import AnyKeycodeDialog
 from widgets.keyboard_widget import KeyboardWidget
 from kle_serial import Key
@@ -52,15 +53,22 @@ class KeyWidget(KeyboardWidget):
         """ Unlike set_keycode, this handles setting masked keycode inside the mask """
 
         if self.active_mask:
-            if keycode > 0xFF:
+            if not Keycode.is_basic(keycode):
                 return
-            keycode = (self.keycode & 0xFF00) | keycode
+            kc = Keycode.find_outer_keycode(self.keycode)
+            if kc is None:
+                return
+            keycode = kc.qmk_id.replace("(kc)", "({})".format(keycode))
         self.set_keycode(keycode)
 
     def on_anykey(self):
         if self.active_key is None:
             return
-        self.dlg = AnyKeycodeDialog((self.keycode & 0xFF) if self.active_mask else self.keycode)
+        if self.active_mask:
+            kc = Keycode.find_inner_keycode(self.keycode).qmk_id
+        else:
+            kc = self.keycode
+        self.dlg = AnyKeycodeDialog(kc)
         self.dlg.finished.connect(self.on_dlg_finished)
         self.dlg.setModal(True)
         self.dlg.show()

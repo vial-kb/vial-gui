@@ -116,19 +116,21 @@ def macro_deserialize_v2(data):
                 sequence.append(ch)
             data.pop(0)
     for s in sequence:
+
         if isinstance(s, str):
             out.append(ActionText(s))
         else:
             args = None
             if s[0] in [SS_TAP_CODE, SS_DOWN_CODE, SS_UP_CODE]:
                 args = s[1]
+                if args is not None:
+                    args = [Keycode.serialize(kc) for kc in args]
             elif s[0] == SS_DELAY_CODE:
                 args = s[1]
 
             if args is not None:
                 cls = {SS_TAP_CODE: ActionTap, SS_DOWN_CODE: ActionDown, SS_UP_CODE: ActionUp,
                        SS_DELAY_CODE: ActionDelay}[s[0]]
-                args = [Keycode.serialize(kc) for kc in args]
                 out.append(cls(args))
     return out
 

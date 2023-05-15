@@ -210,8 +210,8 @@ class Keyboard(ProtocolMacro, ProtocolDynamic, ProtocolTapDance, ProtocolCombo, 
             for idx in self.encoderpos:
                 data = self.usb_send(self.dev, struct.pack("BBBB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_GET_ENCODER, layer, idx),
                                      retries=20)
-                self.encoder_layout[(layer, idx, 0)] = struct.unpack(">H", data[0:2])[0]
-                self.encoder_layout[(layer, idx, 1)] = struct.unpack(">H", data[2:4])[0]
+                self.encoder_layout[(layer, idx, 0)] = Keycode.serialize(struct.unpack(">H", data[0:2])[0])
+                self.encoder_layout[(layer, idx, 1)] = Keycode.serialize(struct.unpack(">H", data[2:4])[0])
 
         if self.layout_labels:
             data = self.usb_send(self.dev, struct.pack("BB", CMD_VIA_GET_KEYBOARD_VALUE, VIA_LAYOUT_OPTIONS),
@@ -312,16 +312,13 @@ class Keyboard(ProtocolMacro, ProtocolDynamic, ProtocolTapDance, ProtocolCombo, 
             self.layout[key] = code
 
     def set_encoder(self, layer, index, direction, code):
-        if code < 0:
-            return
-
         key = (layer, index, direction)
         if self.encoder_layout[key] != code:
             if code == RESET_KEYCODE:
                 Unlocker.unlock(self)
 
             self.usb_send(self.dev, struct.pack(">BBBBBH", CMD_VIA_VIAL_PREFIX, CMD_VIAL_SET_ENCODER,
-                                                layer, index, direction, code), retries=20)
+                                                layer, index, direction, Keycode.deserialize(code)), retries=20)
             self.encoder_layout[key] = code
 
     def set_layout_options(self, options):

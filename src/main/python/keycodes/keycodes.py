@@ -45,11 +45,11 @@ class Keycode:
             self.masked_keycodes.add(qmk_id.replace("(kc)", ""))
 
     @classmethod
-    def find(cls, code):
+    def find(cls, qmk_id):
         # this is to handle cases of qmk_id LCTL(kc) propagated here from find_inner_keycode
-        if code == "kc":
-            code = "KC_NO"
-        return KEYCODES_MAP.get(code)
+        if qmk_id == "kc":
+            qmk_id = "KC_NO"
+        return KEYCODES_MAP.get(qmk_id)
 
     @classmethod
     def find_outer_keycode(cls, qmk_id):
@@ -82,6 +82,10 @@ class Keycode:
         return "(" in qmk_id and qmk_id[:qmk_id.find("(")] in cls.masked_keycodes
 
     @classmethod
+    def is_basic(cls, qmk_id):
+        return cls.deserialize(qmk_id) < 0x00FF
+
+    @classmethod
     def label(cls, qmk_id):
         keycode = cls.find_outer_keycode(qmk_id)
         if keycode is None:
@@ -112,7 +116,7 @@ class Keycode:
                 return kc.qmk_id
         else:
             outer = RAWCODES_MAP.get(code & 0xFF00)
-            inner = RAWCODES_MAP.get(code & 0xFF)
+            inner = RAWCODES_MAP.get(code & 0x00FF)
             if outer is not None and inner is not None:
                 return outer.qmk_id.replace("kc", inner.qmk_id)
         return hex(code)
