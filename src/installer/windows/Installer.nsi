@@ -49,7 +49,7 @@ FunctionEnd
     !define MUI_FINISHPAGE_RUN
     !define MUI_FINISHPAGE_RUN_CHECKED
     !define MUI_FINISHPAGE_RUN_TEXT "Run ${app_name}"
-    !define MUI_FINISHPAGE_RUN_FUNCTION "LaunchLink"
+;    !define MUI_FINISHPAGE_RUN_FUNCTION "LaunchLink"
   !insertmacro MUI_PAGE_FINISH
 
   !insertmacro MUI_UNPAGE_CONFIRM
@@ -99,7 +99,7 @@ Section "Uninstall"
 
 SectionEnd
 
-Function LaunchLink
-  !addplugindir "."
-  ShellExecAsUser::ShellExecAsUser "open" "$SMPROGRAMS\${app_name}.lnk"
-FunctionEnd
+; Function LaunchLink
+;   !addplugindir "."
+;   ShellExecAsUser::ShellExecAsUser "open" "$SMPROGRAMS\${app_name}.lnk"
+; FunctionEnd

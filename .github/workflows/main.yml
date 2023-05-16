@@ -4,17 +4,17 @@ on: [push, pull_request]
 
 jobs:
   build-linux:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
 
     steps:
     - uses: actions/checkout@v2
     - uses: actions/setup-python@v1
       with:
-        python-version: '3.6.x'
+        python-version: '3.10.x'
 
     - name: Install dependencies
       run: |
-        sudo apt-get install libusb-1.0-0-dev libudev-dev ruby ruby-dev rubygems build-essential desktop-file-utils
+        sudo apt-get install libusb-1.0-0-dev libudev-dev ruby ruby-dev rubygems build-essential desktop-file-utils libfuse2
         wget https://github.com/AppImage/pkg2appimage/archive/38603d92359a48189c35debad9005e8e902e6070.zip
         unzip *.zip
         sudo gem install --no-document fpm
@@ -41,19 +41,19 @@ jobs:
         path: out/Vial-x86_64.AppImage
 
   build-mac:
-    runs-on: macos-10.15
+    runs-on: macos-11
     env:
-      PYTHON_VERSION: 3.6.8
-      MACOSX_DEPLOYMENT_TARGET: 10.9
+      PYTHON_VERSION: 3.10.5
+      MACOSX_DEPLOYMENT_TARGET: 11
 
     steps:
     - uses: actions/checkout@v2
 
     - name: Get Python
-      run: curl https://www.python.org/ftp/python/${PYTHON_VERSION}/python-${PYTHON_VERSION}-macosx${MACOSX_DEPLOYMENT_TARGET}.pkg -o "python.pkg"
+      run: curl https://www.python.org/ftp/python/${PYTHON_VERSION}/python-${PYTHON_VERSION}-macos${MACOSX_DEPLOYMENT_TARGET}.pkg -o "python.pkg"
 
     - name: Verify download
-      run: shasum -a 256 -c <<< '4bcd53faffc98d193ef7cdccd5668de3829c702af4db45258819a84a2cab60d0 *python.pkg'
+      run: shasum -a 256 -c <<< '36ff0f2ef1fdd8603042576d206224a76db32a0000e8332877751f86d98abc53 *python.pkg'
 
     - name: Install Python
       run: |
@@ -83,7 +83,7 @@ jobs:
     - uses: actions/checkout@v2
     - uses: actions/setup-python@v1
       with:
-        python-version: '3.6.x'
+        python-version: '3.10.x'
 
     - name: Setup venv
       run: |
@@ -100,7 +100,7 @@ jobs:
     - name: Build
       run: |
         . .\venv\Scripts\activate.ps1
-        fbs freeze
+        fbs freeze	
         Compress-Archive -Path "target\Vial" -DestinationPath vial-win.zip
 
     - uses: actions/upload-artifact@v1
