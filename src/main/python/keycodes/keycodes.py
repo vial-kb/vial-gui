@@ -140,6 +140,12 @@ class Keycode:
         return 0
 
     @classmethod
+    def normalize(cls, code):
+        """ Changes e.g. KC_PERC to LSFT(KC_5) """
+
+        return Keycode.serialize(Keycode.deserialize(code))
+
+    @classmethod
     def resolve(cls, qmk_constant):
         """ Translates a qmk_constant into firmware-specific integer keycode or macro constant """
         if cls.protocol == 6:
