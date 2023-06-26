@@ -7,7 +7,7 @@ from PyQt5.QtCore import Qt, pyqtSignal
 from any_keycode_dialog import AnyKeycodeDialog
 from editor.basic_editor import BasicEditor
 from widgets.keyboard_widget import KeyboardWidget, EncoderWidget
-from keycodes.keycodes import recreate_keyboard_keycodes, Keycode
+from keycodes.keycodes import Keycode
 from widgets.square_button import SquareButton
 from tabbed_keycodes import TabbedKeycodes, keycode_filter_masked
 from util import tr, KeycodeDisplay
@@ -122,7 +122,6 @@ class KeymapEditor(BasicEditor):
             self.current_layer = 0
             self.on_layout_changed()
 
-            recreate_keyboard_keycodes(self.keyboard)
             self.tabbed_keycodes.recreate_keycode_buttons()
             TabbedKeycodes.tray.recreate_keycode_buttons()
             self.refresh_layer_display()

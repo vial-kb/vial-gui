@@ -4,7 +4,7 @@ import json
 import lzma
 from collections import OrderedDict
 
-from keycodes.keycodes import RESET_KEYCODE, Keycode
+from keycodes.keycodes import RESET_KEYCODE, Keycode, recreate_keyboard_keycodes
 from kle_serial import Serial as KleSerial
 from protocol.combo import ProtocolCombo
 from protocol.constants import CMD_VIA_GET_PROTOCOL_VERSION, CMD_VIA_GET_KEYBOARD_VALUE, CMD_VIA_SET_KEYBOARD_VALUE, \
@@ -78,13 +78,20 @@ class Keyboard(ProtocolMacro, ProtocolDynamic, ProtocolTapDance, ProtocolCombo, 
 
         self.reload_layout(sideload_json)
         self.reload_layers()
-        self.reload_keymap()
-        self.reload_macros()
+
+        self.reload_macros_early()
         self.reload_persistent_rgb()
         self.reload_rgb()
         self.reload_settings()
 
         self.reload_dynamic()
+
+        # based on the number of macros, tapdance, etc, this will generate global keycode arrays
+        recreate_keyboard_keycodes(self)
+
+        # at this stage we have correct keycode info and can reload everything that depends on keycodes
+        self.reload_keymap()
+        self.reload_macros_late()
         self.reload_tap_dance()
         self.reload_combo()
         self.reload_key_override()
