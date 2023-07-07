@@ -186,7 +186,7 @@ class ProtocolMacro(BaseProtocol):
             full_macro.append(actions)
         if len(full_macro) < self.macro_count:
             full_macro += [[] for x in range(self.macro_count - len(full_macro))]
-        full_macro = full_macro[:self.macro_count]
+        # full_macro = full_macro[:self.macro_count]
         # TODO: log a warning if macro is cutoff
         data = self.macros_serialize(full_macro)[0:self.macro_memory]
         if data != self.macro:
