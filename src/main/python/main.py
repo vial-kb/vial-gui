@@ -9,7 +9,7 @@ if ssl.get_default_verify_paths().cafile is None:
 import traceback
 
 from PyQt5 import QtWidgets, QtCore
-from PyQt5.QtCore import pyqtSignal, QSettings
+from PyQt5.QtCore import pyqtSignal
 
 from fbs_runtime.application_context import cached_property
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
@@ -61,7 +61,6 @@ class VialApplicationContext(ApplicationContext):
         # Override the app definition in order to set WM_CLASS.
         result = QtWidgets.QApplication(sys.argv)
         result.setApplicationName(self.build_settings["app_name"])
-        result.setOrganizationName(self.build_settings["app_name"])
         result.setOrganizationDomain("vial.today")
 
         #TODO: Qt sets applicationVersion on non-Linux platforms if the exe/pkg metadata is correctly configured.

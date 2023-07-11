@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 import logging
 import os
+import pathlib
 import sys
 import time
 from logging.handlers import RotatingFileHandler
@@ -146,8 +147,7 @@ def pad_for_vibl(msg):
 def init_logger():
     logging.basicConfig(level=logging.INFO)
     directory = QStandardPaths.writableLocation(QStandardPaths.AppLocalDataLocation)
-    if not os.path.exists(directory):
-        os.mkdir(directory)
+    pathlib.Path(directory).mkdir(parents=True, exist_ok=True)
     path = os.path.join(directory, "vial.log")
     handler = RotatingFileHandler(path, maxBytes=5 * 1024 * 1024, backupCount=5)
     handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(module)s:%(lineno)d - %(message)s"))

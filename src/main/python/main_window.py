@@ -42,7 +42,7 @@ class MainWindow(QMainWindow):
 
         self.ui_lock_count = 0
 
-        self.settings = QSettings()
+        self.settings = QSettings("Vial", "Vial")
         if self.settings.value("size", None):
             self.resize(self.settings.value("size"))
         else:
