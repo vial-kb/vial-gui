@@ -7,7 +7,7 @@ from PyQt5.QtCore import Qt, pyqtSignal
 from any_keycode_dialog import AnyKeycodeDialog
 from editor.basic_editor import BasicEditor
 from widgets.keyboard_widget import KeyboardWidget, EncoderWidget
-from keycodes import recreate_keyboard_keycodes
+from keycodes.keycodes import Keycode
 from widgets.square_button import SquareButton
 from tabbed_keycodes import TabbedKeycodes, keycode_filter_masked
 from util import tr, KeycodeDisplay
@@ -122,7 +122,6 @@ class KeymapEditor(BasicEditor):
             self.current_layer = 0
             self.on_layout_changed()
 
-            recreate_keyboard_keycodes(self.keyboard)
             self.tabbed_keycodes.recreate_keycode_buttons()
             TabbedKeycodes.tray.recreate_keycode_buttons()
             self.refresh_layer_display()
@@ -150,7 +149,8 @@ class KeymapEditor(BasicEditor):
             return
         current_code = self.code_for_widget(self.container.active_key)
         if self.container.active_mask:
-            current_code &= 0xFF
+            kc = Keycode.find_inner_keycode(current_code)
+            current_code = kc.qmk_id
 
         self.dlg = AnyKeycodeDialog(current_code)
         self.dlg.finished.connect(self.on_dlg_finished)
@@ -207,9 +207,12 @@ class KeymapEditor(BasicEditor):
 
         # if masked, ensure that this is a byte-sized keycode
         if self.container.active_mask:
-            if keycode > 0xFF:
+            if not Keycode.is_basic(keycode):
                 return
-            keycode = (self.keyboard.encoder_layout[(l, i, d)] & 0xFF00) | keycode
+            kc = Keycode.find_outer_keycode(self.keyboard.encoder_layout[(l, i, d)])
+            if kc is None:
+                return
+            keycode = kc.qmk_id.replace("(kc)", "({})".format(keycode))
 
         self.keyboard.set_encoder(l, i, d, keycode)
         self.refresh_layer_display()
@@ -220,9 +223,12 @@ class KeymapEditor(BasicEditor):
         if r >= 0 and c >= 0:
             # if masked, ensure that this is a byte-sized keycode
             if self.container.active_mask:
-                if keycode > 0xFF:
+                if not Keycode.is_basic(keycode):
                     return
-                keycode = (self.keyboard.layout[(l, r, c)] & 0xFF00) | keycode
+                kc = Keycode.find_outer_keycode(self.keyboard.layout[(l, r, c)])
+                if kc is None:
+                    return
+                keycode = kc.qmk_id.replace("(kc)", "({})".format(keycode))
 
             self.keyboard.set_key(l, r, c, keycode)
             self.refresh_layer_display()

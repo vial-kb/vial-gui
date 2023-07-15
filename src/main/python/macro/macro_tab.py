@@ -5,7 +5,7 @@ from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import QPushButton, QGridLayout, QHBoxLayout, QToolButton, QVBoxLayout, \
     QWidget, QMenu, QScrollArea, QFrame
 
-from keycodes import Keycode
+from keycodes.keycodes import Keycode
 from macro.macro_action import ActionTap
 from macro.macro_action_ui import ActionTextUI, ActionTapUI, ui_action, tag_to_action
 from macro.macro_line import MacroLine
@@ -75,6 +75,8 @@ class MacroTab(QVBoxLayout):
         self.addWidget(make_scrollable(vbox))
         self.addLayout(layout_buttons)
 
+        self.dlg_textbox = None
+
     def add_action(self, act):
         if self.parent.keyboard.vial_protocol < VIAL_PROTOCOL_EXT_MACROS:
             act.set_keycode_filter(keycode_filter_masked)
@@ -118,11 +120,8 @@ class MacroTab(QVBoxLayout):
         self.changed.emit()
 
     def on_text_window(self):
-
         # serialize all actions in this tab to a json
-        macro_text = []
-        macro_text.append([act.save() for act in self.actions()])
-        macro_text = json.dumps(macro_text[0])
+        macro_text = json.dumps([act.save() for act in self.actions()])
 
         self.dlg_textbox = TextboxWindow(macro_text, "vim", "Vial macro")
         self.dlg_textbox.setModal(True)
@@ -155,7 +154,7 @@ class MacroTab(QVBoxLayout):
         self.changed.emit()
 
     def on_tap_enter(self):
-        self.add_action(ActionTapUI(self.container, ActionTap([Keycode.find_by_qmk_id("KC_ENTER").code])))
+        self.add_action(ActionTapUI(self.container, ActionTap(["KC_ENTER"])))
 
     def pre_record(self):
         self.btn_record.hide()

@@ -5,7 +5,7 @@ from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QGridLayout, QWidget, QSizePolicy
 
 from constants import KEYCODE_BTN_RATIO
-from keycodes import Keycode
+from keycodes.keycodes import Keycode
 from util import KeycodeDisplay
 from widgets.square_button import SquareButton
 from kle_serial import Serial as KleSerial
@@ -13,7 +13,7 @@ from kle_serial import Serial as KleSerial
 
 class DisplayKeyboard(QWidget):
 
-    keycode_changed = pyqtSignal(int)
+    keycode_changed = pyqtSignal(str)
 
     def __init__(self, kbdef):
         super().__init__()
@@ -29,9 +29,9 @@ class DisplayKeyboard(QWidget):
             btn.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
             btn.setRelSize(KEYCODE_BTN_RATIO)
             btn.setContentsMargins(0, 0, 0, 0)
-            btn.setToolTip(Keycode.tooltip(kc.code))
+            btn.setToolTip(Keycode.tooltip(kc.qmk_id))
             btn.setText(kc.label)
-            btn.clicked.connect(lambda st, k=kc: self.keycode_changed.emit(k.code))
+            btn.clicked.connect(lambda st, k=kc: self.keycode_changed.emit(k.qmk_id))
             btn.keycode = kc
 
             self.buttons.append(btn)

@@ -1,6 +1,6 @@
 import struct
 
-from keycodes import Keycode
+from keycodes.keycodes import Keycode
 from macro.macro_action import SS_TAP_CODE, SS_DOWN_CODE, SS_UP_CODE, ActionText, ActionTap, ActionDown, ActionUp, \
     SS_QMK_PREFIX, SS_DELAY_CODE, ActionDelay, VIAL_MACRO_EXT_TAP, VIAL_MACRO_EXT_DOWN, VIAL_MACRO_EXT_UP
 from macro.macro_action_ui import tag_to_action
@@ -46,6 +46,7 @@ def macro_deserialize_v1(data):
         else:
             keycodes = s[1]
             cls = {SS_TAP_CODE: ActionTap, SS_DOWN_CODE: ActionDown, SS_UP_CODE: ActionUp}[s[0]]
+            keycodes = [Keycode.serialize(kc) for kc in keycodes]
             out.append(cls(keycodes))
     return out
 
@@ -115,12 +116,15 @@ def macro_deserialize_v2(data):
                 sequence.append(ch)
             data.pop(0)
     for s in sequence:
+
         if isinstance(s, str):
             out.append(ActionText(s))
         else:
             args = None
             if s[0] in [SS_TAP_CODE, SS_DOWN_CODE, SS_UP_CODE]:
                 args = s[1]
+                if args is not None:
+                    args = [Keycode.serialize(kc) for kc in args]
             elif s[0] == SS_DELAY_CODE:
                 args = s[1]
 
@@ -133,26 +137,33 @@ def macro_deserialize_v2(data):
 
 class ProtocolMacro(BaseProtocol):
 
-    def reload_macros(self):
-        """ Loads macro information from the keyboard """
+    def reload_macros_early(self):
+        """ Reload macro information that doesn't require any info about keycodes, i.e. number of macros """
         data = self.usb_send(self.dev, struct.pack("B", CMD_VIA_MACRO_GET_COUNT), retries=20)
         self.macro_count = data[1]
         data = self.usb_send(self.dev, struct.pack("B", CMD_VIA_MACRO_GET_BUFFER_SIZE), retries=20)
         self.macro_memory = struct.unpack(">H", data[1:3])[0]
 
+    def reload_macros_late(self):
+        """ Load actual keycodes """
         self.macro = b""
         if self.macro_memory:
             # now retrieve the entire buffer, MACRO_CHUNK bytes at a time, as that is what fits into a packet
             for x in range(0, self.macro_memory, BUFFER_FETCH_CHUNK):
                 sz = min(BUFFER_FETCH_CHUNK, self.macro_memory - x)
                 data = self.usb_send(self.dev, struct.pack(">BHB", CMD_VIA_MACRO_GET_BUFFER, x, sz), retries=20)
-                self.macro += data[4:4+sz]
+                self.macro += data[4:4 + sz]
                 if self.macro.count(b"\x00") > self.macro_count:
                     break
             # macros are stored as NUL-separated strings, so let's clean up the buffer
             # ensuring we only get macro_count strings after we split by NUL
             macros = self.macro.split(b"\x00") + [b""] * self.macro_count
             self.macro = b"\x00".join(macros[:self.macro_count]) + b"\x00"
+
+    def reload_macros(self):
+        """ Loads macro information from the keyboard """
+        self.reload_macros_early()
+        self.reload_macros_late()
 
     def set_macro(self, data):
         if len(data) > self.macro_memory:

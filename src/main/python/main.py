@@ -10,6 +10,8 @@ import traceback
 
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import pyqtSignal
+
+from fbs_runtime.application_context import cached_property
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
 
 import sys
@@ -53,6 +55,20 @@ class UncaughtHook(QtCore.QObject):
             self._exception_caught.emit(log_msg)
         sys._excepthook(exc_type, exc_value, exc_traceback)
 
+class VialApplicationContext(ApplicationContext):
+    @cached_property
+    def app(self):
+        # Override the app definition in order to set WM_CLASS.
+        result = QtWidgets.QApplication(sys.argv)
+        result.setApplicationName(self.build_settings["app_name"])
+        result.setOrganizationDomain("vial.today")
+
+        #TODO: Qt sets applicationVersion on non-Linux platforms if the exe/pkg metadata is correctly configured.
+        # https://doc.qt.io/qt-5/qcoreapplication.html#applicationVersion-prop
+        # Verify it is, and only set manually on Linux.
+        #if sys.platform.startswith("linux"):
+        result.setApplicationVersion(self.build_settings["version"])
+        return result
 
 if __name__ == '__main__':
     if len(sys.argv) == 2 and sys.argv[1] == "--linux-recorder":
@@ -60,7 +76,7 @@ if __name__ == '__main__':
 
         linux_keystroke_recorder()
     else:
-        appctxt = ApplicationContext()       # 1. Instantiate ApplicationContext
+        appctxt = VialApplicationContext()       # 1. Instantiate ApplicationContext
         init_logger()
         qt_exception_hook = UncaughtHook()
         window = MainWindow(appctxt)

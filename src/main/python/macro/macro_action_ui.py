@@ -4,11 +4,8 @@ from PyQt5.QtWidgets import QLineEdit, QToolButton, QWidget, QSizePolicy, QSpinB
 from constants import KEY_SIZE_RATIO
 from tabbed_keycodes import TabbedKeycodes
 from widgets.flowlayout import FlowLayout
-from keycodes import KEYCODES_SPECIAL
 from macro.macro_action import ActionText, ActionSequence, ActionDown, ActionUp, ActionTap, ActionDelay
 from widgets.key_widget import KeyWidget
-
-KC_TRNS = KEYCODES_SPECIAL[1]
 
 
 class DeletableKeyWidget(KeyWidget):
@@ -123,7 +120,7 @@ class ActionSequenceUI(BasicActionUI):
         self.layout_container.deleteLater()
 
     def on_add(self):
-        self.act.sequence.append(KC_TRNS.code)
+        self.act.sequence.append("KC_TRNS")
         self.recreate_sequence()
         self.changed.emit()
 
