@@ -19,10 +19,11 @@ class DummyKeyboard(Keyboard):
         if self.layout_labels:
             self.layout_options = 0
 
-    def reload_macros(self):
+    def reload_macros_early(self):
         self.macro_count = 16
         self.macro_memory = 900
 
+    def reload_macros_late(self):
         self.macro = b"\x00" * self.macro_count
 
     def set_key(self, layer, row, col, code):
