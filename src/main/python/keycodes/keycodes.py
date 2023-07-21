@@ -323,6 +323,10 @@ BASIC_KEYCODES = {
     "KC_MRWD",
     "KC_BRIU",
     "KC_BRID",
+    "KC_CPNL",
+    "KC_ASST",
+    "KC_MCTL",
+    "KC_LPAD",
     "KC_LCTRL",
     "KC_LSHIFT",
     "KC_LALT",
@@ -727,6 +731,11 @@ KEYCODES_MEDIA = [
     K("KC_WFAV", "Browser\nFav.", "Browser Favorites (Windows)", alias=["KC_WWW_FAVORITES"]),
     K("KC_BRIU", "Bright.\nUp", "Increase the brightness of screen (Laptop)", alias=["KC_BRIGHTNESS_UP"]),
     K("KC_BRID", "Bright.\nDown", "Decrease the brightness of screen (Laptop)", alias=["KC_BRIGHTNESS_DOWN"]),
+
+    K("KC_CPNL", "Ctrl.\nPanel", "Open Control Panel (Windows)", alias=["KC_CONTROL_PANEL"]),
+    K("KC_ASST", "Asst.", "Launch Context-Aware Assistant (Windows)", alias=["KC_ASSISTANT"]),
+    K("KC_MCTL", "MCtrl", "Open Mission Control (macOS)", alias=["KC_MISSION_CONTROL"]),
+    K("KC_LPAD", "LPad", "Open Launchpad (macOS)", alias=["KC_LAUNCHPAD"]),
 
     K("KC_MPRV", "Media\nPrev", "Previous Track", alias=["KC_MEDIA_PREV_TRACK"]),
     K("KC_MNXT", "Media\nNext", "Next Track", alias=["KC_MEDIA_NEXT_TRACK"]),
