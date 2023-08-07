@@ -653,6 +653,7 @@ KEYCODES_QUANTUM = [
     K("CMB_ON", "Combo\nOn", "Turns on Combo feature"),
     K("CMB_OFF", "Combo\nOff", "Turns off Combo feature"),
     K("CMB_TOG", "Combo\nToggle", "Toggles Combo feature on and off"),
+    K("FN_CAPSWORD", "Caps\nWord\nToggle", "Toggles Caps Word on and off"),
 ]
 
 KEYCODES_BACKLIGHT = [

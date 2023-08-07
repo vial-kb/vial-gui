@@ -550,6 +550,8 @@ class keycodes_v5:
 
         "RESET": 0x5C00,
 
+        "FN_CAPSWORD": 0x5DAC,
+
         "FN_MO13": 0x5F10,
         "FN_MO23": 0x5F11,
 
