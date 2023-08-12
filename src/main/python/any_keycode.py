@@ -86,7 +86,7 @@ functions = {
     "LCG": LCG, "RCG": RCG, "LCG_T": LCG_T, "RCG_T": RCG_T,
 }
 
-for x in range(32):
+for x in range(16):
     functions["LT{}".format(x)] = lambda kc, layer=x: (r("QK_LAYER_TAP") | (((layer)&0xF) << 8) | ((kc)&0xFF))
 
 

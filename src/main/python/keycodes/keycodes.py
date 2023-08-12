@@ -1034,7 +1034,7 @@ def recreate_keyboard_keycodes(keyboard):
         generate_keycodes_for_mask("TO",
                                    "Turns on layer and turns off all other layers, except the default layer"))
 
-    for x in range(layers):
+    for x in range(min(layers, 16)):
         KEYCODES_LAYERS.append(Keycode("LT{}(kc)".format(x), "LT {}\n(kc)".format(x),
                                        "kc on tap, switch to layer {} while held".format(x), masked=True))
 
