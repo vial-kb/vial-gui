@@ -552,6 +552,7 @@ class keycodes_v6:
         "RESET": 0x7C00,
 
         "FN_CAPSWORD": 0x7C73,
+
         "FN_MO13": 0x7C77,
         "FN_MO23": 0x7C78,
 
