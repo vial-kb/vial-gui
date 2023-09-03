@@ -2,5 +2,5 @@
     "app_name": "Vial",
     "author": "xyz",
     "main_module": "src/main/python/main.py",
-    "version": "0.7"
+    "version": "0.7.1"
 }
