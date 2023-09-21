@@ -54,5 +54,5 @@ keymap = {
     "KC_DQUO": "Ć",
     "KC_PIPE": "Ž",
     "KC_NONUS_HASH": "Ž\n   ¤",
-    "KC_KP_DOT": ",",
+    "KC_KP_DOT": ","
 }
