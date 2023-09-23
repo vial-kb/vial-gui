@@ -1,10 +1,11 @@
 from keycodes.keycodes import Keycode
-from keymap import brazilian, canadian_csa, danish, eurkey, french, german, hebrew, hungarian, japanese, latam, norwegian, russian, slovak, spanish, swedish, swedish_swerty, swiss
+from keymap import brazilian, canadian_csa, danish, eurkey, french, german, hebrew, hungarian, japanese, latam, norwegian, russian, slovak, spanish, swedish, swedish_swerty, swiss, croatian
 
 KEYMAPS = [
     ("QWERTY", dict()),
     ("Brazilian (QWERTY)", brazilian.keymap),
     ("Canadian CSA (QWERTY)", canadian_csa.keymap),
+    ("Croatian (QWERTZ)", croatian.keymap),
     ("Danish (QWERTY)", danish.keymap),
     ("EurKey (QWERTY)", eurkey.keymap),
     ("French (AZERTY)", french.keymap),
