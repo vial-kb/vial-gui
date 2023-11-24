@@ -412,6 +412,8 @@ class MainWindow(QMainWindow):
             old_tab.editor.deactivate()
         if new_tab is not None:
             new_tab.editor.activate()
+            if new_tab.editor == self.keymap_editor:
+                new_tab.editor.refresh_layer_display()
 
         self.current_tab = new_tab
 
