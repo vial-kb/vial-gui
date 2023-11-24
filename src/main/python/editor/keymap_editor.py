@@ -179,7 +179,7 @@ class KeymapEditor(BasicEditor):
 
         for widget in self.container.widgets:
             code = self.code_for_widget(widget)
-            KeycodeDisplay.display_keycode(widget, code)
+            KeycodeDisplay.display_keycode(widget, code, self.keyboard)
         self.container.update()
         self.container.updateGeometry()
 
