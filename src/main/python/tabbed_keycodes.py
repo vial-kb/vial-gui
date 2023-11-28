@@ -270,8 +270,10 @@ class TabbedKeycodes(QWidget):
         cls.tray = tray
 
     @classmethod
-    def open_tray(cls, target, keycode_filter=None):
+    def open_tray(cls, target, keycode_filter=None, keyboard=None):
         cls.tray.set_keycode_filter(keycode_filter)
+        if keyboard != None:
+            cls.tray.recreate_keycode_buttons(keyboard)
         cls.tray.show()
         if cls.tray.target is not None and cls.tray.target != target:
             cls.tray.target.deselect()

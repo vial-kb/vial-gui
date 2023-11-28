@@ -43,7 +43,7 @@ class KeyWidget(KeyboardWidget):
             keycode_filter = self.keycode_filter
             if self.active_mask:
                 keycode_filter = keycode_filter_masked
-            TabbedKeycodes.open_tray(self, keycode_filter)
+            TabbedKeycodes.open_tray(self, keycode_filter, self.keyboard)
         else:
             TabbedKeycodes.close_tray()
 
