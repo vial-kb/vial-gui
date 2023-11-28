@@ -412,8 +412,10 @@ class MainWindow(QMainWindow):
             old_tab.editor.deactivate()
         if new_tab is not None:
             new_tab.editor.activate()
+            if new_tab.editor == self.keymap_editor:
+                new_tab.editor.rebuild(self.autorefresh.current_device)
+
         self.current_tab = new_tab
-        self.rebuild()
 
     def about_vial(self):
         title = "About Vial"
