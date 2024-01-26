@@ -113,6 +113,13 @@ VIALRGB_EFFECTS = [
     VialRGBEffect(42, "Solid Multisplash"),
     VialRGBEffect(43, "Pixel Rain"),
     VialRGBEffect(44, "Pixel Fractal"),
+    VialRGBEffect(45, "Pixel Flow"),
+    VialRGBEffect(46, "Flower Blooming"),
+    VialRGBEffect(47, "Starlight"),
+    VialRGBEffect(48, "Starlight Hue"),
+    VialRGBEffect(49, "Starlight Sat"),
+    VialRGBEffect(50, "Riverflow"),
+
 ]
 
 
