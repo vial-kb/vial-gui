@@ -119,7 +119,6 @@ VIALRGB_EFFECTS = [
     VialRGBEffect(48, "Starlight Dual Hue"),
     VialRGBEffect(49, "Starlight Dual Sat"),
     VialRGBEffect(50, "Riverflow"),
-
 ]
 
 
