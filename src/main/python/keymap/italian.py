@@ -10,7 +10,7 @@ keymap = {
     "KC_8": "(\n8",
     "KC_9": ")\n9",
     "KC_0": "=\n0",
-    "KC_MINUS": "´\n?",
+    "KC_MINUS": "?\n'",
     "KC_EQUAL": "^\nì",
     "KC_E": "E\n   €",
     "KC_LBRACKET": "é\nè  [",
