@@ -344,8 +344,6 @@ class KeyboardWidget(QWidget):
         self.place_widgets()
         self.widgets = list(filter(lambda w: not w.desc.decal, self.widgets))
 
-        self.widgets.sort(key=lambda w: (w.y, w.x))
-
         # determine maximum width and height of container
         max_w = max_h = 0
         for key in self.widgets:
