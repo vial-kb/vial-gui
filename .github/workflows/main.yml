@@ -7,16 +7,16 @@ jobs:
     runs-on: ubuntu-22.04
 
     container:
-      image: ubuntu:18.04
+      image: ubuntu:22.04
       options: --privileged
-      env:
-        LD_LIBRARY_PATH: /__w/vial-gui/vial-gui/util/python36/prefix/lib/
+    env:
+      PYTHON_VERSION: 3.12.2
 
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-python@v4
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
       with:
-        python-version: '3.10' 
+        python-version: ${{env.PYTHON_VERSION}}
         cache: pip
 
     - name: Install dependencies
@@ -45,7 +45,7 @@ jobs:
         ./linuxdeploy-x86_64.AppImage --appdir dist/Vial --output appimage
         mv Vial-*-x86_64.AppImage Vial-x86_64.AppImage
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: vial-linux
         path: Vial-x86_64.AppImage
@@ -53,14 +53,13 @@ jobs:
   build-mac:
     runs-on: macos-11
     env:
-      PYTHON_VERSION: 3.6.8
       MACOSX_DEPLOYMENT_TARGET: 10.9
 
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-python@v4
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
       with:
-        python-version: '3.10' 
+        python-version: ${{env.PYTHON_VERSION}}
         cache: pip
 
     - name: Setup venv
@@ -75,7 +74,7 @@ jobs:
         pyinstaller misc/Vial.spec
         hdiutil create -volname Vial -srcfolder "target/Vial.app" -ov -format UDZO vial-mac.dmg
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: vial-mac
         path: vial-mac.dmg
@@ -84,10 +83,10 @@ jobs:
     runs-on: windows-2019
 
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-python@v4
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
       with:
-        python-version: '3.10'
+        python-version: ${{env.PYTHON_VERSION}}
 
     - name: Setup venv
       run: |
@@ -107,7 +106,7 @@ jobs:
         pyinstaller misc/Vial.spec
         Compress-Archive -Path "dist/Vial" -DestinationPath vial-win.zip
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: vial-win
         path: vial-win.zip
@@ -118,7 +117,7 @@ jobs:
         cd dist/Vial
         makensis ../../src/installer/windows/Installer.nsi
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: vial-win-installer
         path: target\VialSetup.exe
