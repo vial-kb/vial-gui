@@ -2,7 +2,7 @@
 
 
 a = Analysis(
-    ['..\\src\\main\\python\\main.py'],
+    ['../src/main/python/main.py'],
     pathex=[],
     binaries=[],
     datas=[('../src/main/resources/base/qmk_settings.json', 'resources/base'), ('../src/build/settings/base.json', 'resources/settings'), ('../src/build/settings/linux.json', 'resources/settings'), ('../src/build/settings/mac.json', 'resources/settings')],
@@ -31,7 +31,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['..\\src\\main\\icons\\Icon.ico'],
+    icon=['../src/main/icons/Icon.ico'],
 )
 coll = COLLECT(
     exe,
