@@ -4,22 +4,28 @@ on: [push, pull_request]
 
 jobs:
   build-linux:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
+
+    container:
+      image: ubuntu:24.04
+      options: --privileged
+    env:
+      PYTHON_VERSION: 3.12.2
 
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-python@v4
-      with:
-        python-version: '3.10' 
-        cache: pip
-
+    - uses: actions/checkout@v4
+ 
     - name: Install dependencies
       run: |
         apt-get update
-        apt-get install -y libusb-1.0-0-dev libudev-dev ruby ruby-dev rubygems build-essential desktop-file-utils wget unzip zlib1g-dev liblzma-dev libssl-dev git imagemagick file libfuse2
-        wget https://github.com/AppImage/pkg2appimage/archive/38603d92359a48189c35debad9005e8e902e6070.zip
-        unzip *.zip
+        apt-get install -y lsb-release libusb-1.0-0-dev libudev-dev ruby ruby-dev rubygems build-essential desktop-file-utils wget unzip zlib1g-dev liblzma-dev libssl-dev git imagemagick file libfuse2
+        wget -c $(wget -q https://api.github.com/repos/AppImageCommunity/pkg2appimage/releases -O - | grep "pkg2appimage-.*-x86_64.AppImage" | grep browser_download_url | head -n 1 | cut -d '"' -f 4)
+        chmod +x ./pkg2appimage-*.AppImage
         gem install --no-document fpm
+
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{env.PYTHON_VERSION}}
 
     - name: Setup venv
       run: |
@@ -29,14 +35,13 @@ jobs:
 
     - name: Build
       run: |
-        source venv/bin/activate
+        . venv/bin/activate
         pyinstaller misc/Vial.spec
-        rm ./dist/Vial/{libgdk-3.so.0,libfontconfig.so.1}
         deactivate
         cp src/main/icons/linux/1024.png dist/Vial/Vial.png
         cp misc/Vial.desktop dist/Vial/
         cp misc/AppRun dist/Vial/
-        ./linuxdeploy-x86_64.AppImage --appdir dist/Vial --output appimage
+        ./pkg2appimage-*.AppImage --appdir dist/Vial --output appimage
         mv Vial-*-x86_64.AppImage Vial-x86_64.AppImage
 
     - uses: actions/upload-artifact@v4
@@ -47,25 +52,24 @@ jobs:
   build-mac:
     runs-on: macos-13
     env:
-      PYTHON_VERSION: 3.6.8
       MACOSX_DEPLOYMENT_TARGET: 10.9
 
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-python@v4
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
       with:
-        python-version: '3.10' 
+        python-version: ${{env.PYTHON_VERSION}}
         cache: pip
 
     - name: Setup venv
       run: |
         python3 -m venv venv
-        source venv/bin/activate
+        . venv/bin/activate
         pip install -r requirements.txt
 
     - name: Build
       run: |
-        source venv/bin/activate
+        . venv/bin/activate
         pyinstaller misc/Vial.spec
         hdiutil create -volname Vial -srcfolder "target/Vial.app" -ov -format UDZO vial-mac.dmg
 
@@ -79,9 +83,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - uses: actions/setup-python@v4
+    - uses: actions/setup-python@v5
       with:
-        python-version: '3.10'
+        python-version: ${{env.PYTHON_VERSION}}
 
     - name: Setup venv
       run: |
