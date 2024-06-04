@@ -555,6 +555,8 @@ class keycodes_v6:
         "FN_MO23": 0x7C78,
 
         "QK_KB": 0x7E00,
+
+        "QMK_LM_SHIFT": 5,
     }
 
     masked = set()

@@ -555,6 +555,8 @@ class keycodes_v5:
 
         "QK_KB": 0x5F80,
         "QK_MACRO": 0x5F12,
+
+        "QMK_LM_SHIFT": 4,
     }
 
     masked = set()
