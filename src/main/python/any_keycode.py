@@ -29,7 +29,6 @@ def RCS(kc): return (r("QK_RCTL") | r("QK_RSFT") | (kc))
 def LCG(kc): return (r("QK_LCTL") | r("QK_LGUI") | (kc))
 def RCG(kc): return (r("QK_RCTL") | r("QK_RGUI") | (kc))
 
-# TODO: make sure bit packing is the same in new fw
 def LT(layer, kc): return (r("QK_LAYER_TAP") | (((layer)&0xF) << 8) | ((kc)&0xFF))
 def TO(layer): return (r("QK_TO") | (r("ON_PRESS") << 0x4) | ((layer)&0xFF))
 def MO(layer): return (r("QK_MOMENTARY") | ((layer)&0xFF))
