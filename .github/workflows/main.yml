@@ -7,13 +7,17 @@ jobs:
     runs-on: ubuntu-22.04
 
     container:
-      image: ubuntu:18.04
+      image: ubuntu:22.04
       options: --privileged
-      env:
-        LD_LIBRARY_PATH: /__w/vial-gui/vial-gui/util/python36/prefix/lib/
+    env:
+      PYTHON_VERSION: 3.12.2
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{env.PYTHON_VERSION}}
+        cache: pip
 
     - name: Install dependencies
       run: |
@@ -23,47 +27,40 @@ jobs:
         unzip *.zip
         gem install --no-document fpm
 
-    - name: Set up Python 3.6
-      run: ./util/setup_python36.sh
-
     - name: Setup venv
       run: |
-        ./util/python36/prefix/bin/python3 -m venv venv
+        python3 -m venv venv
         . venv/bin/activate
         pip install -r requirements.txt
 
     - name: Build
       run: |
-        . venv/bin/activate
-        fbs freeze
-        fbs installer
+        source venv/bin/activate
+        pyinstaller misc/Vial.spec
+        rm ./dist/Vial/{libgdk-3.so.0,libfontconfig.so.1}
         deactivate
-        ./pkg2appimage-*/pkg2appimage misc/Vial.yml
-        mv out/Vial-*.AppImage out/Vial-x86_64.AppImage
+        cp src/main/icons/linux/1024.png dist/Vial/Vial.png
+        cp misc/Vial.desktop dist/Vial/
+        cp misc/AppRun dist/Vial/
+        ./linuxdeploy-x86_64.AppImage --appdir dist/Vial --output appimage
+        mv Vial-*-x86_64.AppImage Vial-x86_64.AppImage
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: vial-linux
-        path: out/Vial-x86_64.AppImage
+        path: Vial-x86_64.AppImage
 
   build-mac:
     runs-on: macos-11
     env:
-      PYTHON_VERSION: 3.6.8
       MACOSX_DEPLOYMENT_TARGET: 10.9
 
     steps:
-    - uses: actions/checkout@v3
-
-    - name: Get Python
-      run: curl https://www.python.org/ftp/python/${PYTHON_VERSION}/python-${PYTHON_VERSION}-macosx${MACOSX_DEPLOYMENT_TARGET}.pkg -o "python.pkg"
-
-    - name: Verify download
-      run: shasum -a 256 -c <<< '4bcd53faffc98d193ef7cdccd5668de3829c702af4db45258819a84a2cab60d0 *python.pkg'
-
-    - name: Install Python
-      run: |
-        sudo installer -pkg python.pkg -target /
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{env.PYTHON_VERSION}}
+        cache: pip
 
     - name: Setup venv
       run: |
@@ -74,10 +71,10 @@ jobs:
     - name: Build
       run: |
         source venv/bin/activate
-        fbs freeze
+        pyinstaller misc/Vial.spec
         hdiutil create -volname Vial -srcfolder "target/Vial.app" -ov -format UDZO vial-mac.dmg
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: vial-mac
         path: vial-mac.dmg
@@ -86,10 +83,10 @@ jobs:
     runs-on: windows-2019
 
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-python@v4
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
       with:
-        python-version: '3.6.x'
+        python-version: ${{env.PYTHON_VERSION}}
 
     - name: Setup venv
       run: |
@@ -106,10 +103,10 @@ jobs:
     - name: Build
       run: |
         . .\venv\Scripts\activate.ps1
-        fbs freeze
-        Compress-Archive -Path "target\Vial" -DestinationPath vial-win.zip
+        pyinstaller misc/Vial.spec
+        Compress-Archive -Path "dist/Vial" -DestinationPath vial-win.zip
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: vial-win
         path: vial-win.zip
@@ -117,10 +114,10 @@ jobs:
     - name: Create installer
       run: |
         $env:Path += ";C:\Program Files (x86)\NSIS"
-        . .\venv\Scripts\activate.ps1
-        fbs installer
+        cd dist/Vial
+        makensis ../../src/installer/windows/Installer.nsi
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: vial-win-installer
         path: target\VialSetup.exe
