@@ -172,10 +172,11 @@ class MainWindow(QMainWindow):
         exit_act.setShortcut("Ctrl+Q")
         exit_act.triggered.connect(self.close)
 
+        file_menu = self.menuBar().addMenu(tr("Menu", "File"))
+        file_menu.addAction(layout_load_act)
+        file_menu.addAction(layout_save_act)
+
         if sys.platform != "emscripten":
-            file_menu = self.menuBar().addMenu(tr("Menu", "File"))
-            file_menu.addAction(layout_load_act)
-            file_menu.addAction(layout_save_act)
             file_menu.addSeparator()
             file_menu.addAction(sideload_json_act)
             file_menu.addAction(download_via_stack_act)
@@ -240,25 +241,46 @@ class MainWindow(QMainWindow):
         self.about_menu.addAction(self.about_keyboard_act)
         self.about_menu.addAction(about_vial_act)
 
+    def on_layout_loaded(self, layout):
+        """
+        Receives a message from the JS bridge when a layout has
+        been loaded via the JS File System API.
+        """
+        self.keymap_editor.restore_layout(layout)
+        self.rebuild()
+
     def on_layout_load(self):
-        dialog = QFileDialog()
-        dialog.setDefaultSuffix("vil")
-        dialog.setAcceptMode(QFileDialog.AcceptOpen)
-        dialog.setNameFilters(["Vial layout (*.vil)"])
-        if dialog.exec_() == QDialog.Accepted:
-            with open(dialog.selectedFiles()[0], "rb") as inf:
-                data = inf.read()
-            self.keymap_editor.restore_layout(data)
-            self.rebuild()
+        if sys.platform == "emscripten":
+            import vialglue
+            # Tells the JS bridge to open a file selection dialog
+            # so the user can load a layout.
+            vialglue.load_layout()
+        else:
+            dialog = QFileDialog()
+            dialog.setDefaultSuffix("vil")
+            dialog.setAcceptMode(QFileDialog.AcceptOpen)
+            dialog.setNameFilters(["Vial layout (*.vil)"])
+            if dialog.exec_() == QDialog.Accepted:
+                with open(dialog.selectedFiles()[0], "rb") as inf:
+                    data = inf.read()
+                self.keymap_editor.restore_layout(data)
+                self.rebuild()
 
     def on_layout_save(self):
-        dialog = QFileDialog()
-        dialog.setDefaultSuffix("vil")
-        dialog.setAcceptMode(QFileDialog.AcceptSave)
-        dialog.setNameFilters(["Vial layout (*.vil)"])
-        if dialog.exec_() == QDialog.Accepted:
-            with open(dialog.selectedFiles()[0], "wb") as outf:
-                outf.write(self.keymap_editor.save_layout())
+        if sys.platform == "emscripten":
+            import vialglue
+            layout = self.keymap_editor.save_layout()
+            # Passes the current layout to the JS bridge so it can
+            # open a file dialog and allow the user to save it to disk.
+            vialglue.save_layout(layout)
+        else:
+            dialog = QFileDialog()
+            dialog.setDefaultSuffix("vil")
+            dialog.setAcceptMode(QFileDialog.AcceptSave)
+            dialog.setNameFilters(["Vial layout (*.vil)"])
+            if dialog.exec_() == QDialog.Accepted:
+                with open(dialog.selectedFiles()[0], "wb") as outf:
+                    outf.write(self.keymap_editor.save_layout())
 
     def on_click_refresh(self):
         self.autorefresh.update(quiet=False, hard=True)

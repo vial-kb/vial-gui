@@ -15,6 +15,7 @@ from main_window import MainWindow
 # http://timlehr.com/python-exception-hooks-with-qt-message-box/
 from util import init_logger
 
+window = None
 
 def show_exception_box(log_msg):
     if QtWidgets.QApplication.instance() is not None:
@@ -65,6 +66,10 @@ def main(app):
     with open(app.get_resource("build_settings.json"), "r") as inf:
         app.build_settings = json.loads(inf.read())
     qt_exception_hook = UncaughtHook()
+
+    # Not sure of the best way to do this.
+    global window
     window = MainWindow(app)
     window.show()
+
     app.processEvents()
