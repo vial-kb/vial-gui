@@ -6,48 +6,19 @@ jobs:
   build-linux:
     runs-on: ubuntu-22.04
 
-    container:
-      image: ubuntu:18.04
-      options: --privileged
-      env:
-        LD_LIBRARY_PATH: /__w/vial-gui/vial-gui/util/python36/prefix/lib/
-
     steps:
     - uses: actions/checkout@v3
 
-    - name: Install dependencies
-      run: |
-        apt-get update
-        apt-get install -y libusb-1.0-0-dev libudev-dev ruby ruby-dev rubygems build-essential desktop-file-utils wget unzip zlib1g-dev liblzma-dev libssl-dev git imagemagick file libfuse2
-        wget https://github.com/AppImage/pkg2appimage/archive/38603d92359a48189c35debad9005e8e902e6070.zip
-        unzip *.zip
-        gem install --no-document fpm
-
-    - name: Set up Python 3.6
-      run: ./util/setup_python36.sh
-
-    - name: Setup venv
-      run: |
-        ./util/python36/prefix/bin/python3 -m venv venv
-        . venv/bin/activate
-        pip install -r requirements.txt
-
     - name: Build
-      run: |
-        . venv/bin/activate
-        fbs freeze
-        fbs installer
-        deactivate
-        ./pkg2appimage-*/pkg2appimage misc/Vial.yml
-        mv out/Vial-*.AppImage out/Vial-x86_64.AppImage
+      run: ./util/linux-builder/build-in-docker.sh
 
     - uses: actions/upload-artifact@v3
       with:
         name: vial-linux
-        path: out/Vial-x86_64.AppImage
+        path: util/linux-builder/output/Vial-x86_64.AppImage
 
   build-mac:
-    runs-on: macos-11
+    runs-on: macos-12
     env:
       PYTHON_VERSION: 3.6.8
       MACOSX_DEPLOYMENT_TARGET: 10.9
