@@ -26,7 +26,7 @@ keymap = {
     "KC_EQUAL": "+ ÷\n= ×",
     "KC_LBRACKET": "{ ‹\n[ «",
     "KC_RBRACKET": "} ›\n] »",
-    "KC_BSLASH": "| ¦\n\ ¬",
+    "KC_BSLASH": "| ¦\n\\ ¬",
     "KC_A": "A\n   ä",
     "KC_S": "S\n   ß",
     "KC_D": "D\n   đ",
