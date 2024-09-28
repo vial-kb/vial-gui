@@ -19,7 +19,7 @@ keymap = {
     "KC_P": "P\nЗ",
     "KC_LBRACKET": "{\n[ Х",
     "KC_RBRACKET": "}\n] Ї",
-    "KC_BSLASH": "| /\n\\ /",
+    "KC_BSLASH": "| /\n\\ \\",
     "KC_A": "A\nФ",
     "KC_S": "S\nІ",
     "KC_D": "D\nВ",
@@ -40,5 +40,7 @@ keymap = {
     "KC_M": "M\nЬ",
     "KC_COMMA": "<\n, Б",
     "KC_DOT": ">\n. Ю",
-    "KC_SLASH": "? ,\n/ ."
+    "KC_SLASH": "? ,\n/ .",
+    "KC_NONUS_HASH": "~ /\n# \\",
+    "KC_NONUS_BSLASH": "|\n\\ Ґ",
 }
