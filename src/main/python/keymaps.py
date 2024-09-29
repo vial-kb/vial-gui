@@ -24,8 +24,8 @@ KEYMAPS = [
     ("Swedish (QWERTY)", swedish.keymap),
     ("Swedish (SWERTY)", swedish_swerty.keymap),
     ("Swiss (QWERTZ)", swiss.keymap),
-    ("Ukrainian (ЙЦУКЕН)", ukrainian.keymap),
-    ("Turkish (QWERTY)", turkish.keymap)
+    ("Turkish (QWERTY)", turkish.keymap),
+    ("Ukrainian (ЙЦУКЕН)", ukrainian.keymap)
 ]
 
 # make sure that qmk IDs we used are all correct
