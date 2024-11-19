@@ -21,6 +21,7 @@ KEYMAPS = [
     ("Russian (ЙЦУКЕН)", russian.keymap),
     ("Slovak (QWERTY)", slovak.keymap),
     ("Spanish (QWERTY)", spanish.keymap),
+    ("Spanish (Dvorak)", spanish.keymap_dvorak),
     ("Swedish (QWERTY)", swedish.keymap),
     ("Swedish (SWERTY)", swedish_swerty.keymap),
     ("Swiss (QWERTZ)", swiss.keymap),
