@@ -19,6 +19,8 @@ KEYMAPS = [
     ("Latin American (QWERTY)", latam.keymap),
     ("Norwegian (QWERTY)", norwegian.keymap),
     ("Russian (ЙЦУКЕН)", russian.keymap),
+    ("Russian (braindefender, ortho)", russian.universal_braindefender_ortho),
+    ("Russian (braindefender, standard)", russian.universal_braindefender_standard),
     ("Slovak (QWERTY)", slovak.keymap),
     ("Spanish (QWERTY)", spanish.keymap),
     ("Swedish (QWERTY)", swedish.keymap),
