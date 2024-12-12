@@ -44,7 +44,7 @@ def hid_send(dev, msg, retries=1):
 
     data = b""
     first = True
-
+    retries = 1
     while retries > 0:
         retries -= 1
         if not first:
@@ -52,13 +52,19 @@ def hid_send(dev, msg, retries=1):
         first = False
         try:
             # add 00 at start for hidapi report id
-            if dev.write(b"\x00" + msg) != MSG_LEN + 1:
+            data = b"\x06" + msg;
+            if dev.write(data) != MSG_LEN + 1:
                 continue
+            logging.debug("write {}".format(data.hex()))
 
-            data = bytes(dev.read(MSG_LEN, timeout_ms=500))
+            data = bytes(dev.read(MSG_LEN+1, timeout_ms=500))
+            logging.debug("read {}".format(data.hex()))
+            if len(data) == MSG_LEN+1:
+                data= data[1:]
             if not data:
                 continue
         except OSError:
+            logging.error("hid_send {}", OSError)
             continue
         break
 
@@ -98,6 +104,7 @@ def find_vial_devices(via_stack_json, sideload_vid=None, sideload_pid=None, quie
 
     filtered = []
     for dev in hid.enumerate():
+        logging.debug("Matching {}".format(dev))
         if dev["vendor_id"] == sideload_vid and dev["product_id"] == sideload_pid:
             if not quiet:
                 logging.info("Trying VID={:04X}, PID={:04X}, serial={}, path={} - sideload".format(
@@ -105,7 +112,8 @@ def find_vial_devices(via_stack_json, sideload_vid=None, sideload_pid=None, quie
                 ))
             if is_rawhid(dev, quiet):
                 filtered.append(VialKeyboard(dev, sideload=True))
-        elif VIAL_SERIAL_NUMBER_MAGIC in dev["serial_number"]:
+        #elif VIAL_SERIAL_NUMBER_MAGIC in dev["serial_number"]:
+        elif dev["usage_page"]==65376:
             if not quiet:
                 logging.info("Matching VID={:04X}, PID={:04X}, serial={}, path={} - vial serial magic".format(
                     dev["vendor_id"], dev["product_id"], dev["serial_number"], dev["path"]
