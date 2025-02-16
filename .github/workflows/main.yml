@@ -7,24 +7,24 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Build
       run: ./util/linux-builder/build-in-docker.sh
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: vial-linux
         path: util/linux-builder/output/Vial-x86_64.AppImage
 
   build-mac:
-    runs-on: macos-12
+    runs-on: macos-13
     env:
       PYTHON_VERSION: 3.6.8
       MACOSX_DEPLOYMENT_TARGET: 10.9
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Get Python
       run: curl https://www.python.org/ftp/python/${PYTHON_VERSION}/python-${PYTHON_VERSION}-macosx${MACOSX_DEPLOYMENT_TARGET}.pkg -o "python.pkg"
@@ -48,7 +48,7 @@ jobs:
         fbs freeze
         hdiutil create -volname Vial -srcfolder "target/Vial.app" -ov -format UDZO vial-mac.dmg
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: vial-mac
         path: vial-mac.dmg
@@ -57,7 +57,7 @@ jobs:
     runs-on: windows-2019
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - uses: actions/setup-python@v4
       with:
         python-version: '3.6.x'
@@ -80,7 +80,7 @@ jobs:
         fbs freeze
         Compress-Archive -Path "target\Vial" -DestinationPath vial-win.zip
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: vial-win
         path: vial-win.zip
@@ -91,7 +91,7 @@ jobs:
         . .\venv\Scripts\activate.ps1
         fbs installer
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: vial-win-installer
         path: target\VialSetup.exe
