@@ -12,7 +12,7 @@ pyi-makespec \
     --add-data="../src/build/settings/mac.json:resources/settings" \
     --windowed \
     --noupx \
-    --icon="../src/main/icons/Icon.ico"
+    --icon="../src/main/icons/Icon.ico" \
     --argv-emulation \
     ./src/main/python/main.py
 ```

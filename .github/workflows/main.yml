@@ -4,10 +4,10 @@ on: [push, pull_request]
 
 jobs:
   build-linux:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
 
     container:
-      image: ubuntu:24.04
+      image: ubuntu:22.04
       options: --privileged
     env:
       PYTHON_VERSION: 3.12.2
@@ -19,9 +19,8 @@ jobs:
       run: |
         apt-get update
         apt-get install -y lsb-release libusb-1.0-0-dev libudev-dev ruby ruby-dev rubygems build-essential desktop-file-utils wget unzip zlib1g-dev liblzma-dev libssl-dev git imagemagick file libfuse2
-        wget -c $(wget -q https://api.github.com/repos/AppImageCommunity/pkg2appimage/releases -O - | grep "pkg2appimage-.*-x86_64.AppImage" | grep browser_download_url | head -n 1 | cut -d '"' -f 4)
-        chmod +x ./pkg2appimage-*.AppImage
-        gem install --no-document fpm
+        wget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
+        chmod +x ./appimagetool-x86_64.AppImage
 
     - uses: actions/setup-python@v5
       with:
@@ -41,8 +40,7 @@ jobs:
         cp src/main/icons/linux/1024.png dist/Vial/Vial.png
         cp misc/Vial.desktop dist/Vial/
         cp misc/AppRun dist/Vial/
-        ./pkg2appimage-*.AppImage --appdir dist/Vial --output appimage
-        mv Vial-*-x86_64.AppImage Vial-x86_64.AppImage
+        ./appimagetool-x86_64.AppImage dist/Vial
 
     - uses: actions/upload-artifact@v4
       with:
@@ -71,7 +69,7 @@ jobs:
       run: |
         . venv/bin/activate
         pyinstaller misc/Vial.spec
-        hdiutil create -volname Vial -srcfolder "target/Vial.app" -ov -format UDZO vial-mac.dmg
+        hdiutil create -volname Vial -srcfolder "dist/Vial.app" -ov -format UDZO vial-mac.dmg
 
     - uses: actions/upload-artifact@v4
       with:
@@ -119,4 +117,4 @@ jobs:
     - uses: actions/upload-artifact@v4
       with:
         name: vial-win-installer
-        path: target\VialSetup.exe
+        path: VialSetup.exe

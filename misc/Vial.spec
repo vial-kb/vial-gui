@@ -25,7 +25,7 @@ exe = EXE(
     bootloader_ignore_signals=False,
     strip=False,
     upx=False,
-    console=True,
+    console=False,
     disable_windowed_traceback=False,
     argv_emulation=True,
     target_arch=None,
@@ -41,4 +41,10 @@ coll = COLLECT(
     upx=False,
     upx_exclude=[],
     name='Vial',
+)
+app = BUNDLE(
+    coll,
+    name='Vial.app',
+    icon='../src/main/icons/Icon.ico',
+    bundle_identifier=None
 )

@@ -2,6 +2,7 @@
 from functools import cached_property
 from glob import glob
 import json
+from multiprocessing import freeze_support
 import os
 from os import path
 import ssl
@@ -107,6 +108,9 @@ class VialApplicationContext():
 
 
 if __name__ == '__main__':
+    # https://pyinstaller.org/en/stable/common-issues-and-pitfalls.html#multi-processing
+    freeze_support()
+
     if len(sys.argv) == 2 and sys.argv[1] == "--linux-recorder":
         from linux_keystroke_recorder import linux_keystroke_recorder
 

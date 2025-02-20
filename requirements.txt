@@ -1,16 +1,16 @@
 altgraph==0.17.4
 certifi==2024.2.2
 future==1.0.0
-hidapi==0.14.0
+hidapi==0.14.0.post4
 keyboard==0.13.5
 macholib==1.14
 packaging==24.0
 pefile==2023.2.7
-pyinstaller==6.5.0
-pyinstaller-hooks-contrib==2024.3
-PyQt5==5.15.7
-PyQt5-Qt5==5.15.2
-PyQt5-sip==12.13.0
+pillow==11.1.0
+pyinstaller==6.12.0
+pyinstaller-hooks-contrib==2025.1
+PyQt5==5.15.11
+PyQt5-sip==12.17.0
 pywin32==306; sys_platform == 'win32'
 pywin32-ctypes==0.2.2
 setuptools==69.2.0
