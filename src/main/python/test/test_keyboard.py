@@ -2,7 +2,7 @@ import unittest
 import lzma
 import struct
 
-
+from keycodes.keycodes import Keycode
 from protocol.keyboard_comm import Keyboard
 from util import chunks, MSG_LEN
 
@@ -13,6 +13,10 @@ LAYOUT_2x2 = """
 LAYOUT_ENCODER = r"""
 {"name":"test","vendorId":"0x0000","productId":"0x1111","lighting":"none","matrix":{"rows":1,"cols":1},"layouts":{"keymap":[["0,0\n\n\n\n\n\n\n\n\ne","0,1\n\n\n\n\n\n\n\n\ne"],["0,0"]]}}
 """
+
+
+def s(kc):
+    return Keycode.serialize(kc)
 
 
 class SimulatedDevice:
@@ -118,14 +122,14 @@ class TestKeyboard(unittest.TestCase):
 
         kb, dev = self.prepare_keyboard(LAYOUT_2x2, [[[1, 2], [3, 4]], [[5, 6], [7, 8]]])
         self.assertEqual(kb.layers, 2)
-        self.assertEqual(kb.layout[(0, 0, 0)], 1)
-        self.assertEqual(kb.layout[(0, 0, 1)], 2)
-        self.assertEqual(kb.layout[(0, 1, 0)], 3)
-        self.assertEqual(kb.layout[(0, 1, 1)], 4)
-        self.assertEqual(kb.layout[(1, 0, 0)], 5)
-        self.assertEqual(kb.layout[(1, 0, 1)], 6)
-        self.assertEqual(kb.layout[(1, 1, 0)], 7)
-        self.assertEqual(kb.layout[(1, 1, 1)], 8)
+        self.assertEqual(kb.layout[(0, 0, 0)], s(1))
+        self.assertEqual(kb.layout[(0, 0, 1)], s(2))
+        self.assertEqual(kb.layout[(0, 1, 0)], s(3))
+        self.assertEqual(kb.layout[(0, 1, 1)], s(4))
+        self.assertEqual(kb.layout[(1, 0, 0)], s(5))
+        self.assertEqual(kb.layout[(1, 0, 1)], s(6))
+        self.assertEqual(kb.layout[(1, 1, 0)], s(7))
+        self.assertEqual(kb.layout[(1, 1, 1)], s(8))
         dev.finish()
 
     def test_set_key(self):

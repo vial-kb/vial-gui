@@ -4,7 +4,7 @@ import json
 import lzma
 from collections import OrderedDict
 
-from keycodes import RESET_KEYCODE, Keycode
+from keycodes.keycodes import RESET_KEYCODE, Keycode, recreate_keyboard_keycodes
 from kle_serial import Serial as KleSerial
 from protocol.combo import ProtocolCombo
 from protocol.constants import CMD_VIA_GET_PROTOCOL_VERSION, CMD_VIA_GET_KEYBOARD_VALUE, CMD_VIA_SET_KEYBOARD_VALUE, \
@@ -24,7 +24,7 @@ from unlocker import Unlocker
 from util import MSG_LEN, hid_send
 
 SUPPORTED_VIA_PROTOCOL = [-1, 9]
-SUPPORTED_VIAL_PROTOCOL = [-1, 0, 1, 2, 3, 4, 5]
+SUPPORTED_VIAL_PROTOCOL = [-1, 0, 1, 2, 3, 4, 5, 6]
 
 
 class ProtocolError(Exception):
@@ -78,13 +78,20 @@ class Keyboard(ProtocolMacro, ProtocolDynamic, ProtocolTapDance, ProtocolCombo, 
 
         self.reload_layout(sideload_json)
         self.reload_layers()
-        self.reload_keymap()
-        self.reload_macros()
+
+        self.reload_macros_early()
         self.reload_persistent_rgb()
         self.reload_rgb()
         self.reload_settings()
 
         self.reload_dynamic()
+
+        # based on the number of macros, tapdance, etc, this will generate global keycode arrays
+        recreate_keyboard_keycodes(self)
+
+        # at this stage we have correct keycode info and can reload everything that depends on keycodes
+        self.reload_keymap()
+        self.reload_macros_late()
         self.reload_tap_dance()
         self.reload_combo()
         self.reload_key_override()
@@ -203,15 +210,15 @@ class Keyboard(ProtocolMacro, ProtocolDynamic, ProtocolTapDance, ProtocolCombo, 
                                        .format(row, col, self.rows, self.cols))
                 # determine where this (layer, row, col) will be located in keymap array
                 offset = layer * self.rows * self.cols * 2 + row * self.cols * 2 + col * 2
-                keycode = struct.unpack(">H", keymap[offset:offset+2])[0]
+                keycode = Keycode.serialize(struct.unpack(">H", keymap[offset:offset+2])[0])
                 self.layout[(layer, row, col)] = keycode
 
         for layer in range(self.layers):
             for idx in self.encoderpos:
                 data = self.usb_send(self.dev, struct.pack("BBBB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_GET_ENCODER, layer, idx),
                                      retries=20)
-                self.encoder_layout[(layer, idx, 0)] = struct.unpack(">H", data[0:2])[0]
-                self.encoder_layout[(layer, idx, 1)] = struct.unpack(">H", data[2:4])[0]
+                self.encoder_layout[(layer, idx, 0)] = Keycode.serialize(struct.unpack(">H", data[0:2])[0])
+                self.encoder_layout[(layer, idx, 1)] = Keycode.serialize(struct.unpack(">H", data[2:4])[0])
 
         if self.layout_labels:
             data = self.usb_send(self.dev, struct.pack("BB", CMD_VIA_GET_KEYBOARD_VALUE, VIA_LAYOUT_OPTIONS),
@@ -302,28 +309,23 @@ class Keyboard(ProtocolMacro, ProtocolDynamic, ProtocolTapDance, ProtocolCombo, 
                 self.settings[qsid] = QmkSettings.qsid_deserialize(qsid, data[1:])
 
     def set_key(self, layer, row, col, code):
-        if code < 0:
-            return
-
         key = (layer, row, col)
         if self.layout[key] != code:
             if code == RESET_KEYCODE:
                 Unlocker.unlock(self)
 
-            self.usb_send(self.dev, struct.pack(">BBBBH", CMD_VIA_SET_KEYCODE, layer, row, col, code), retries=20)
+            self.usb_send(self.dev, struct.pack(">BBBBH", CMD_VIA_SET_KEYCODE, layer, row, col,
+                                                Keycode.deserialize(code)), retries=20)
             self.layout[key] = code
 
     def set_encoder(self, layer, index, direction, code):
-        if code < 0:
-            return
-
         key = (layer, index, direction)
         if self.encoder_layout[key] != code:
             if code == RESET_KEYCODE:
                 Unlocker.unlock(self)
 
             self.usb_send(self.dev, struct.pack(">BBBBBH", CMD_VIA_VIAL_PREFIX, CMD_VIAL_SET_ENCODER,
-                                                layer, index, direction, code), retries=20)
+                                                layer, index, direction, Keycode.deserialize(code)), retries=20)
             self.encoder_layout[key] = code
 
     def set_layout_options(self, options):
@@ -376,7 +378,7 @@ class Keyboard(ProtocolMacro, ProtocolDynamic, ProtocolTapDance, ProtocolCombo, 
                 layer.append(row)
                 for c in range(self.cols):
                     val = self.layout.get((l, r, c), -1)
-                    row.append(Keycode.serialize(val))
+                    row.append(val)
 
         encoder_layout = []
         for l in range(self.layers):
@@ -384,8 +386,8 @@ class Keyboard(ProtocolMacro, ProtocolDynamic, ProtocolTapDance, ProtocolCombo, 
             for e in range(self.encoder_count):
                 cw = (l, e, 0)
                 ccw = (l, e, 1)
-                layer.append([Keycode.serialize(self.encoder_layout.get(cw, -1)),
-                              Keycode.serialize(self.encoder_layout.get(ccw, -1))])
+                layer.append([self.encoder_layout.get(cw, -1),
+                              self.encoder_layout.get(ccw, -1)])
             encoder_layout.append(layer)
 
         data["layout"] = layout
@@ -411,13 +413,13 @@ class Keyboard(ProtocolMacro, ProtocolDynamic, ProtocolTapDance, ProtocolCombo, 
             for r, row in enumerate(layer):
                 for c, code in enumerate(row):
                     if (l, r, c) in self.layout:
-                        self.set_key(l, r, c, Keycode.deserialize(code))
+                        self.set_key(l, r, c, Keycode.serialize(Keycode.deserialize(code)))
 
         # restore encoders
         for l, layer in enumerate(data["encoder_layout"]):
             for e, encoder in enumerate(layer):
-                self.set_encoder(l, e, 0, Keycode.deserialize(encoder[0]))
-                self.set_encoder(l, e, 1, Keycode.deserialize(encoder[1]))
+                self.set_encoder(l, e, 0, Keycode.serialize(Keycode.deserialize(encoder[0])))
+                self.set_encoder(l, e, 1, Keycode.serialize(Keycode.deserialize(encoder[1])))
 
         self.set_layout_options(data["layout_options"])
         self.restore_macros(data.get("macro"))

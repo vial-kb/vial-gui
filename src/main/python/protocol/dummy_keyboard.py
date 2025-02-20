@@ -9,30 +9,27 @@ class DummyKeyboard(Keyboard):
     def reload_keymap(self):
         for layer in range(self.layers):
             for row, col in self.rowcol.keys():
-                self.layout[(layer, row, col)] = 0
+                self.layout[(layer, row, col)] = "KC_NO"
 
         for layer in range(self.layers):
             for idx in self.encoderpos:
-                self.encoder_layout[(layer, idx, 0)] = 0
-                self.encoder_layout[(layer, idx, 1)] = 0
+                self.encoder_layout[(layer, idx, 0)] = "KC_NO"
+                self.encoder_layout[(layer, idx, 1)] = "KC_NO"
 
         if self.layout_labels:
             self.layout_options = 0
 
-    def reload_macros(self):
+    def reload_macros_early(self):
         self.macro_count = 16
         self.macro_memory = 900
 
+    def reload_macros_late(self):
         self.macro = b"\x00" * self.macro_count
 
     def set_key(self, layer, row, col, code):
-        if code < 0:
-            return
         self.layout[(layer, row, col)] = code
 
     def set_encoder(self, layer, index, direction, code):
-        if code < 0:
-            return
         self.encoder_layout[(layer, index, direction)] = code
 
     def set_layout_options(self, options):

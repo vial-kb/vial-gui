@@ -5,7 +5,7 @@ from PyQt5 import QtCore
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QPushButton, QApplication
 
-from keycodes import Keycode
+from keycodes.keycodes import Keycode
 from macro.macro_key import KeyUp, KeyDown
 from util import tr
 
@@ -41,7 +41,7 @@ class WindowsRecorder(QWidget):
         self.show()
 
         center = QApplication.desktop().availableGeometry(self).center()
-        self.move(center.x() - self.width() * 0.5, 0)
+        self.move(round(center.x() - self.width() * 0.5), 0)
 
         keyboard.hook(self.on_key)
 

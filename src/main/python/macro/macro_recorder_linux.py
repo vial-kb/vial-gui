@@ -7,7 +7,7 @@ from PyQt5.QtCore import pyqtSignal, QProcess
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QPushButton, QApplication
 from fbs_runtime.application_context import is_frozen
 
-from keycodes import Keycode
+from keycodes.keycodes import Keycode
 from macro.macro_key import KeyUp, KeyDown
 from util import tr
 
@@ -36,7 +36,7 @@ class LinuxRecorder(QWidget):
         self.show()
 
         center = QApplication.desktop().availableGeometry(self).center()
-        self.move(center.x() - self.width() * 0.5, 0)
+        self.move(round(center.x() - self.width() * 0.5), 0)
 
         args = [sys.executable]
         if os.getenv("APPIMAGE"):

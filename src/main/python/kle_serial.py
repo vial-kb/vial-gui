@@ -185,7 +185,7 @@ class Serial:
                         if "d" in item:
                             current.decal = item["d"]
                         if "g" in item and item["g"]:
-                            current.ghost = item.g
+                            current.ghost = item["g"]
                         if "sm" in item:
                             current.sm = item["sm"]
                         if "sb" in item:

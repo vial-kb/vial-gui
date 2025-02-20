@@ -1,7 +1,7 @@
 # coding: utf-8
 
 keymap = {
-    "KC_GRAVE": "~\n` Ё",
+    "KC_GRAVE": "~ ₴\n` ʼ",
     "KC_2": '@ "\n2',
     "KC_3": "# №\n3",
     "KC_4": "$ ;\n4",
@@ -18,10 +18,10 @@ keymap = {
     "KC_O": "O\nЩ",
     "KC_P": "P\nЗ",
     "KC_LBRACKET": "{\n[ Х",
-    "KC_RBRACKET": "}\n] Ъ",
-    "KC_BSLASH": "| /\n\\",
+    "KC_RBRACKET": "}\n] Ї",
+    "KC_BSLASH": "| /\n\\ \\",
     "KC_A": "A\nФ",
-    "KC_S": "S\nЫ",
+    "KC_S": "S\nІ",
     "KC_D": "D\nВ",
     "KC_F": "F\nА",
     "KC_G": "G\nП",
@@ -30,7 +30,7 @@ keymap = {
     "KC_K": "K\nЛ",
     "KC_L": "L\nД",
     "KC_SCOLON": ":\n; Ж",
-    "KC_QUOTE": "\"\n' Э",
+    "KC_QUOTE": "\"\n' Є",
     "KC_Z": "Z\nЯ",
     "KC_X": "X\nЧ",
     "KC_C": "C\nС",
@@ -40,5 +40,7 @@ keymap = {
     "KC_M": "M\nЬ",
     "KC_COMMA": "<\n, Б",
     "KC_DOT": ">\n. Ю",
-    "KC_SLASH": "? ,\n/ ."
+    "KC_SLASH": "? ,\n/ .",
+    "KC_NONUS_HASH": "~ /\n# \\",
+    "KC_NONUS_BSLASH": "|\n\\ Ґ",
 }

@@ -15,12 +15,10 @@ if sys.platform == "emscripten":
             print("opening {}...".format(path))
 
         def write(self, data):
-            print("WRITE {}".format(data.hex()))
             return vialglue.write_device(data)
 
         def read(self, length, timeout_ms=0):
             data = vialglue.read_device()
-            print("READ {}".format(data.hex()))
             return data
 
 

@@ -47,15 +47,6 @@ class MacroRecorder(BasicEditor):
         self.recording_append = False
 
         self.tabs = TabWidgetWithKeycodes()
-        for x in range(32):
-            tab = MacroTab(self, self.recorder is not None)
-            tab.changed.connect(self.on_change)
-            tab.record.connect(self.on_record)
-            tab.record_stop.connect(self.on_tab_stop)
-            self.macro_tabs.append(tab)
-            w = QWidget()
-            w.setLayout(tab)
-            self.macro_tab_w.append(w)
 
         self.lbl_memory = QLabel()
 
@@ -80,6 +71,16 @@ class MacroRecorder(BasicEditor):
         if not self.valid():
             return
         self.keyboard = self.device.keyboard
+
+        for x in range(self.keyboard.macro_count - len(self.macro_tab_w)):
+            tab = MacroTab(self, self.recorder is not None)
+            tab.changed.connect(self.on_change)
+            tab.record.connect(self.on_record)
+            tab.record_stop.connect(self.on_tab_stop)
+            self.macro_tabs.append(tab)
+            w = QWidget()
+            w.setLayout(tab)
+            self.macro_tab_w.append(w)
 
         # only show the number of macro editors that keyboard supports
         while self.tabs.count() > 0:
@@ -133,7 +134,7 @@ class MacroRecorder(BasicEditor):
                 actions.append(ActionText(k.string))
             else:
                 cls = {KeyDown: ActionDown, KeyUp: ActionUp, KeyTap: ActionTap}[type(k)]
-                actions.append(cls([k.keycode.code]))
+                actions.append(cls([k.keycode.qmk_id]))
 
         # merge: i.e. replace multiple instances of KeyDown with a single multi-key ActionDown, etc
         actions = self.keyboard.macro_deserialize(self.keyboard.macro_serialize(actions))

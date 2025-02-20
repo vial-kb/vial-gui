@@ -4,50 +4,27 @@ on: [push, pull_request]
 
 jobs:
   build-linux:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
 
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-python@v1
-      with:
-        python-version: '3.6.x'
-
-    - name: Install dependencies
-      run: |
-        sudo apt-get install libusb-1.0-0-dev libudev-dev ruby ruby-dev rubygems build-essential desktop-file-utils
-        wget https://github.com/AppImage/pkg2appimage/archive/38603d92359a48189c35debad9005e8e902e6070.zip
-        unzip *.zip
-        sudo gem install --no-document fpm
-
-    - name: Setup venv
-      run: |
-        python -m venv venv
-        source venv/bin/activate
-        pip install -r requirements.txt
+    - uses: actions/checkout@v4
 
     - name: Build
-      run: |
-        source venv/bin/activate
-        fbs freeze
-        find -name libgdk-3.so.0 | xargs rm
-        fbs installer
-        deactivate
-        ./pkg2appimage-*/pkg2appimage misc/Vial.yml
-        mv out/Vial-*.AppImage out/Vial-x86_64.AppImage
+      run: ./util/linux-builder/build-in-docker.sh
 
-    - uses: actions/upload-artifact@v1
+    - uses: actions/upload-artifact@v4
       with:
         name: vial-linux
-        path: out/Vial-x86_64.AppImage
+        path: util/linux-builder/output/Vial-x86_64.AppImage
 
   build-mac:
-    runs-on: macos-10.15
+    runs-on: macos-13
     env:
       PYTHON_VERSION: 3.6.8
       MACOSX_DEPLOYMENT_TARGET: 10.9
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
     - name: Get Python
       run: curl https://www.python.org/ftp/python/${PYTHON_VERSION}/python-${PYTHON_VERSION}-macosx${MACOSX_DEPLOYMENT_TARGET}.pkg -o "python.pkg"
@@ -71,7 +48,7 @@ jobs:
         fbs freeze
         hdiutil create -volname Vial -srcfolder "target/Vial.app" -ov -format UDZO vial-mac.dmg
 
-    - uses: actions/upload-artifact@v1
+    - uses: actions/upload-artifact@v4
       with:
         name: vial-mac
         path: vial-mac.dmg
@@ -80,8 +57,8 @@ jobs:
     runs-on: windows-2019
 
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-python@v1
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v4
       with:
         python-version: '3.6.x'
 
@@ -103,7 +80,7 @@ jobs:
         fbs freeze
         Compress-Archive -Path "target\Vial" -DestinationPath vial-win.zip
 
-    - uses: actions/upload-artifact@v1
+    - uses: actions/upload-artifact@v4
       with:
         name: vial-win
         path: vial-win.zip
@@ -114,7 +91,7 @@ jobs:
         . .\venv\Scripts\activate.ps1
         fbs installer
 
-    - uses: actions/upload-artifact@v1
+    - uses: actions/upload-artifact@v4
       with:
         name: vial-win-installer
         path: target\VialSetup.exe

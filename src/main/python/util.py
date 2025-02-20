@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 import logging
 import os
+import pathlib
 import sys
 import time
 from logging.handlers import RotatingFileHandler
@@ -10,7 +11,7 @@ from PyQt5.QtGui import QPalette
 from PyQt5.QtWidgets import QApplication, QWidget, QScrollArea, QFrame
 
 from hidproxy import hid
-from keycodes import Keycode
+from keycodes.keycodes import Keycode
 from keymaps import KEYMAPS
 
 tr = QCoreApplication.translate
@@ -146,8 +147,7 @@ def pad_for_vibl(msg):
 def init_logger():
     logging.basicConfig(level=logging.INFO)
     directory = QStandardPaths.writableLocation(QStandardPaths.AppLocalDataLocation)
-    if not os.path.exists(directory):
-        os.mkdir(directory)
+    pathlib.Path(directory).mkdir(parents=True, exist_ok=True)
     path = os.path.join(directory, "vial.log")
     handler = RotatingFileHandler(path, maxBytes=5 * 1024 * 1024, backupCount=5)
     handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(module)s:%(lineno)d - %(message)s"))
@@ -190,7 +190,10 @@ class KeycodeDisplay:
         text = cls.get_label(code)
         tooltip = Keycode.tooltip(code)
         mask = Keycode.is_mask(code)
-        mask_text = cls.get_label(code & 0xFF)
+        mask_text = ""
+        inner = Keycode.find_inner_keycode(code)
+        if inner:
+            mask_text = cls.get_label(inner.qmk_id)
         if mask:
             text = text.split("\n")[0]
         widget.masked = mask
@@ -201,7 +204,7 @@ class KeycodeDisplay:
             widget.setColor(QApplication.palette().color(QPalette.Link))
         else:
             widget.setColor(None)
-        if mask and cls.code_is_overriden(code & 0xFF):
+        if inner and mask and cls.code_is_overriden(inner.qmk_id):
             widget.setMaskColor(QApplication.palette().color(QPalette.Link))
         else:
             widget.setMaskColor(None)

@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QVBoxLayout, QLineEdit, QLabel
 
-from keycodes import Keycode
+from keycodes.keycodes import Keycode
 from util import tr
 
 
@@ -27,10 +27,7 @@ class AnyKeycodeDialog(QDialog):
         self.setLayout(self.layout)
 
         self.value = initial
-        ser = Keycode.serialize(initial)
-        if isinstance(ser, int):
-            ser = hex(ser)
-        self.txt_entry.setText(ser)
+        self.txt_entry.setText(initial)
         self.txt_entry.selectAll()
         self.on_change()
 
@@ -43,16 +40,16 @@ class AnyKeycodeDialog(QDialog):
             err = str(e)
 
         if not text:
-            self.value = -1
+            self.value = ""
             self.lbl_computed.setText(tr("AnyKeycodeDialog", "Enter an expression"))
         elif err:
-            self.value = -1
+            self.value = ""
             self.lbl_computed.setText(tr("AnyKeycodeDialog", "Invalid input: {}").format(err))
         elif isinstance(value, int):
-            self.value = value
+            self.value = Keycode.serialize(value)
             self.lbl_computed.setText(tr("AnyKeycodeDialog", "Computed value: 0x{:X}").format(value))
         else:
-            self.value = -1
+            self.value = ""
             self.lbl_computed.setText(tr("AnyKeycodeDialog", "Invalid input"))
 
-        self.buttons.button(QDialogButtonBox.Ok).setEnabled(0 <= self.value < 2 ** 16)
+        self.buttons.button(QDialogButtonBox.Ok).setEnabled(self.value != "")

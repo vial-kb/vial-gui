@@ -211,7 +211,14 @@ class QmkRgblightHandler(BasicHandler):
         self.device.keyboard.set_qmk_rgblight_effect(index)
 
     def on_underglow_color(self):
-        color = QColorDialog.getColor(self.current_color())
+        self.dlg_color = QColorDialog()
+        self.dlg_color.setModal(True)
+        self.dlg_color.finished.connect(self.on_underglow_color_finished)
+        self.dlg_color.setCurrentColor(self.current_color())
+        self.dlg_color.show()
+
+    def on_underglow_color_finished(self):
+        color = self.dlg_color.selectedColor()
         if not color.isValid():
             return
         self.underglow_color.setStyleSheet("QWidget { background-color: %s}" % color.name())
@@ -322,7 +329,14 @@ class VialRGBHandler(BasicHandler):
         self.keyboard.set_vialrgb_mode(self.effects[index].idx)
 
     def on_rgb_color(self):
-        color = QColorDialog.getColor(self.current_color())
+        self.dlg_color = QColorDialog()
+        self.dlg_color.setModal(True)
+        self.dlg_color.finished.connect(self.on_rgb_color_finished)
+        self.dlg_color.setCurrentColor(self.current_color())
+        self.dlg_color.show()
+
+    def on_rgb_color_finished(self):
+        color = self.dlg_color.selectedColor()
         if not color.isValid():
             return
         self.rgb_color.setStyleSheet("QWidget { background-color: %s}" % color.name())
