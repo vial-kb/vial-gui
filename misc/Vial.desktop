@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Vial
+Type=Application
+Exec=Vial
+Terminal=false
+NoDisplay=false
+Categories=Utility;
+Version=1.0
+Icon=Vial
