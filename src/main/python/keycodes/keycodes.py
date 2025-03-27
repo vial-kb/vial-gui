@@ -511,6 +511,20 @@ KEYCODES_BACKLIGHT = [
     K("RGB_M_X", "RGB\nMode X", "RGB Mode: Christmas"),
     K("RGB_M_G", "RGB\nMode G", "RGB Mode: Gradient"),
     K("RGB_M_T", "RGB\nMode T", "RGB Mode: Test"),
+
+    K("RM_ON", "RGBM\nOn", "Turn on RGB Matrix"),
+    K("RM_OFF", "RGBM\nOff", "Turn off RGB Matrix"),
+    K("RM_TOGG", "RGBM\nTogg", "Toggle RGB Matrix on or off"),
+    K("RM_NEXT", "RGBM\nNext", "Cycle through animations"),
+    K("RM_PREV", "RGBM\nPrev", "Cycle through animations in reverse"),
+    K("RM_HUEU", "RGBM\nHue +", "Cycle through hue"),
+    K("RM_HUED", "RGBM\nHue -", "Cycle through hue in reverse"),
+    K("RM_SATU", "RGBM\nSat +", "Increase the saturation"),
+    K("RM_SATD", "RGBM\nSat -", "Decrease the saturation"),
+    K("RM_VALU", "RGBM\nBright +", "Increase the brightness level"),
+    K("RM_VALD", "RGBM\nBright -", "Decrease the brightness level"),
+    K("RM_SPDU", "RGBM\nSpeed +", "Increase the animation speed"),
+    K("RM_SPDD", "RGBM\nSpeed -", "Decrease the animation speed"),
 ]
 
 KEYCODES_MEDIA = [

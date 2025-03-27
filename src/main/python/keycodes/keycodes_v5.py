@@ -558,6 +558,22 @@ class keycodes_v5:
 
         "QMK_LM_SHIFT": 4,
         "QMK_LM_MASK": 0xF,
+
+        # TODO: these keycodes don't actually exist in v5; we need fake ones here to unbreak the build
+        # TODO: these should be removed after we can move keycodes to be owned by the Keyboard object and support optional/not implemented keycodes
+        "RM_ON": 0x9990,
+        "RM_OFF": 0x9991,
+        "RM_TOGG": 0x9992,
+        "RM_NEXT": 0x9993,
+        "RM_PREV": 0x9994,
+        "RM_HUEU": 0x9995,
+        "RM_HUED": 0x9996,
+        "RM_SATU": 0x9997,
+        "RM_SATD": 0x9998,
+        "RM_VALU": 0x9999,
+        "RM_VALD": 0x999a,
+        "RM_SPDU": 0x999b,
+        "RM_SPDD": 0x999c,
     }
 
     masked = set()

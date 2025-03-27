@@ -558,6 +558,20 @@ class keycodes_v6:
 
         "QMK_LM_SHIFT": 5,
         "QMK_LM_MASK": 0x1F,
+
+        "RM_ON": 0x7840,
+        "RM_OFF": 0x7841,
+        "RM_TOGG": 0x7842,
+        "RM_NEXT": 0x7843,
+        "RM_PREV": 0x7844,
+        "RM_HUEU": 0x7845,
+        "RM_HUED": 0x7846,
+        "RM_SATU": 0x7847,
+        "RM_SATD": 0x7848,
+        "RM_VALU": 0x7849,
+        "RM_VALD": 0x784A,
+        "RM_SPDU": 0x784B,
+        "RM_SPDD": 0x784C,
     }
 
     masked = set()
