@@ -3,6 +3,7 @@ import os.path
 import struct
 
 from PyQt5.QtCore import QPoint
+from PyQt5.QtWidgets import QPushButton
 from pytestqt.qt_compat import qt_api
 
 from main_window import MainWindow
@@ -205,6 +206,7 @@ def test_about_keyboard(qtbot):
 
 
 def test_key_change(qtbot):
+    """ Tests changing keys in a keymap """
     mw, vk = prepare(qtbot, FAKE_KEYBOARD)
 
     # nothing should be selected yet in the keyboard display
@@ -297,3 +299,32 @@ def test_key_change(qtbot):
     assert not mw.keymap_editor.container.active_mask
     assert ak.isVisible()
     assert not bk.isVisible()
+
+
+def test_keymap_zoom(qtbot):
+    """ Tests zooming keymap in/out using +/- keys """
+    mw, vk = prepare(qtbot, FAKE_KEYBOARD)
+
+    btn_plus = mw.keymap_editor.layout_size.itemAt(0).widget()
+    btn_minus = mw.keymap_editor.layout_size.itemAt(1).widget()
+    # TODO: resolve this field collision, +/- are SquareButton which overrides text
+    assert QPushButton.text(btn_plus) == "+"
+    assert QPushButton.text(btn_minus) == "-"
+
+    # grab area for first widget
+    scale_initial = mw.keymap_editor.container.scale
+
+    # click the plus button
+    qtbot.mouseClick(btn_plus, qt_api.QtCore.Qt.MouseButton.LeftButton)
+    # area got bigger
+    assert mw.keymap_editor.container.scale > scale_initial
+
+    # click the minus button
+    qtbot.mouseClick(btn_minus, qt_api.QtCore.Qt.MouseButton.LeftButton)
+    # area back to the initial
+    assert abs(mw.keymap_editor.container.scale - scale_initial) < 0.01
+
+    # click the minus button
+    qtbot.mouseClick(btn_minus, qt_api.QtCore.Qt.MouseButton.LeftButton)
+    # area got smaller
+    assert mw.keymap_editor.container.scale < scale_initial
