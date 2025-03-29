@@ -16,7 +16,7 @@ class DeletableKeyWidget(KeyWidget):
     def keyReleaseEvent(self, ev):
         # remove this keycode from the sequence when delete is pressed
         if ev.key() == Qt.Key_Delete:
-            self.set_keycode(0)
+            self.set_keycode("KC_NO")
 
 
 class BasicActionUI(QObject):
@@ -127,7 +127,7 @@ class ActionSequenceUI(BasicActionUI):
     def on_change(self):
         for x in range(len(self.act.sequence)):
             kc = self.widgets[x].keycode
-            if kc == 0:
+            if kc == "KC_NO":
                 # asked to remove this item
                 del self.act.sequence[x]
                 self.recreate_sequence()
