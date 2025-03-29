@@ -328,3 +328,70 @@ def test_keymap_zoom(qtbot):
     qtbot.mouseClick(btn_minus, qt_api.QtCore.Qt.MouseButton.LeftButton)
     # area got smaller
     assert mw.keymap_editor.container.scale < scale_initial
+
+
+def test_layer_switch(qtbot):
+    """ Tests setting keycodes across different layers """
+    mw, vk = prepare(qtbot, FAKE_KEYBOARD)
+
+    ak = mw.keymap_editor.tabbed_keycodes.all_keycodes
+    bk = mw.keymap_editor.tabbed_keycodes.basic_keycodes
+    c = mw.keymap_editor.container
+
+    def find_key_btn(start, text):
+        for w in start.findChildren(SquareButton):
+            if w.isVisible() and w.text == text:
+                return w
+        raise RuntimeError("cannot find a visible key button with text='{}'".format(text))
+
+    # initial keycode must be KC_NO
+    assert vk.keymap[0][0][0] == 0
+
+    # clicking on first key must activate it
+    point = c.widgets[0].bbox[0]
+    qtbot.mouseClick(c, qt_api.QtCore.Qt.MouseButton.LeftButton,
+                     pos=QPoint(int(point.x()), int(point.y())))
+    assert c.active_key == c.widgets[0]
+
+    # change current key to Z
+    qtbot.mouseClick(find_key_btn(ak, "Z"), qt_api.QtCore.Qt.MouseButton.LeftButton)
+    assert vk.keymap[0][0][0] == 0x1D
+    assert vk.keymap[1][0][0] == 0
+
+    # make sure display for the widget now says Z
+    assert c.widgets[0].text == "Z"
+    # and that the next key is selected
+    assert c.active_key == c.widgets[1]
+    assert not c.active_mask
+
+    # go to layer 1
+    btn_layer_0 = mw.keymap_editor.layer_buttons[0]
+    btn_layer_1 = mw.keymap_editor.layer_buttons[1]
+    # TODO: resolve this field collision, +/- are SquareButton which overrides text
+    assert QPushButton.text(btn_layer_0) == "0"
+    assert QPushButton.text(btn_layer_1) == "1"
+
+    qtbot.mouseClick(btn_layer_1, qt_api.QtCore.Qt.MouseButton.LeftButton)
+    # check the current key got deselected
+    assert c.active_key is None
+    assert not c.active_mask
+
+    # check the widget now displays layer 1 data, i.e. empty string as it's not set yet
+    assert c.widgets[0].text == ""
+
+    # click the key again
+    qtbot.mouseClick(c, qt_api.QtCore.Qt.MouseButton.LeftButton,
+                     pos=QPoint(int(point.x()), int(point.y())))
+    assert c.active_key == c.widgets[0]
+
+    # change current key to Y
+    qtbot.mouseClick(find_key_btn(ak, "Y"), qt_api.QtCore.Qt.MouseButton.LeftButton)
+    assert vk.keymap[0][0][0] == 0x1D
+    assert vk.keymap[1][0][0] == 0x1C
+
+    # make sure display for the widget now says Y
+    assert c.widgets[0].text == "Y"
+
+    # go back to the layer 0 and make sure the button got redrawn to Z
+    qtbot.mouseClick(btn_layer_0, qt_api.QtCore.Qt.MouseButton.LeftButton)
+    assert c.widgets[0].text == "Z"
