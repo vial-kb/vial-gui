@@ -104,13 +104,15 @@ class TestKeyboard(unittest.TestCase):
         dev.expect_keyboard_id(0)
         dev.expect_layout(layout)
         dev.expect_layers(len(keymap))
-        dev.expect_keymap(keymap)
-        if encoders is not None:
-            dev.expect_encoders(encoders)
+
         # macro count
         dev.expect("0C", "0C00")
         # macro buffer size
         dev.expect("0D", "0D0000")
+
+        dev.expect_keymap(keymap)
+        if encoders is not None:
+            dev.expect_encoders(encoders)
 
         kb = Keyboard(dev, dev.sim_send)
         kb.reload()
@@ -158,37 +160,37 @@ class TestKeyboard(unittest.TestCase):
 
         kb, dev = self.prepare_keyboard(LAYOUT_2x2, [[[1, 2], [3, 4]], [[5, 6], [7, 8]]])
         dev.expect("05010100000A", "")
-        kb.set_key(1, 1, 0, 10)
-        self.assertEqual(kb.layout[(1, 1, 0)], 10)
+        kb.set_key(1, 1, 0, Keycode.serialize(10))
+        self.assertEqual(kb.layout[(1, 1, 0)], Keycode.serialize(10))
         data = kb.save_layout()
         dev.finish()
 
         kb, dev = self.prepare_keyboard(LAYOUT_2x2, [[[1, 2], [3, 4]], [[5, 6], [7, 8]]])
         dev.expect("05010100000A", "")
         kb.restore_layout(data)
-        self.assertEqual(kb.layout[(1, 1, 0)], 10)
+        self.assertEqual(kb.layout[(1, 1, 0)], Keycode.serialize(10))
         dev.finish()
 
     def test_encoder_simple(self):
         """ Tests that we try to retrieve encoder layout """
 
         kb, dev = self.prepare_keyboard(LAYOUT_ENCODER, [[[1]], [[2]], [[3]], [[4]]], [[(10, 11)], [(12, 13)], [(14, 15)], [(16, 17)]])
-        self.assertEqual(kb.encoder_layout[(0, 0, 0)], 10)
-        self.assertEqual(kb.encoder_layout[(0, 0, 1)], 11)
-        self.assertEqual(kb.encoder_layout[(1, 0, 0)], 12)
-        self.assertEqual(kb.encoder_layout[(1, 0, 1)], 13)
-        self.assertEqual(kb.encoder_layout[(2, 0, 0)], 14)
-        self.assertEqual(kb.encoder_layout[(2, 0, 1)], 15)
-        self.assertEqual(kb.encoder_layout[(3, 0, 0)], 16)
-        self.assertEqual(kb.encoder_layout[(3, 0, 1)], 17)
+        self.assertEqual(kb.encoder_layout[(0, 0, 0)], Keycode.serialize(10))
+        self.assertEqual(kb.encoder_layout[(0, 0, 1)], Keycode.serialize(11))
+        self.assertEqual(kb.encoder_layout[(1, 0, 0)], Keycode.serialize(12))
+        self.assertEqual(kb.encoder_layout[(1, 0, 1)], Keycode.serialize(13))
+        self.assertEqual(kb.encoder_layout[(2, 0, 0)], Keycode.serialize(14))
+        self.assertEqual(kb.encoder_layout[(2, 0, 1)], Keycode.serialize(15))
+        self.assertEqual(kb.encoder_layout[(3, 0, 0)], Keycode.serialize(16))
+        self.assertEqual(kb.encoder_layout[(3, 0, 1)], Keycode.serialize(17))
         dev.finish()
 
     def test_encoder_change(self):
         """ Test that changing encoder works """
 
         kb, dev = self.prepare_keyboard(LAYOUT_ENCODER, [[[1]], [[2]], [[3]], [[4]]], [[(10, 11)], [(12, 13)], [(14, 15)], [(16, 17)]])
-        self.assertEqual(kb.encoder_layout[(1, 0, 0)], 12)
-        self.assertEqual(kb.encoder_layout[(1, 0, 1)], 13)
+        self.assertEqual(kb.encoder_layout[(1, 0, 0)], Keycode.serialize(12))
+        self.assertEqual(kb.encoder_layout[(1, 0, 1)], Keycode.serialize(13))
         dev.expect("FE040100010020", "")
-        kb.set_encoder(1, 0, 1, 0x20)
-        self.assertEqual(kb.encoder_layout[(1, 0, 1)], 0x20)
+        kb.set_encoder(1, 0, 1, Keycode.serialize(0x20))
+        self.assertEqual(kb.encoder_layout[(1, 0, 1)], Keycode.serialize(0x20))
