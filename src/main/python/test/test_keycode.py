@@ -11,11 +11,14 @@ class FakeKeyboard:
     tap_dance_count = 0
     midi = None
 
+    def __init__(self, protocol):
+        self.vial_protocol = protocol
+
 
 class TestKeycode(unittest.TestCase):
 
-    def test_serialize(self):
-        recreate_keyboard_keycodes(FakeKeyboard())
+    def _test_serialize_protocol(self, protocol):
+        recreate_keyboard_keycodes(FakeKeyboard(protocol))
         covered = 0
 
         # at a minimum, we should be able to deserialize/serialize everything
@@ -25,4 +28,10 @@ class TestKeycode(unittest.TestCase):
             self.assertEqual(d, x, "{} serialized into {} deserialized into {}".format(x, s, d))
             if s != hex(x):
                 covered += 1
-        print("{}/{} covered keycodes, which is {:.4f}%".format(covered, 2 ** 16, 100 * covered / 2 ** 16))
+        print("[protocol={}] {}/{} covered keycodes, which is {:.4f}%".format(protocol, covered, 2 ** 16, 100 * covered / 2 ** 16))
+
+    def test_serialize_v5(self):
+        self._test_serialize_protocol(5)
+
+    def test_serialize_v6(self):
+        self._test_serialize_protocol(6)

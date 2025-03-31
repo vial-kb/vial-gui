@@ -88,17 +88,17 @@ class AboutKeyboard(QDialog):
 
         font = QFont("monospace")
         font.setStyleHint(QFont.TypeWriter)
-        textarea = QPlainTextEdit()
-        textarea.setReadOnly(True)
-        textarea.setFont(font)
+        self.textarea = QPlainTextEdit()
+        self.textarea.setReadOnly(True)
+        self.textarea.setFont(font)
 
-        textarea.setPlainText(text)
+        self.textarea.setPlainText(text)
 
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok)
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
 
         self.layout = QVBoxLayout()
-        self.layout.addWidget(textarea)
+        self.layout.addWidget(self.textarea)
         self.layout.addWidget(self.buttonBox)
         self.setLayout(self.layout)
