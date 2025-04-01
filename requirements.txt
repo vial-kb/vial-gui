@@ -1,13 +1,18 @@
-altgraph==0.17
-fbs==0.9.0
-future==0.18.2
-git+https://github.com/vial-kb/cython-hidapi@88d8983b3dc65b9ef84238abe3f46004b0ef2fd0#egg=hidapi
+altgraph==0.17.4
+certifi==2024.2.2
+future==1.0.0
+hidapi==0.14.0.post4
 keyboard==0.13.5
 macholib==1.14
-pefile==2019.4.18
-PyInstaller==3.4
-PyQt5==5.9.2
-https://github.com/danthedeckie/simpleeval/archive/41c99b8e224a7a0ae0ac59c773598fe79a4470db.zip
-sip==4.19.8
-pywin32==303; sys_platform == 'win32'
-certifi
+packaging==24.0
+pefile==2023.2.7
+pillow==11.1.0
+pyinstaller==6.12.0
+pyinstaller-hooks-contrib==2025.1
+PyQt5==5.15.11
+PyQt5-sip==12.17.0
+pywin32==306; sys_platform == 'win32'
+pywin32-ctypes==0.2.2
+setuptools==69.2.0
+simpleeval==0.9.13
+sip==6.8.3

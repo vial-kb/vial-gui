@@ -1,6 +1,9 @@
 !include MUI2.nsh
 !include FileFunc.nsh
 
+!define app_name "Vial"
+!define author "Vial KB"
+
 ;--------------------------------
 ;Perform Machine-level install, if possible
 
@@ -31,7 +34,7 @@ FunctionEnd
 ;General
 
   Name "${app_name}"
-  OutFile "..\${installer}"
+  OutFile "..\..\..\VialSetup.exe"
 
 ;--------------------------------
 ;Interface Settings
@@ -49,7 +52,7 @@ FunctionEnd
     !define MUI_FINISHPAGE_RUN
     !define MUI_FINISHPAGE_RUN_CHECKED
     !define MUI_FINISHPAGE_RUN_TEXT "Run ${app_name}"
-    !define MUI_FINISHPAGE_RUN_FUNCTION "LaunchLink"
+    !define MUI_FINISHPAGE_RUN_FUNCTION "LaunchAsNonAdmin"
   !insertmacro MUI_PAGE_FINISH
 
   !insertmacro MUI_UNPAGE_CONFIRM
@@ -67,7 +70,7 @@ FunctionEnd
   "Software\Microsoft\Windows\CurrentVersion\Uninstall\${app_name}"
 Section
   SetOutPath "$InstDir"
-  File /r "..\${app_name}\*"
+  File /r "..\..\..\dist\${app_name}\*"
   WriteRegStr SHCTX "Software\${app_name}" "" $InstDir
   WriteUninstaller "$InstDir\uninstall.exe"
   CreateShortCut "$SMPROGRAMS\${app_name}.lnk" "$InstDir\${app_name}.exe"
@@ -99,7 +102,6 @@ Section "Uninstall"
 
 SectionEnd
 
-Function LaunchLink
-  !addplugindir "."
-  ShellExecAsUser::ShellExecAsUser "open" "$SMPROGRAMS\${app_name}.lnk"
+Function LaunchAsNonAdmin
+  Exec '"$WINDIR\explorer.exe" "$InstDir\${app_name}.exe"'
 FunctionEnd

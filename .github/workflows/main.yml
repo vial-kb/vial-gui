@@ -6,47 +6,70 @@ jobs:
   build-linux:
     runs-on: ubuntu-22.04
 
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Build
-      run: ./util/linux-builder/build-in-docker.sh
-
-    - uses: actions/upload-artifact@v4
-      with:
-        name: vial-linux
-        path: util/linux-builder/output/Vial-x86_64.AppImage
-
-  build-mac:
-    runs-on: macos-13
+    container:
+      image: ubuntu:22.04
+      options: --privileged
     env:
-      PYTHON_VERSION: 3.6.8
-      MACOSX_DEPLOYMENT_TARGET: 10.9
+      PYTHON_VERSION: 3.12.2
 
     steps:
     - uses: actions/checkout@v4
-
-    - name: Get Python
-      run: curl https://www.python.org/ftp/python/${PYTHON_VERSION}/python-${PYTHON_VERSION}-macosx${MACOSX_DEPLOYMENT_TARGET}.pkg -o "python.pkg"
-
-    - name: Verify download
-      run: shasum -a 256 -c <<< '4bcd53faffc98d193ef7cdccd5668de3829c702af4db45258819a84a2cab60d0 *python.pkg'
-
-    - name: Install Python
+ 
+    - name: Install dependencies
       run: |
-        sudo installer -pkg python.pkg -target /
+        apt-get update
+        apt-get install -y lsb-release libusb-1.0-0-dev libudev-dev ruby ruby-dev rubygems build-essential desktop-file-utils wget unzip zlib1g-dev liblzma-dev libssl-dev git imagemagick file libfuse2
+        wget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
+        chmod +x ./appimagetool-x86_64.AppImage
+
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{env.PYTHON_VERSION}}
 
     - name: Setup venv
       run: |
         python3 -m venv venv
-        source venv/bin/activate
+        . venv/bin/activate
         pip install -r requirements.txt
 
     - name: Build
       run: |
-        source venv/bin/activate
-        fbs freeze
-        hdiutil create -volname Vial -srcfolder "target/Vial.app" -ov -format UDZO vial-mac.dmg
+        . venv/bin/activate
+        pyinstaller misc/Vial.spec
+        deactivate
+        cp src/main/icons/linux/1024.png dist/Vial/Vial.png
+        cp misc/Vial.desktop dist/Vial/
+        cp misc/AppRun dist/Vial/
+        ./appimagetool-x86_64.AppImage dist/Vial
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: vial-linux
+        path: Vial-x86_64.AppImage
+
+  build-mac:
+    runs-on: macos-13
+    env:
+      MACOSX_DEPLOYMENT_TARGET: 10.9
+
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{env.PYTHON_VERSION}}
+        cache: pip
+
+    - name: Setup venv
+      run: |
+        python3 -m venv venv
+        . venv/bin/activate
+        pip install -r requirements.txt
+
+    - name: Build
+      run: |
+        . venv/bin/activate
+        pyinstaller misc/Vial.spec
+        hdiutil create -volname Vial -srcfolder "dist/Vial.app" -ov -format UDZO vial-mac.dmg
 
     - uses: actions/upload-artifact@v4
       with:
@@ -58,9 +81,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - uses: actions/setup-python@v4
+    - uses: actions/setup-python@v5
       with:
-        python-version: '3.6.x'
+        python-version: ${{env.PYTHON_VERSION}}
 
     - name: Setup venv
       run: |
@@ -77,8 +100,8 @@ jobs:
     - name: Build
       run: |
         . .\venv\Scripts\activate.ps1
-        fbs freeze
-        Compress-Archive -Path "target\Vial" -DestinationPath vial-win.zip
+        pyinstaller misc/Vial.spec
+        Compress-Archive -Path "dist/Vial" -DestinationPath vial-win.zip
 
     - uses: actions/upload-artifact@v4
       with:
@@ -88,10 +111,10 @@ jobs:
     - name: Create installer
       run: |
         $env:Path += ";C:\Program Files (x86)\NSIS"
-        . .\venv\Scripts\activate.ps1
-        fbs installer
+        cd dist/Vial
+        makensis ../../src/installer/windows/Installer.nsi
 
     - uses: actions/upload-artifact@v4
       with:
         name: vial-win-installer
-        path: target\VialSetup.exe
+        path: VialSetup.exe
