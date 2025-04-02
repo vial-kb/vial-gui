@@ -242,6 +242,7 @@ class MainWindow(QMainWindow):
         dialog.setDefaultSuffix("vil")
         dialog.setAcceptMode(QFileDialog.AcceptOpen)
         dialog.setNameFilters(["Vial layout (*.vil)"])
+        dialog.setOption(QFileDialog.DontUseNativeDialog, True)
         if dialog.exec_() == QDialog.Accepted:
             with open(dialog.selectedFiles()[0], "rb") as inf:
                 data = inf.read()
@@ -253,6 +254,7 @@ class MainWindow(QMainWindow):
         dialog.setDefaultSuffix("vil")
         dialog.setAcceptMode(QFileDialog.AcceptSave)
         dialog.setNameFilters(["Vial layout (*.vil)"])
+        dialog.setOption(QFileDialog.DontUseNativeDialog, True)
         if dialog.exec_() == QDialog.Accepted:
             with open(dialog.selectedFiles()[0], "wb") as outf:
                 outf.write(self.keymap_editor.save_layout())
@@ -340,6 +342,7 @@ class MainWindow(QMainWindow):
         dialog.setDefaultSuffix("json")
         dialog.setAcceptMode(QFileDialog.AcceptOpen)
         dialog.setNameFilters(["VIA layout JSON (*.json)"])
+        dialog.setOption(QFileDialog.DontUseNativeDialog, True)
         if dialog.exec_() == QDialog.Accepted:
             with open(dialog.selectedFiles()[0], "rb") as inf:
                 data = inf.read()
@@ -350,6 +353,7 @@ class MainWindow(QMainWindow):
         dialog.setDefaultSuffix("json")
         dialog.setAcceptMode(QFileDialog.AcceptOpen)
         dialog.setNameFilters(["VIA layout JSON (*.json)"])
+        dialog.setOption(QFileDialog.DontUseNativeDialog, True)
         if dialog.exec_() == QDialog.Accepted:
             with open(dialog.selectedFiles()[0], "rb") as inf:
                 data = inf.read()
