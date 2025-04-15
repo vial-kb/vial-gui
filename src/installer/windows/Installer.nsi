@@ -80,6 +80,7 @@ Section
   ${GetSize} "$InstDir" "/S=0K" $0 $1 $2
   IntFmt $0 "0x%08X" $0
   WriteRegDWORD SHCTX "${UNINST_KEY}" "EstimatedSize" "$0"
+  WriteRegStr SHCTX "${UNINST_KEY}" "DisplayVersion" "${VERSION}"
 
 SectionEnd
 
