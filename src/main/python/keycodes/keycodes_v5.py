@@ -594,7 +594,8 @@ for x in range(32):
 for x in range(16):
     keycodes_v5.kc["LT{}(kc)".format(x)] = keycodes_v5.kc["QK_LAYER_TAP"] | (((x) & 0xF) << 8)
 
-for x in range(16):
+#TODO(userkeycodes): temp workaround, keycodes handling is messy, rework this later
+for x in range(64):
     keycodes_v5.kc["USER{:02}".format(x)] = keycodes_v5.kc["QK_KB"] + x
 
 for name, val in keycodes_v5.kc.items():
