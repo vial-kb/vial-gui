@@ -12,7 +12,7 @@ from protocol.constants import CMD_VIA_GET_PROTOCOL_VERSION, CMD_VIA_VIAL_PREFIX
     CMD_VIAL_GET_SIZE, CMD_VIAL_GET_DEFINITION, CMD_VIA_GET_LAYER_COUNT, CMD_VIA_MACRO_GET_COUNT, \
     CMD_VIA_MACRO_GET_BUFFER_SIZE, CMD_VIAL_QMK_SETTINGS_QUERY, CMD_VIAL_DYNAMIC_ENTRY_OP, \
     DYNAMIC_VIAL_GET_NUMBER_OF_ENTRIES, CMD_VIA_KEYMAP_GET_BUFFER, CMD_VIA_MACRO_GET_BUFFER, CMD_VIAL_GET_UNLOCK_STATUS, \
-    CMD_VIA_SET_KEYCODE
+    CMD_VIA_SET_KEYCODE, DYNAMIC_VIAL_COMBO_GET, DYNAMIC_VIAL_COMBO_SET
 from widgets.square_button import SquareButton
 
 FAKE_KEYBOARD = """
@@ -52,7 +52,10 @@ def mock_enumerate():
 
 class VirtualKeyboard:
 
-    def __init__(self, kbjson):
+    def __init__(self, kbjson, combos=None):
+        if combos is None:
+            combos = []
+
         self.keyboard_definition = lzma.compress(kbjson.encode("utf-8"))
 
         self.rows = 2
@@ -67,6 +70,11 @@ class VirtualKeyboard:
         self.macro_count = 8
         self.macro_buffer = b"\x00" * 512
 
+        self.combos = combos
+        self.combo_entries = len(self.combos)
+
+        self.tap_dance_entries = self.key_override_entries = 0
+
     def get_keymap_buffer(self):
         output = b""
         for layer in range(self.layers):
@@ -77,7 +85,17 @@ class VirtualKeyboard:
 
     def vial_cmd_dynamic(self, msg):
         if msg[2] == DYNAMIC_VIAL_GET_NUMBER_OF_ENTRIES:
-            return b"\x00" * 32
+            return struct.pack("BBB", self.tap_dance_entries, self.combo_entries, self.key_override_entries)
+        elif msg[2] == DYNAMIC_VIAL_COMBO_GET:
+            idx = msg[3]
+            assert idx < len(self.combos)
+            return struct.pack("<BHHHHH", 0, *self.combos[idx])
+        elif msg[2] == DYNAMIC_VIAL_COMBO_SET:
+            idx = msg[3]
+            keys = struct.unpack_from("<HHHHH", msg[4:])
+            assert idx < len(self.combos)
+            self.combos[idx] = keys
+            return b""
         raise RuntimeError("unsupported dynamic submsg 0x{:02X}".format(msg[2]))
 
     def vial_cmd(self, msg):
@@ -152,10 +170,10 @@ class FakeAppctx:
 all_mw = []
 
 
-def prepare(qtbot, keyboard_json):
+def prepare(qtbot, keyboard_json, combos=None):
     import hidraw as hid
 
-    vk = VirtualKeyboard(keyboard_json)
+    vk = VirtualKeyboard(keyboard_json, combos=combos)
     MockDevice.vk = vk
 
     hid.enumerate = mock_enumerate
@@ -330,6 +348,13 @@ def test_keymap_zoom(qtbot):
     assert mw.keymap_editor.container.scale < scale_initial
 
 
+def find_key_btn(start, text):
+    for w in start.findChildren(SquareButton):
+        if w.isVisible() and w.text == text:
+            return w
+    raise RuntimeError("cannot find a visible key button with text='{}'".format(text))
+
+
 def test_layer_switch(qtbot):
     """ Tests setting keycodes across different layers """
     mw, vk = prepare(qtbot, FAKE_KEYBOARD)
@@ -337,12 +362,6 @@ def test_layer_switch(qtbot):
     ak = mw.keymap_editor.tabbed_keycodes.all_keycodes
     bk = mw.keymap_editor.tabbed_keycodes.basic_keycodes
     c = mw.keymap_editor.container
-
-    def find_key_btn(start, text):
-        for w in start.findChildren(SquareButton):
-            if w.isVisible() and w.text == text:
-                return w
-        raise RuntimeError("cannot find a visible key button with text='{}'".format(text))
 
     # initial keycode must be KC_NO
     assert vk.keymap[0][0][0] == 0
@@ -395,3 +414,89 @@ def test_layer_switch(qtbot):
     # go back to the layer 0 and make sure the button got redrawn to Z
     qtbot.mouseClick(btn_layer_0, qt_api.QtCore.Qt.MouseButton.LeftButton)
     assert c.widgets[0].text == "Z"
+
+
+def test_combos(qtbot):
+    from widgets.key_widget import KeyWidget
+
+    """ Tests setting combo keycodes """
+    mw, vk = prepare(qtbot, FAKE_KEYBOARD, combos=[[0, 0, 0, 0, 0], [4, 5, 6, 7, 8], [0, 0x106, 0, 0, 0]])
+
+    combos = None
+    for x in range(mw.tabs.count()):
+        if mw.tabs.tabText(x) == "Combos":
+            combos = mw.tabs.widget(x).editor
+
+    assert combos is not None, "could not find the combos tab"
+    ct = combos.tabs
+
+    tabs = []
+    for x in range(ct.count()):
+        tabs.append(ct.tabText(x))
+    assert tabs == ["1", "2", "3"]
+
+    def check_tab(idx, keys):
+        ct.setCurrentIndex(idx)
+        assert ct.tabText(ct.currentIndex()) == str(idx + 1)
+        w = ct.widget(ct.currentIndex()).findChildren(KeyWidget)
+        assert len(w) == 5
+        for x in range(5):
+            assert w[x].keycode == keys[x], "unexpected keycode at tab {} position {}: {} vs {}".format(idx, x, w[x].keycode, keys[x])
+
+    check_tab(0, ["KC_NO", "KC_NO", "KC_NO", "KC_NO", "KC_NO"])
+    check_tab(1, ["KC_A", "KC_B", "KC_C", "KC_D", "KC_E"])
+    check_tab(2, ["KC_NO", "LCTL(KC_C)", "KC_NO", "KC_NO", "KC_NO"])
+
+    # ok now still on tab index 2, let's switch some combos
+    # change "Key 1" to "A"
+    assert mw.tray_keycodes.isVisible() == False
+    w = ct.widget(ct.currentIndex()).findChildren(KeyWidget)
+    bbox = w[0].widgets[0].bbox
+    min_x = min(p.x() for p in bbox)
+    max_x = max(p.x() for p in bbox)
+    min_y = min(p.y() for p in bbox)
+    max_y = max(p.y() for p in bbox)
+    pos_mask = QPoint(int((min_x + max_x) / 2), int(min_y + (max_y - min_y) * 4/5))
+    pos = QPoint(bbox[0].x(), bbox[0].y())
+    qtbot.mouseClick(w[0], qt_api.QtCore.Qt.MouseButton.LeftButton, pos=pos)
+    assert mw.tray_keycodes.isVisible() == True
+
+    qtbot.mouseClick(find_key_btn(mw.tray_keycodes, "A"), qt_api.QtCore.Qt.MouseButton.LeftButton)
+    assert vk.combos[2] == (4, 0x106, 0, 0, 0)
+
+    # change "Output key" to "B"
+    qtbot.mouseClick(w[4], qt_api.QtCore.Qt.MouseButton.LeftButton, pos=pos)
+    qtbot.mouseClick(find_key_btn(mw.tray_keycodes, "B"), qt_api.QtCore.Qt.MouseButton.LeftButton)
+    assert vk.combos[2] == (4, 0x106, 0, 0, 5)
+
+    ak = mw.tray_keycodes.all_keycodes
+    bk = mw.tray_keycodes.basic_keycodes
+
+    # change "Key 4" to LSft(D)
+    # first set up LSft(kc)
+    qtbot.mouseClick(w[3], qt_api.QtCore.Qt.MouseButton.LeftButton, pos=pos)
+    assert ak.isVisible()
+    assert not bk.isVisible()
+    ak.setCurrentIndex(3)
+    assert ak.tabText(ak.currentIndex()) == "Quantum"
+    qtbot.mouseClick(find_key_btn(mw.tray_keycodes, "LSft\n(kc)"), qt_api.QtCore.Qt.MouseButton.LeftButton)
+    assert vk.combos[2] == (4, 0x106, 0, 0x200, 5)
+    # now click the mask and set up D inside
+    qtbot.mouseClick(w[3], qt_api.QtCore.Qt.MouseButton.LeftButton, pos=pos_mask)
+    assert not ak.isVisible()
+    assert bk.isVisible()
+    qtbot.mouseClick(find_key_btn(mw.tray_keycodes, "D"), qt_api.QtCore.Qt.MouseButton.LeftButton)
+    assert vk.combos[2] == (4, 0x106, 0, 0x207, 5)
+
+    # change "Key 2" to E
+    qtbot.mouseClick(w[1], qt_api.QtCore.Qt.MouseButton.LeftButton, pos=pos)
+    assert ak.isVisible()
+    assert not bk.isVisible()
+    ak.setCurrentIndex(0)
+    qtbot.mouseClick(find_key_btn(mw.tray_keycodes, "E"), qt_api.QtCore.Qt.MouseButton.LeftButton)
+    assert vk.combos[2] == (4, 8, 0, 0x207, 5)
+
+    # check the final result in the gui as well
+    check_tab(2, ["KC_A", "KC_E", "KC_NO", "LSFT(KC_D)", "KC_B"])
+
+    # TODO: a future unit test should check switching between multiple keyboards with different number of combos
