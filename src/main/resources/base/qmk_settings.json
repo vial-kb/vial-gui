@@ -43,7 +43,8 @@
                 { "type": "integer", "title": "Tap Hold Caps Delay", "qsid": 19, "min": 0, "max": 1000, "width": 2 },
                 { "type": "integer", "title": "Tapping Toggle", "qsid": 20, "min": 0, "max": 100, "width": 1 },
 
-                { "type": "boolean", "title": "Chordal Hold", "qsid": 26 }
+                { "type": "boolean", "title": "Chordal Hold", "qsid": 26 },
+                { "type": "integer", "title": "Flow Tap", "qsid": 27, "min": 0, "max": 10000, "width": 2 }
             ]
         },
         {
