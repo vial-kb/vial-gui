@@ -28,13 +28,22 @@
             "name": "Tap-Hold",
             "fields": [
                 { "type": "integer", "title": "Tapping Term", "qsid": 7, "min": 0, "max": 10000, "width": 2 },
+
                 { "type": "boolean", "title": "Permissive Hold", "qsid": 8, "bit": 0 },
                 { "type": "boolean", "title": "Ignore Mod Tap Interrupt", "qsid": 8, "bit": 1 },
                 { "type": "boolean", "title": "Tapping Force Hold", "qsid": 8, "bit": 2 },
                 { "type": "boolean", "title": "Retro Tapping", "qsid": 8, "bit": 3 },
+
+                { "type": "boolean", "title": "Permissive Hold", "qsid": 22 },
+                { "type": "boolean", "title": "Hold On Other Key Press", "qsid": 23 },
+                { "type": "boolean", "title": "Retro Tapping", "qsid": 24 },
+                { "type": "integer", "title": "Quick Tap Term", "qsid": 25, "min": 0, "max": 10000, "width": 2 },
+
                 { "type": "integer", "title": "Tap Code Delay", "qsid": 18, "min": 0, "max": 1000, "width": 2 },
                 { "type": "integer", "title": "Tap Hold Caps Delay", "qsid": 19, "min": 0, "max": 1000, "width": 2 },
-                { "type": "integer", "title": "Tapping Toggle", "qsid": 20, "min": 0, "max": 100, "width": 1 }
+                { "type": "integer", "title": "Tapping Toggle", "qsid": 20, "min": 0, "max": 100, "width": 1 },
+
+                { "type": "boolean", "title": "Chordal Hold", "qsid": 26 }
             ]
         },
         {
