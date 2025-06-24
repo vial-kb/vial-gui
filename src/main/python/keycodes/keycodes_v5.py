@@ -576,6 +576,10 @@ class keycodes_v5:
         "RM_SPDU": 0x999b,
         "RM_SPDD": 0x999c,
         "QK_REBOOT": 0x999d,
+
+        "QK_PERSISTENT_DEF_LAYER": 0,
+        "QK_CAPS_WORD_TOGGLE": 0,
+        "QK_LAYER_LOCK": 0,
     }
 
     masked = set()
