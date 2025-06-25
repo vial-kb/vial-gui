@@ -2,7 +2,7 @@ from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QVBoxLayout, QLabel, QPlainTextEdit
 
 from protocol.constants import VIAL_PROTOCOL_DYNAMIC, VIAL_PROTOCOL_KEY_OVERRIDE, VIAL_PROTOCOL_ADVANCED_MACROS, \
-    VIAL_PROTOCOL_EXT_MACROS, VIAL_PROTOCOL_QMK_SETTINGS, VIAL_PROTOCOL_OPTIONAL_FEATURES
+    VIAL_PROTOCOL_EXT_MACROS, VIAL_PROTOCOL_QMK_SETTINGS
 
 
 class AboutKeyboard(QDialog):
@@ -51,7 +51,7 @@ class AboutKeyboard(QDialog):
     def about_feature(self, feature_name):
         if feature_name in self.keyboard.supported_features:
             return "yes"
-        return self.want_min_vial_fw(VIAL_PROTOCOL_OPTIONAL_FEATURES)
+        return self.want_min_vial_fw(VIAL_PROTOCOL_DYNAMIC)
 
     def __init__(self, device):
         super().__init__()

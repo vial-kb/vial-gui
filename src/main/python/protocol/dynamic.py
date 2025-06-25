@@ -3,7 +3,7 @@ import struct
 
 from protocol.base_protocol import BaseProtocol
 from protocol.constants import CMD_VIA_VIAL_PREFIX, CMD_VIAL_DYNAMIC_ENTRY_OP, DYNAMIC_VIAL_GET_NUMBER_OF_ENTRIES, \
-    VIAL_PROTOCOL_DYNAMIC, VIAL_PROTOCOL_OPTIONAL_FEATURES
+    VIAL_PROTOCOL_DYNAMIC, VIAL_PROTOCOL_KEY_OVERRIDE
 
 
 class ProtocolDynamic(BaseProtocol):
@@ -25,16 +25,16 @@ class ProtocolDynamic(BaseProtocol):
         self.combo_count = data[1]
         self.key_override_count = data[2]
 
-        if self.vial_protocol >= VIAL_PROTOCOL_OPTIONAL_FEATURES:
-          # Bits of data[-1] indicate optionally supported features.
-          for bit_index, feature in [
-              (0, "caps_word"),
-              (1, "layer_lock"),
-              # Add more feature bits as needed...
-          ]:
-            if data[-1] & (1 << bit_index):
-              self.supported_features.add(feature)
+        # Bits of data[-1] indicate optionally supported features.
+        for bit_index, feature in [
+            (0, "caps_word"),
+            (1, "layer_lock"),
+            # Add more feature bits as needed...
+        ]:
+          if data[-1] & (1 << bit_index):
+            self.supported_features.add(feature)
 
+        if self.vial_protocol >= VIAL_PROTOCOL_KEY_OVERRIDE:
           # Persistent Default Layers isn't present in older QMK builds, but is
           # unconditionally enabled in recent QMK builds.
           self.supported_features.add("persistent_default_layer")

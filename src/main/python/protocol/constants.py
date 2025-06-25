@@ -63,5 +63,3 @@ VIAL_PROTOCOL_QMK_SETTINGS = 4
 # When did we get support for 2-byte macros
 VIAL_PROTOCOL_EXT_MACROS = 5
 VIAL_PROTOCOL_KEY_OVERRIDE = 5
-# When did we indicate optionally-supported features.
-VIAL_PROTOCOL_OPTIONAL_FEATURES = 6
