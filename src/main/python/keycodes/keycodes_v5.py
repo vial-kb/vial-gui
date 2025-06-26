@@ -596,6 +596,7 @@ for x in range(32):
     keycodes_v5.kc["TT({})".format(x)] = keycodes_v5.kc["QK_LAYER_TAP_TOGGLE"] | x
     keycodes_v5.kc["OSL({})".format(x)] = keycodes_v5.kc["QK_ONE_SHOT_LAYER"] | x
     keycodes_v5.kc["TO({})".format(x)] = keycodes_v5.kc["QK_TO"] | (1 << 4) | x
+    keycodes_v5.kc["PDF({})".format(x)] = keycodes_v5.kc["QK_PERSISTENT_DEF_LAYER"] + x
 
 for x in range(16):
     keycodes_v5.kc["LT{}(kc)".format(x)] = keycodes_v5.kc["QK_LAYER_TAP"] | (((x) & 0xF) << 8)

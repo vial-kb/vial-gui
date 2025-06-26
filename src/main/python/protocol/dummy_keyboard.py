@@ -3,6 +3,10 @@ from protocol.keyboard_comm import Keyboard
 
 class DummyKeyboard(Keyboard):
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.supported_features = set()
+
     def reload_layers(self):
         self.layers = 4
 

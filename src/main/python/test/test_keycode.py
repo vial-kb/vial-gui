@@ -13,6 +13,10 @@ class FakeKeyboard:
 
     def __init__(self, protocol):
         self.vial_protocol = protocol
+        if protocol >= 6:
+            self.supported_features = set(["persistent_default_layer", "caps_word", "layer_lock"])
+        else:
+            self.supported_features = set()
 
 
 class TestKeycode(unittest.TestCase):
