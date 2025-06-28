@@ -48,6 +48,11 @@ class AboutKeyboard(QDialog):
             return "yes"
         return self.want_min_vial_fw(VIAL_PROTOCOL_QMK_SETTINGS)
 
+    def about_feature(self, feature_name):
+        if feature_name in self.keyboard.supported_features:
+            return "yes"
+        return self.want_min_vial_fw(VIAL_PROTOCOL_DYNAMIC)
+
     def __init__(self, device):
         super().__init__()
 
@@ -82,6 +87,8 @@ class AboutKeyboard(QDialog):
         text += "Tap Dance entries: {}\n".format(self.about_tap_dance())
         text += "Combo entries: {}\n".format(self.about_combo())
         text += "Key Override entries: {}\n".format(self.about_key_override())
+        text += "Caps Word: {}\n".format(self.about_feature("caps_word"))
+        text += "Layer Lock: {}\n".format(self.about_feature("layer_lock"))
         text += "\n"
 
         text += "QMK Settings: {}\n".format(self.about_qmk_settings())

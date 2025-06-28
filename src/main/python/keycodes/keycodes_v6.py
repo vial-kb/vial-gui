@@ -14,6 +14,7 @@ class keycodes_v6:
         "QK_TO": 0x5200,
         "QK_MOMENTARY": 0x5220,
         "QK_DEF_LAYER": 0x5240,
+        "QK_PERSISTENT_DEF_LAYER": 0x52E0,
         "QK_TOGGLE_LAYER": 0x5260,
         "QK_ONE_SHOT_LAYER": 0x5280,
         "QK_ONE_SHOT_MOD": 0x52A0,
@@ -553,8 +554,12 @@ class keycodes_v6:
         "QK_REBOOT": 0x7C01,
         "QK_CLEAR_EEPROM": 0x7C03,
 
+        "QK_CAPS_WORD_TOGGLE": 0x7C73,
+
         "FN_MO13": 0x7C77,
         "FN_MO23": 0x7C78,
+
+        "QK_LAYER_LOCK": 0x7C7B,
 
         "QK_KB": 0x7E00,
 
@@ -590,6 +595,7 @@ for x in range(32):
     keycodes_v6.kc["TT({})".format(x)] = keycodes_v6.kc["QK_LAYER_TAP_TOGGLE"] + x
     keycodes_v6.kc["OSL({})".format(x)] = keycodes_v6.kc["QK_ONE_SHOT_LAYER"] + x
     keycodes_v6.kc["TO({})".format(x)] = keycodes_v6.kc["QK_TO"] + x
+    keycodes_v6.kc["PDF({})".format(x)] = keycodes_v6.kc["QK_PERSISTENT_DEF_LAYER"] + x
 
 for x in range(16):
     keycodes_v6.kc["LT{}(kc)".format(x)] = keycodes_v6.kc["QK_LAYER_TAP"] | (((x) & 0xF) << 8)

@@ -88,7 +88,12 @@ class VirtualKeyboard:
 
     def vial_cmd_dynamic(self, msg):
         if msg[2] == DYNAMIC_VIAL_GET_NUMBER_OF_ENTRIES:
-            return struct.pack("BBB", len(self.tap_dance), len(self.combos), self.key_override_entries)
+            response = struct.pack("BBB", len(self.tap_dance), len(self.combos), self.key_override_entries)
+            # Zero pad to 31 bytes.
+            response += (31 - len(response)) * b'\0'
+            # Set last two bits, indicating Caps Word and Layer Lock.
+            response += (0b00000011).to_bytes(1, "little")
+            return response
         elif msg[2] == DYNAMIC_VIAL_COMBO_GET:
             idx = msg[3]
             assert idx < len(self.combos)
@@ -231,6 +236,8 @@ def test_about_keyboard(qtbot):
          'Tap Dance entries: unsupported - disabled in firmware\n'
          'Combo entries: unsupported - disabled in firmware\n'
          'Key Override entries: unsupported - disabled in firmware\n'
+         'Caps Word: yes\n'
+         'Layer Lock: yes\n'
          '\n'
          'QMK Settings: disabled in firmware\n')
     mw.about_dialog.accept()
