@@ -14,6 +14,7 @@ class Keycode:
     recorder_alias_to_keycode = dict()
     qmk_id_to_keycode = dict()
     protocol = 0
+    hidden = False
 
     def __init__(self, qmk_id, label, tooltip=None, masked=False, printable=None, recorder_alias=None, alias=None, requires_feature=None):
         self.qmk_id = qmk_id
@@ -919,8 +920,10 @@ def recreate_keyboard_keycodes(keyboard):
 
     recreate_keycodes()
 
-    # Keep only keycodes where .requires_feature is supported by the keyboard.
-    KEYCODES[:] = list(filter(lambda kc: kc.is_supported_by(keyboard), KEYCODES))
+    # Hide keycodes where .requires_feature isn't supported by the keyboard.
+    for kc in KEYCODES:
+        if not kc.is_supported_by(keyboard):
+            kc.hidden = True
 
 
 recreate_keycodes()

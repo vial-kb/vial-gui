@@ -52,7 +52,7 @@ class AlternativeDisplay(QWidget):
         self.buttons = []
 
         for keycode in self.keycodes:
-            if not keycode_filter(keycode.qmk_id):
+            if keycode.hidden or not keycode_filter(keycode.qmk_id):
                 continue
             btn = SquareButton()
             btn.setRelSize(KEYCODE_BTN_RATIO)
