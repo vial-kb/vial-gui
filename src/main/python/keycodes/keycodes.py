@@ -922,8 +922,7 @@ def recreate_keyboard_keycodes(keyboard):
 
     # Hide keycodes where .requires_feature isn't supported by the keyboard.
     for kc in KEYCODES:
-        if not kc.is_supported_by(keyboard):
-            kc.hidden = True
+        kc.hidden = not kc.is_supported_by(keyboard)
 
 
 recreate_keycodes()
