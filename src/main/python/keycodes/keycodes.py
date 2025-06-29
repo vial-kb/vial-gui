@@ -492,6 +492,8 @@ KEYCODES_QUANTUM = [
     K("CMB_TOG", "Combo\nToggle", "Toggles Combo feature on and off"),
 
     K("QK_CAPS_WORD_TOGGLE", "Caps\nWord", "Capitalizes until end of current word", alias=["CW_TOGG"], requires_feature="caps_word"),
+    K("QK_REPEAT_KEY", "Repeat", "Repeats the last pressed key", alias=["QK_REP"], requires_feature="repeat_key"),
+    K("QK_ALT_REPEAT_KEY", "Alt\nRepeat", "Alt repeats the last pressed key", alias=["QK_AREP"], requires_feature="repeat_key"),
 ]
 
 KEYCODES_BACKLIGHT = [

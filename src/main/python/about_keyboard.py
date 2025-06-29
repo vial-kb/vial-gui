@@ -31,6 +31,11 @@ class AboutKeyboard(QDialog):
             return str(self.keyboard.key_override_count)
         return self.want_min_vial_fw(VIAL_PROTOCOL_KEY_OVERRIDE)
 
+    def about_alt_repeat_key(self):
+        if self.keyboard.alt_repeat_key_count > 0:
+            return str(self.keyboard.alt_repeat_key_count)
+        return self.want_min_vial_fw(VIAL_PROTOCOL_KEY_OVERRIDE)
+
     def about_macro_delays(self):
         if self.keyboard.vial_protocol >= VIAL_PROTOCOL_ADVANCED_MACROS:
             return "yes"
@@ -87,6 +92,7 @@ class AboutKeyboard(QDialog):
         text += "Tap Dance entries: {}\n".format(self.about_tap_dance())
         text += "Combo entries: {}\n".format(self.about_combo())
         text += "Key Override entries: {}\n".format(self.about_key_override())
+        text += "Alt Repeat Key entries: {}\n".format(self.about_alt_repeat_key())
         text += "Caps Word: {}\n".format(self.about_feature("caps_word"))
         text += "Layer Lock: {}\n".format(self.about_feature("layer_lock"))
         text += "\n"

@@ -6,6 +6,7 @@ from collections import OrderedDict
 
 from keycodes.keycodes import RESET_KEYCODE, Keycode, recreate_keyboard_keycodes
 from kle_serial import Serial as KleSerial
+from protocol.alt_repeat_key import ProtocolAltRepeatKey
 from protocol.combo import ProtocolCombo
 from protocol.constants import CMD_VIA_GET_PROTOCOL_VERSION, CMD_VIA_GET_KEYBOARD_VALUE, CMD_VIA_SET_KEYBOARD_VALUE, \
     CMD_VIA_SET_KEYCODE, CMD_VIA_LIGHTING_SET_VALUE, CMD_VIA_LIGHTING_GET_VALUE, CMD_VIA_LIGHTING_SAVE, \
@@ -31,7 +32,7 @@ class ProtocolError(Exception):
     pass
 
 
-class Keyboard(ProtocolMacro, ProtocolDynamic, ProtocolTapDance, ProtocolCombo, ProtocolKeyOverride):
+class Keyboard(ProtocolMacro, ProtocolDynamic, ProtocolTapDance, ProtocolCombo, ProtocolKeyOverride, ProtocolAltRepeatKey):
     """ Low-level communication with a vial-enabled keyboard """
 
     def __init__(self, dev, usb_send=hid_send):
@@ -95,6 +96,7 @@ class Keyboard(ProtocolMacro, ProtocolDynamic, ProtocolTapDance, ProtocolCombo, 
         self.reload_tap_dance()
         self.reload_combo()
         self.reload_key_override()
+        self.reload_alt_repeat_key()
 
     def reload_layers(self):
         """ Get how many layers the keyboard has """
@@ -399,6 +401,7 @@ class Keyboard(ProtocolMacro, ProtocolDynamic, ProtocolTapDance, ProtocolCombo, 
         data["tap_dance"] = self.save_tap_dance()
         data["combo"] = self.save_combo()
         data["key_override"] = self.save_key_override()
+        data["alt_repeat_key"] = self.save_alt_repeat_key()
         data["settings"] = self.settings
 
         return json.dumps(data).encode("utf-8")
@@ -427,6 +430,7 @@ class Keyboard(ProtocolMacro, ProtocolDynamic, ProtocolTapDance, ProtocolCombo, 
         self.restore_tap_dance(data.get("tap_dance", []))
         self.restore_combo(data.get("combo", []))
         self.restore_key_override(data.get("key_override", []))
+        self.restore_alt_repeat_key(data.get("alt_repeat_key", []))
 
         for qsid, value in data.get("settings", dict()).items():
             from editor.qmk_settings import QmkSettings
