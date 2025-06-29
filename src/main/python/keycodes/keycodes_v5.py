@@ -548,7 +548,8 @@ class keycodes_v5:
         "MI_BENDD": 0x5CB9,
         "MI_BENDU": 0x5CBA,
 
-        "RESET": 0x5C00,
+        "QK_BOOT": 0x5C00,
+        "QK_CLEAR_EEPROM": 0x5CDF,
 
         "FN_MO13": 0x5F10,
         "FN_MO23": 0x5F11,
@@ -574,6 +575,7 @@ class keycodes_v5:
         "RM_VALD": 0x999a,
         "RM_SPDU": 0x999b,
         "RM_SPDD": 0x999c,
+        "QK_REBOOT": 0x999d,
     }
 
     masked = set()
