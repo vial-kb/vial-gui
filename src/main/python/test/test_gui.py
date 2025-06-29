@@ -77,6 +77,7 @@ class VirtualKeyboard:
         self.tap_dance = tap_dance
 
         self.key_override_entries = 0
+        self.alt_repeat_key_entries = 0
 
     def get_keymap_buffer(self):
         output = b""
@@ -88,7 +89,8 @@ class VirtualKeyboard:
 
     def vial_cmd_dynamic(self, msg):
         if msg[2] == DYNAMIC_VIAL_GET_NUMBER_OF_ENTRIES:
-            response = struct.pack("BBB", len(self.tap_dance), len(self.combos), self.key_override_entries)
+            response = struct.pack("BBBB", len(self.tap_dance), len(self.combos),
+                                   self.key_override_entries, self.alt_repeat_key_entries)
             # Zero pad to 31 bytes.
             response += (31 - len(response)) * b'\0'
             # Set last two bits, indicating Caps Word and Layer Lock.
@@ -236,6 +238,7 @@ def test_about_keyboard(qtbot):
          'Tap Dance entries: unsupported - disabled in firmware\n'
          'Combo entries: unsupported - disabled in firmware\n'
          'Key Override entries: unsupported - disabled in firmware\n'
+         'Alt Repeat Key entries: unsupported - disabled in firmware\n'
          'Caps Word: yes\n'
          'Layer Lock: yes\n'
          '\n'

@@ -558,7 +558,8 @@ class keycodes_v6:
 
         "FN_MO13": 0x7C77,
         "FN_MO23": 0x7C78,
-
+        "QK_REPEAT_KEY": 0x7C79,
+        "QK_ALT_REPEAT_KEY": 0x7C7A,
         "QK_LAYER_LOCK": 0x7C7B,
 
         "QK_KB": 0x7E00,

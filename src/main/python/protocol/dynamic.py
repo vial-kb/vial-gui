@@ -18,12 +18,14 @@ class ProtocolDynamic(BaseProtocol):
             self.combo_entries = []
             self.key_override_count = 0
             self.key_override_entries = []
+            self.alt_repeat_key_count = 0
             return
         data = self.usb_send(self.dev, struct.pack("BBB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_DYNAMIC_ENTRY_OP,
                                                    DYNAMIC_VIAL_GET_NUMBER_OF_ENTRIES), retries=20)
         self.tap_dance_count = data[0]
         self.combo_count = data[1]
         self.key_override_count = data[2]
+        self.alt_repeat_key_count = data[3]
 
         # Bits of data[-1] indicate optionally supported features.
         for bit_index, feature in [
@@ -31,10 +33,14 @@ class ProtocolDynamic(BaseProtocol):
             (1, "layer_lock"),
             # Add more feature bits as needed...
         ]:
-          if data[-1] & (1 << bit_index):
-            self.supported_features.add(feature)
+            if data[-1] & (1 << bit_index):
+                self.supported_features.add(feature)
 
         if self.vial_protocol >= VIAL_PROTOCOL_KEY_OVERRIDE:
-          # Persistent Default Layers isn't present in older QMK builds, but is
-          # unconditionally enabled in recent QMK builds.
-          self.supported_features.add("persistent_default_layer")
+            # Persistent Default Layers isn't present in older QMK builds, but is
+            # unconditionally enabled in recent QMK builds.
+            self.supported_features.add("persistent_default_layer")
+
+        if self.alt_repeat_key_count:
+            self.supported_features.add("repeat_key")
+

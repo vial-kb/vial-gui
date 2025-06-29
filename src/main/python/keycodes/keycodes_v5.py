@@ -579,7 +579,9 @@ class keycodes_v5:
 
         "QK_CAPS_WORD_TOGGLE": 0x999e,
         "QK_LAYER_LOCK": 0x999f,
-        "QK_PERSISTENT_DEF_LAYER": 0x99a0,  # Reserve 0x99a0 - 0x99bf.
+        "QK_PERSISTENT_DEF_LAYER": 0x999a0,  # Reserve 0x999a0 - 0x999bf.
+        "QK_REPEAT_KEY": 0x999c0,
+        "QK_ALT_REPEAT_KEY": 0x999c1,
     }
 
     masked = set()
