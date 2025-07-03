@@ -14,11 +14,13 @@ class Keycode:
     recorder_alias_to_keycode = dict()
     qmk_id_to_keycode = dict()
     protocol = 0
+    min_protocol = 0
 
-    def __init__(self, qmk_id, label, tooltip=None, masked=False, printable=None, recorder_alias=None, alias=None):
+    def __init__(self, qmk_id, label, tooltip=None, masked=False, printable=None, recorder_alias=None, alias=None, min_protocol=0):
         self.qmk_id = qmk_id
         self.qmk_id_to_keycode[qmk_id] = self
         self.label = label
+        self.min_protocol = min_protocol
         # we cannot embed full CJK fonts due to large size, workaround like this for now
         if sys.platform == "emscripten" and not label.isascii() and qmk_id != "KC_TRNS":
             self.label = qmk_id.replace("KC_", "")
@@ -412,8 +414,9 @@ KEYCODES_MODIFIERS = [
     K("KC_RAPC", "RA\n)", "Right Alt when held, ) when tapped"),
     K("KC_SFTENT", "RS\nEnter", "Right Shift when held, Enter when tapped"),
 ]
-
 KEYCODES_QUANTUM = [
+]
+KEYCODES_QUANTUM_ALL = [
     K("MAGIC_SWAP_CONTROL_CAPSLOCK", "Swap\nCtrl\nCaps", "Swap Caps Lock and Left Control", alias=["CL_SWAP"]),
     K("MAGIC_UNSWAP_CONTROL_CAPSLOCK", "Unswap\nCtrl\nCaps", "Unswap Caps Lock and Left Control", alias=["CL_NORM"]),
     K("MAGIC_CAPSLOCK_TO_CONTROL", "Caps\nto\nCtrl", "Treat Caps Lock as Control", alias=["CL_CTRL"]),
@@ -482,6 +485,7 @@ KEYCODES_QUANTUM = [
     K("CMB_ON", "Combo\nOn", "Turns on Combo feature"),
     K("CMB_OFF", "Combo\nOff", "Turns off Combo feature"),
     K("CMB_TOG", "Combo\nToggle", "Toggles Combo feature on and off"),
+    K("FN_CAPSWORD", "Caps\nWord\nToggle", "Toggles Caps Word on and off", min_protocol=6),
 ]
 
 KEYCODES_BACKLIGHT = [
@@ -789,10 +793,15 @@ RAWCODES_MAP = dict()
 K = None
 
 
-def recreate_keycodes():
+def recreate_keycodes(min_protocol=0):
     """ Regenerates global KEYCODES array """
 
     KEYCODES.clear()
+    KEYCODES_QUANTUM.clear()
+    if min_protocol > 0:
+        for keycode in KEYCODES_QUANTUM_ALL:
+            if min_protocol >= keycode.min_protocol:
+                KEYCODES_QUANTUM.append(keycode)
     KEYCODES.extend(KEYCODES_SPECIAL + KEYCODES_BASIC + KEYCODES_SHIFTED + KEYCODES_ISO + KEYCODES_LAYERS +
                     KEYCODES_BOOT + KEYCODES_MODIFIERS + KEYCODES_QUANTUM + KEYCODES_BACKLIGHT + KEYCODES_MEDIA +
                     KEYCODES_TAP_DANCE + KEYCODES_MACRO + KEYCODES_USER + KEYCODES_HIDDEN + KEYCODES_MIDI)
@@ -902,7 +911,5 @@ def recreate_keyboard_keycodes(keyboard):
 
     create_midi_keycodes(keyboard.midi)
 
-    recreate_keycodes()
+    recreate_keycodes(keyboard.vial_protocol)
 
-
-recreate_keycodes()

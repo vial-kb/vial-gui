@@ -553,6 +553,8 @@ class keycodes_v6:
         "QK_REBOOT": 0x7C01,
         "QK_CLEAR_EEPROM": 0x7C03,
 
+        "FN_CAPSWORD": 0x7C73,
+
         "FN_MO13": 0x7C77,
         "FN_MO23": 0x7C78,
 
