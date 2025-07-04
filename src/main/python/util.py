@@ -107,7 +107,7 @@ def find_vial_devices(via_stack_json, sideload_vid=None, sideload_pid=None, quie
                 filtered.append(VialKeyboard(dev, sideload=True))
         elif dev["usage_page"]==65376: #TO Support BLE HID ,65376(0xFF60) is verdor defined for VIA/VIAL
             if not quiet:
-                logging.info("Matching VID={:04X}, PID={:04X}, serial={}, path={} - vial serial magic 111".format(
+                logging.info("Matching VID={:04X}, PID={:04X}, serial={}, path={} - vial serial magic".format(
                     dev["vendor_id"], dev["product_id"], dev["serial_number"], dev["path"]
                 ))
             if is_rawhid(dev, quiet):
