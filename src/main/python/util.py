@@ -55,7 +55,9 @@ def hid_send(dev, msg, retries=1):
             if dev.write(b"\x00" + msg) != MSG_LEN + 1:
                 continue
 
-            data = bytes(dev.read(MSG_LEN, timeout_ms=500))
+            data = bytes(dev.read(MSG_LEN+1, timeout_ms=500))
+            if len(data) == MSG_LEN+1:
+                data= data[1:]
             if not data:
                 continue
         except OSError:
