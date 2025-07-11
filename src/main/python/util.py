@@ -4,6 +4,7 @@ import os
 import pathlib
 import sys
 import time
+import re
 from logging.handlers import RotatingFileHandler
 
 from PyQt5.QtCore import QCoreApplication, QStandardPaths
@@ -186,9 +187,36 @@ class KeycodeDisplay:
         return key is not None and key.qmk_id in cls.keymap_override
 
     @classmethod
-    def display_keycode(cls, widget, code):
+    def display_keycode(cls, widget, code, keyboard=None):
         text = cls.get_label(code)
         tooltip = Keycode.tooltip(code)
+        # tool tip for tap_dance
+        if re.search(r"TD\((\d+)\)", code) and keyboard != None:
+            tooltip_ = ''
+            tap_dance_idx = int(re.search(r"TD\((\d+)\)", code).group(1))
+            prefix = ['On Tap: ', 'On hold: ', 'On double tap: ', 'On tap + hold: ', 'Tapping term(ms): ']
+            for i in range(len(keyboard.tap_dance_entries[tap_dance_idx])):
+                tooltip_ = tooltip_ + (prefix[i]) + str(keyboard.tap_dance_entries[tap_dance_idx][i])
+                if i != len(keyboard.tap_dance_entries[tap_dance_idx]) - 1:
+                    tooltip_ = tooltip_ + '\n'
+            tooltip = tooltip_
+        elif re.search(r"M(\d+)", code) and keyboard != None:
+            macro_idx = int(re.search(r"M(\d+)", code).group(1))
+            macro = keyboard.macros_deserialize(keyboard.macro)[macro_idx]
+            tooltip_ = ''
+            for act in macro:
+                tooltip_ = tooltip_ + act.tag + ': '
+                if act.tag == 'text':
+                    tooltip_ = tooltip_ + act.text
+                elif act.tag == 'delay':
+                    tooltip_ = tooltip_ + str(act.delay)
+                else:
+                    for s in act.sequence:
+                        tooltip_ = tooltip_ + s + ' + '
+                    tooltip_ = tooltip_[:-3]
+                if macro.index(act) != len(macro) - 1:
+                    tooltip_ = tooltip_ + '\n'
+            tooltip = tooltip_
         mask = Keycode.is_mask(code)
         mask_text = ""
         inner = Keycode.find_inner_keycode(code)
