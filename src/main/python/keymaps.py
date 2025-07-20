@@ -1,11 +1,14 @@
 from keycodes.keycodes import Keycode
-from keymap import brazilian, canadian_csa, colemak, danish, dvorak, eurkey, french, german, hebrew, hungarian, italian, japanese, latam, norwegian, portuguese, russian, slovak, spanish, swedish, swedish_swerty, swiss, turkish, ukrainian, croatian, us_international
+from keymap import brazilian, canadian_csa, colemak, colemak_dh_ansi, colemak_dh_iso, colemak_dh_matrix, danish, dvorak, eurkey, french, german, hebrew, hungarian, italian, japanese, latam, norwegian, portuguese, russian, slovak, spanish, swedish, swedish_swerty, swiss, turkish, ukrainian, croatian, us_international
 
 KEYMAPS = [
     ("QWERTY", dict()),
     ("Brazilian (QWERTY)", brazilian.keymap),
     ("Canadian CSA (QWERTY)", canadian_csa.keymap),
     ("Colemak", colemak.keymap),
+    ("Colemak DH (ANSI)", colemak_dh_ansi.keymap),
+    ("Colemak DH (ISO)", colemak_dh_iso.keymap),
+    ("Colemak DH (Matrix)", colemak_dh_matrix.keymap),
     ("Croatian (QWERTZ)", croatian.keymap),
     ("Danish (QWERTY)", danish.keymap),
     ("Dvorak", dvorak.keymap),
