@@ -1,0 +1,27 @@
+# coding: utf-8
+
+keymap = {
+    "KC_E": "F",
+    "KC_R": "P",
+    "KC_T": "B",
+    "KC_Y": "J",
+    "KC_U": "L",
+    "KC_I": "U",
+    "KC_O": "Y",
+    "KC_P": ";",
+    "KC_S": "R",
+    "KC_D": "S",
+    "KC_F": "T",
+    "KC_H": "M",
+    "KC_J": "N",
+    "KC_K": "E",
+    "KC_L": "I",
+    "KC_SCOLON": "O",
+    "KC_NONUS_BSLASH": "Z",
+    "KC_Z": "X",
+    "KC_X": "C",
+    "KC_C": "D",
+    "KC_B": "",
+    "KC_N": "K",
+    "KC_M": "H",
+}
