@@ -55,7 +55,9 @@ def hid_send(dev, msg, retries=1):
             if dev.write(b"\x00" + msg) != MSG_LEN + 1:
                 continue
 
-            data = bytes(dev.read(MSG_LEN, timeout_ms=500))
+            data = bytes(dev.read(MSG_LEN+1, timeout_ms=500))
+            if len(data) == MSG_LEN+1:
+                data= data[1:]
             if not data:
                 continue
         except OSError:
@@ -105,6 +107,13 @@ def find_vial_devices(via_stack_json, sideload_vid=None, sideload_pid=None, quie
                 ))
             if is_rawhid(dev, quiet):
                 filtered.append(VialKeyboard(dev, sideload=True))
+        elif dev["usage_page"]==65376: #TO Support BLE HID ,65376(0xFF60) is verdor defined for VIA/VIAL
+            if not quiet:
+                logging.info("Matching VID={:04X}, PID={:04X}, serial={}, path={} - vial serial magic".format(
+                    dev["vendor_id"], dev["product_id"], dev["serial_number"], dev["path"]
+                ))
+            if is_rawhid(dev, quiet):
+                filtered.append(VialKeyboard(dev))
         elif VIAL_SERIAL_NUMBER_MAGIC in dev["serial_number"]:
             if not quiet:
                 logging.info("Matching VID={:04X}, PID={:04X}, serial={}, path={} - vial serial magic".format(
