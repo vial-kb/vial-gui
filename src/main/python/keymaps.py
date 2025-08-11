@@ -1,5 +1,5 @@
 from keycodes.keycodes import Keycode
-from keymap import brazilian, canadian_csa, colemak, colemak_dh_ansi, colemak_dh_iso, colemak_dh_matrix, danish, dvorak, eurkey, french, german, hebrew, hungarian, italian, japanese, latam, norwegian, portuguese, russian, slovak, spanish, swedish, swedish_swerty, swiss, turkish, ukrainian, croatian, us_international
+from keymap import brazilian, canadian_csa, colemak, colemak_dh_ansi, colemak_dh_iso, colemak_dh_matrix, danish, dvorak, eurkey, french, german, hebrew, hungarian, italian, japanese, latam, norwegian, portuguese, russian, slovak, spanish, swedish, swedish_swerty, swiss, turkish, ukrainian, croatian, us_international, uk
 
 KEYMAPS = [
     ("QWERTY", dict()),
@@ -31,6 +31,7 @@ KEYMAPS = [
     ("Swedish (SWERTY)", swedish_swerty.keymap),
     ("Swiss (QWERTZ)", swiss.keymap),
     ("Turkish (QWERTY)", turkish.keymap),
+    ("UK (QWERTY)", uk.keymap),
     ("Ukrainian (ЙЦУКЕН)", ukrainian.keymap),
     ("US - International (QWERTY)", us_international.keymap),
 ]
