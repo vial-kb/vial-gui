@@ -35,4 +35,5 @@ keymap = {
     "KC_RALT": "AltGr",
     "RALT(kc)": "AltGr\n(kc)",
     "RALT_T(kc)": "AltGr_T\n(kc)",
+    "KC_KP_DOT": ","
 }
