@@ -1,7 +1,7 @@
 altgraph==0.17
 fbs==0.9.0
 future==0.18.2
-git+https://github.com/vial-kb/cython-hidapi@88d8983b3dc65b9ef84238abe3f46004b0ef2fd0#egg=hidapi
+git+https://github.com/vial-kb/cython-hidapi@fa31fd46e709ac4adba80bd516b1290dd56f43e9#egg=hidapi
 keyboard==0.13.5
 macholib==1.14
 pefile==2019.4.18
