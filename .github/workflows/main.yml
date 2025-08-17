@@ -9,12 +9,10 @@ jobs:
     container:
       image: ubuntu:22.04
       options: --privileged
-    env:
-      PYTHON_VERSION: 3.12.2
 
     steps:
     - uses: actions/checkout@v4
- 
+
     - name: Install dependencies
       run: |
         apt-get update
@@ -23,8 +21,6 @@ jobs:
         chmod +x ./appimagetool-x86_64.AppImage
 
     - uses: actions/setup-python@v5
-      with:
-        python-version: ${{env.PYTHON_VERSION}}
 
     - name: Setup venv
       run: |
@@ -55,9 +51,6 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-python@v5
-      with:
-        python-version: ${{env.PYTHON_VERSION}}
-        cache: pip
 
     - name: Setup venv
       run: |
@@ -82,8 +75,6 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-python@v5
-      with:
-        python-version: ${{env.PYTHON_VERSION}}
 
     - name: Setup venv
       run: |
