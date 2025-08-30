@@ -266,6 +266,7 @@ class keycodes_v6:
         "MAGIC_TOGGLE_ALT_GUI": 0x7016,
         "MAGIC_NO_GUI": 0x700A,
         "MAGIC_UNNO_GUI": 0x7009,
+        "MAGIC_TOGGLE_GUI": 0x700B,
         "MAGIC_SWAP_GRAVE_ESC": 0x700C,
         "MAGIC_UNSWAP_GRAVE_ESC": 0x700D,
         "MAGIC_SWAP_BACKSLASH_BACKSPACE": 0x700E,
