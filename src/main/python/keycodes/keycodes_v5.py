@@ -582,6 +582,7 @@ class keycodes_v5:
         "QK_PERSISTENT_DEF_LAYER": 0x999a0,  # Reserve 0x999a0 - 0x999bf.
         "QK_REPEAT_KEY": 0x999c0,
         "QK_ALT_REPEAT_KEY": 0x999c1,
+        "MAGIC_TOGGLE_GUI": 0x999c2,
     }
 
     masked = set()
