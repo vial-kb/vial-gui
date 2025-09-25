@@ -122,7 +122,7 @@ class KeymapEditor(BasicEditor):
             self.current_layer = 0
             self.on_layout_changed()
 
-            self.tabbed_keycodes.recreate_keycode_buttons()
+            self.tabbed_keycodes.recreate_keycode_buttons(self.keyboard)
             TabbedKeycodes.tray.recreate_keycode_buttons()
             self.refresh_layer_display()
         self.container.setEnabled(self.valid())
@@ -179,7 +179,7 @@ class KeymapEditor(BasicEditor):
 
         for widget in self.container.widgets:
             code = self.code_for_widget(widget)
-            KeycodeDisplay.display_keycode(widget, code)
+            KeycodeDisplay.display_keycode(widget, code, self.keyboard)
         self.container.update()
         self.container.updateGeometry()
 
