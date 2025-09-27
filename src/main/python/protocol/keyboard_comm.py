@@ -141,7 +141,12 @@ class Keyboard(ProtocolMacro, ProtocolDynamic, ProtocolTapDance, ProtocolCombo, 
                 block += 1
                 sz -= MSG_LEN
 
-            payload = json.loads(lzma.decompress(payload))
+            try:
+                payload = lzma.decompress(payload)
+            except lzma.LZMAError:
+                payload = payload.decode()
+
+            payload = json.loads(payload)
 
         self.check_protocol_version()
 
