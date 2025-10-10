@@ -41,5 +41,6 @@ class SquareButton(QPushButton):
                 self.label.setText(text)
         else:
             if self.label is not None:
+                self.label.hide()
                 self.label.deleteLater()
             super().setText(text)

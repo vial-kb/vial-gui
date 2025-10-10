@@ -14,10 +14,12 @@ class Keycode:
     recorder_alias_to_keycode = dict()
     qmk_id_to_keycode = dict()
     protocol = 0
+    hidden = False
 
-    def __init__(self, qmk_id, label, tooltip=None, masked=False, printable=None, recorder_alias=None, alias=None):
+    def __init__(self, qmk_id, label, tooltip=None, masked=False, printable=None, recorder_alias=None, alias=None, requires_feature=None):
         self.qmk_id = qmk_id
         self.qmk_id_to_keycode[qmk_id] = self
+        self.requires_feature = requires_feature
         self.label = label
         # we cannot embed full CJK fonts due to large size, workaround like this for now
         if sys.platform == "emscripten" and not label.isascii() and qmk_id != "KC_TRNS":
@@ -156,6 +158,12 @@ class Keycode:
         if qmk_constant not in kc:
             raise RuntimeError("unable to resolve qmk_id={}".format(qmk_constant))
         return kc[qmk_constant]
+
+    def is_supported_by(self, keyboard):
+      """ Whether the keycode is supported by the keyboard. """
+      if self.requires_feature is None:
+        return True
+      return self.requires_feature in keyboard.supported_features
 
 
 K = Keycode
@@ -326,10 +334,12 @@ KEYCODES_ISO_KR = [
 KEYCODES_ISO.extend(KEYCODES_ISO_KR)
 
 KEYCODES_LAYERS = []
-RESET_KEYCODE = "RESET"
+RESET_KEYCODE = "QK_BOOT"
 
 KEYCODES_BOOT = [
-    K("RESET", "Reset", "Reboot to bootloader")
+    K("QK_BOOT", "Boot-\nloader", "Put the keyboard into bootloader mode for flashing", alias=["RESET"]),
+    K("QK_REBOOT", "Reboot", "Reboots the keyboard. Does not load the bootloader"),
+    K("QK_CLEAR_EEPROM", "Clear\nEEPROM", "Reinitializes the keyboard's EEPROM (persistent memory)", alias=["EE_CLR"]),
 ]
 
 KEYCODES_MODIFIERS = [
@@ -432,6 +442,7 @@ KEYCODES_QUANTUM = [
     K("MAGIC_TOGGLE_ALT_GUI", "Toggle\nAlt\nGui", "Toggle Alt and GUI swap on both sides", alias=["AG_TOGG"]),
     K("MAGIC_NO_GUI", "GUI\nOff", "Disable the GUI keys", alias=["GUI_OFF"]),
     K("MAGIC_UNNO_GUI", "GUI\nOn", "Enable the GUI keys", alias=["GUI_ON"]),
+    K("MAGIC_TOGGLE_GUI", "GUI\nToggle", "Toggle the GUI keys on and off", alias=["GUI_TOGG"]),
     K("MAGIC_SWAP_GRAVE_ESC", "Swap\n`\nEsc", "Swap ` and Escape", alias=["GE_SWAP"]),
     K("MAGIC_UNSWAP_GRAVE_ESC", "Unswap\n`\nEsc", "Unswap ` and Escape", alias=["GE_NORM"]),
     K("MAGIC_SWAP_BACKSLASH_BACKSPACE", "Swap\n\\\nBS", "Swap \\ and Backspace", alias=["BS_SWAP"]),
@@ -480,6 +491,10 @@ KEYCODES_QUANTUM = [
     K("CMB_ON", "Combo\nOn", "Turns on Combo feature"),
     K("CMB_OFF", "Combo\nOff", "Turns off Combo feature"),
     K("CMB_TOG", "Combo\nToggle", "Toggles Combo feature on and off"),
+
+    K("QK_CAPS_WORD_TOGGLE", "Caps\nWord", "Capitalizes until end of current word", alias=["CW_TOGG"], requires_feature="caps_word"),
+    K("QK_REPEAT_KEY", "Repeat", "Repeats the last pressed key", alias=["QK_REP"], requires_feature="repeat_key"),
+    K("QK_ALT_REPEAT_KEY", "Alt\nRepeat", "Alt repeats the last pressed key", alias=["QK_AREP"], requires_feature="repeat_key"),
 ]
 
 KEYCODES_BACKLIGHT = [
@@ -511,6 +526,20 @@ KEYCODES_BACKLIGHT = [
     K("RGB_M_X", "RGB\nMode X", "RGB Mode: Christmas"),
     K("RGB_M_G", "RGB\nMode G", "RGB Mode: Gradient"),
     K("RGB_M_T", "RGB\nMode T", "RGB Mode: Test"),
+
+    K("RM_ON", "RGBM\nOn", "Turn on RGB Matrix"),
+    K("RM_OFF", "RGBM\nOff", "Turn off RGB Matrix"),
+    K("RM_TOGG", "RGBM\nTogg", "Toggle RGB Matrix on or off"),
+    K("RM_NEXT", "RGBM\nNext", "Cycle through animations"),
+    K("RM_PREV", "RGBM\nPrev", "Cycle through animations in reverse"),
+    K("RM_HUEU", "RGBM\nHue +", "Cycle through hue"),
+    K("RM_HUED", "RGBM\nHue -", "Cycle through hue in reverse"),
+    K("RM_SATU", "RGBM\nSat +", "Increase the saturation"),
+    K("RM_SATD", "RGBM\nSat -", "Decrease the saturation"),
+    K("RM_VALU", "RGBM\nBright +", "Increase the brightness level"),
+    K("RM_VALD", "RGBM\nBright -", "Decrease the brightness level"),
+    K("RM_SPDU", "RGBM\nSpeed +", "Increase the animation speed"),
+    K("RM_SPDD", "RGBM\nSpeed -", "Decrease the animation speed"),
 ]
 
 KEYCODES_MEDIA = [
@@ -829,14 +858,16 @@ def recreate_keyboard_keycodes(keyboard):
 
     layers = keyboard.layers
 
-    def generate_keycodes_for_mask(label, description):
+    def generate_keycodes_for_mask(label, description, requires_feature=None):
         keycodes = []
         for layer in range(layers):
             lbl = "{}({})".format(label, layer)
-            keycodes.append(Keycode(lbl, lbl, description))
+            keycodes.append(Keycode(lbl, lbl, description, requires_feature=requires_feature))
         return keycodes
 
     KEYCODES_LAYERS.clear()
+    KEYCODES_LAYERS.append(Keycode("QK_LAYER_LOCK", "Layer\nLock",
+            "Locks the current layer", alias=["QK_LLCK"], requires_feature="layer_lock"))
 
     if layers >= 4:
         KEYCODES_LAYERS.append(Keycode("FN_MO13", "Fn1\n(Fn3)"))
@@ -848,6 +879,10 @@ def recreate_keyboard_keycodes(keyboard):
     KEYCODES_LAYERS.extend(
         generate_keycodes_for_mask("DF",
                                    "Set the base (default) layer"))
+    KEYCODES_LAYERS.extend(
+        generate_keycodes_for_mask("PDF",
+                                   "Persistently set the base (default) layer",
+                                   requires_feature="persistent_default_layer"))
     KEYCODES_LAYERS.extend(
         generate_keycodes_for_mask("TG",
                                    "Toggle layer on or off"))
@@ -887,6 +922,10 @@ def recreate_keyboard_keycodes(keyboard):
     create_midi_keycodes(keyboard.midi)
 
     recreate_keycodes()
+
+    # Hide keycodes where .requires_feature isn't supported by the keyboard.
+    for kc in KEYCODES:
+        kc.hidden = not kc.is_supported_by(keyboard)
 
 
 recreate_keycodes()

@@ -14,6 +14,7 @@ class keycodes_v6:
         "QK_TO": 0x5200,
         "QK_MOMENTARY": 0x5220,
         "QK_DEF_LAYER": 0x5240,
+        "QK_PERSISTENT_DEF_LAYER": 0x52E0,
         "QK_TOGGLE_LAYER": 0x5260,
         "QK_ONE_SHOT_LAYER": 0x5280,
         "QK_ONE_SHOT_MOD": 0x52A0,
@@ -265,6 +266,7 @@ class keycodes_v6:
         "MAGIC_TOGGLE_ALT_GUI": 0x7016,
         "MAGIC_NO_GUI": 0x700A,
         "MAGIC_UNNO_GUI": 0x7009,
+        "MAGIC_TOGGLE_GUI": 0x700B,
         "MAGIC_SWAP_GRAVE_ESC": 0x700C,
         "MAGIC_UNSWAP_GRAVE_ESC": 0x700D,
         "MAGIC_SWAP_BACKSLASH_BACKSPACE": 0x700E,
@@ -549,15 +551,36 @@ class keycodes_v6:
         "MI_BENDD": 0x718E,
         "MI_BENDU": 0x718F,
 
-        "RESET": 0x7C00,
+        "QK_BOOT": 0x7C00,
+        "QK_REBOOT": 0x7C01,
+        "QK_CLEAR_EEPROM": 0x7C03,
+
+        "QK_CAPS_WORD_TOGGLE": 0x7C73,
 
         "FN_MO13": 0x7C77,
         "FN_MO23": 0x7C78,
+        "QK_REPEAT_KEY": 0x7C79,
+        "QK_ALT_REPEAT_KEY": 0x7C7A,
+        "QK_LAYER_LOCK": 0x7C7B,
 
         "QK_KB": 0x7E00,
 
         "QMK_LM_SHIFT": 5,
         "QMK_LM_MASK": 0x1F,
+
+        "RM_ON": 0x7840,
+        "RM_OFF": 0x7841,
+        "RM_TOGG": 0x7842,
+        "RM_NEXT": 0x7843,
+        "RM_PREV": 0x7844,
+        "RM_HUEU": 0x7845,
+        "RM_HUED": 0x7846,
+        "RM_SATU": 0x7847,
+        "RM_SATD": 0x7848,
+        "RM_VALU": 0x7849,
+        "RM_VALD": 0x784A,
+        "RM_SPDU": 0x784B,
+        "RM_SPDD": 0x784C,
     }
 
     masked = set()
@@ -574,6 +597,7 @@ for x in range(32):
     keycodes_v6.kc["TT({})".format(x)] = keycodes_v6.kc["QK_LAYER_TAP_TOGGLE"] + x
     keycodes_v6.kc["OSL({})".format(x)] = keycodes_v6.kc["QK_ONE_SHOT_LAYER"] + x
     keycodes_v6.kc["TO({})".format(x)] = keycodes_v6.kc["QK_TO"] + x
+    keycodes_v6.kc["PDF({})".format(x)] = keycodes_v6.kc["QK_PERSISTENT_DEF_LAYER"] + x
 
 for x in range(16):
     keycodes_v6.kc["LT{}(kc)".format(x)] = keycodes_v6.kc["QK_LAYER_TAP"] | (((x) & 0xF) << 8)

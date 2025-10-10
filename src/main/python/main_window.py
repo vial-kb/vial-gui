@@ -12,6 +12,7 @@ import sys
 
 from about_keyboard import AboutKeyboard
 from autorefresh.autorefresh import Autorefresh
+from editor.alt_repeat_key import AltRepeatKey
 from editor.combos import Combos
 from constants import WINDOW_WIDTH, WINDOW_HEIGHT
 from widgets.editor_container import EditorContainer
@@ -54,6 +55,9 @@ class MainWindow(QMainWindow):
         #if _pos and qApp.screenAt(_pos) and qApp.screenAt(_pos + (self.rect().bottomRight())):
             self.move(self.settings.value("pos"))
 
+        if self.settings.value("maximized", False, bool):
+            self.showMaximized()
+
         themes.Theme.set_theme(self.get_theme())
 
         self.combobox_devices = QComboBox()
@@ -76,6 +80,7 @@ class MainWindow(QMainWindow):
         self.tap_dance = TapDance()
         self.combos = Combos()
         self.key_override = KeyOverride()
+        self.alt_repeat_key = AltRepeatKey()
         QmkSettings.initialize(appctx)
         self.qmk_settings = QmkSettings()
         self.matrix_tester = MatrixTest(self.layout_editor)
@@ -83,8 +88,9 @@ class MainWindow(QMainWindow):
 
         self.editors = [(self.keymap_editor, "Keymap"), (self.layout_editor, "Layout"), (self.macro_recorder, "Macros"),
                         (self.rgb_configurator, "Lighting"), (self.tap_dance, "Tap Dance"), (self.combos, "Combos"),
-                        (self.key_override, "Key Overrides"), (self.qmk_settings, "QMK Settings"),
-                        (self.matrix_tester, "Matrix tester"), (self.firmware_flasher, "Firmware updater")]
+                        (self.key_override, "Key Overrides"), (self.alt_repeat_key, "Alt Repeat Key"),
+                        (self.qmk_settings, "QMK Settings"), (self.matrix_tester, "Matrix tester"),
+                        (self.firmware_flasher, "Firmware updater")]
 
         Unlocker.global_layout_editor = self.layout_editor
         Unlocker.global_main_window = self
@@ -170,6 +176,10 @@ class MainWindow(QMainWindow):
         exit_act.setShortcut("Ctrl+Q")
         exit_act.triggered.connect(self.close)
 
+        file_menu = self.menuBar().addMenu(tr("Menu", "File"))
+        file_menu.addAction(layout_load_act)
+        file_menu.addAction(layout_save_act)
+
         if sys.platform != "emscripten":
             file_menu = self.menuBar().addMenu(tr("Menu", "File"))
             file_menu.addAction(layout_load_act)
@@ -239,25 +249,46 @@ class MainWindow(QMainWindow):
         self.about_menu.addAction(self.about_keyboard_act)
         self.about_menu.addAction(about_vial_act)
 
+    def on_layout_loaded(self, layout):
+        """
+        Receives a message from the JS bridge when a layout has
+        been loaded via the JS File System API.
+        """
+        self.keymap_editor.restore_layout(layout)
+        self.rebuild()
+
     def on_layout_load(self):
-        dialog = QFileDialog()
-        dialog.setDefaultSuffix("vil")
-        dialog.setAcceptMode(QFileDialog.AcceptOpen)
-        dialog.setNameFilters(["Vial layout (*.vil)"])
-        if dialog.exec_() == QDialog.Accepted:
-            with open(dialog.selectedFiles()[0], "rb") as inf:
-                data = inf.read()
-            self.keymap_editor.restore_layout(data)
-            self.rebuild()
+        if sys.platform == "emscripten":
+            import vialglue
+            # Tells the JS bridge to open a file selection dialog
+            # so the user can load a layout.
+            vialglue.load_layout()
+        else:
+            dialog = QFileDialog()
+            dialog.setDefaultSuffix("vil")
+            dialog.setAcceptMode(QFileDialog.AcceptOpen)
+            dialog.setNameFilters(["Vial layout (*.vil)"])
+            if dialog.exec_() == QDialog.Accepted:
+                with open(dialog.selectedFiles()[0], "rb") as inf:
+                    data = inf.read()
+                self.keymap_editor.restore_layout(data)
+                self.rebuild()
 
     def on_layout_save(self):
-        dialog = QFileDialog()
-        dialog.setDefaultSuffix("vil")
-        dialog.setAcceptMode(QFileDialog.AcceptSave)
-        dialog.setNameFilters(["Vial layout (*.vil)"])
-        if dialog.exec_() == QDialog.Accepted:
-            with open(dialog.selectedFiles()[0], "wb") as outf:
-                outf.write(self.keymap_editor.save_layout())
+        if sys.platform == "emscripten":
+            import vialglue
+            layout = self.keymap_editor.save_layout()
+            # Passes the current layout to the JS bridge so it can
+            # open a file dialog and allow the user to save it to disk.
+            vialglue.save_layout(layout)
+        else:
+            dialog = QFileDialog()
+            dialog.setDefaultSuffix("vil")
+            dialog.setAcceptMode(QFileDialog.AcceptSave)
+            dialog.setNameFilters(["Vial layout (*.vil)"])
+            if dialog.exec_() == QDialog.Accepted:
+                with open(dialog.selectedFiles()[0], "wb") as outf:
+                    outf.write(self.keymap_editor.save_layout())
 
     def on_layout_export_svg(self):
         dialog = QFileDialog()
@@ -322,8 +353,8 @@ class MainWindow(QMainWindow):
             self.autorefresh.current_device.keyboard.reload()
 
         for e in [self.layout_editor, self.keymap_editor, self.firmware_flasher, self.macro_recorder,
-                  self.tap_dance, self.combos, self.key_override, self.qmk_settings, self.matrix_tester,
-                  self.rgb_configurator]:
+                  self.tap_dance, self.combos, self.key_override, self.alt_repeat_key,
+                  self.qmk_settings, self.matrix_tester, self.rgb_configurator]:
             e.rebuild(self.autorefresh.current_device)
 
     def refresh_tabs(self):
@@ -447,5 +478,6 @@ class MainWindow(QMainWindow):
     def closeEvent(self, e):
         self.settings.setValue("size", self.size())
         self.settings.setValue("pos", self.pos())
+        self.settings.setValue("maximized", self.isMaximized())
 
         e.accept()

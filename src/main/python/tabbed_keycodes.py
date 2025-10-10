@@ -48,11 +48,12 @@ class AlternativeDisplay(QWidget):
 
     def recreate_buttons(self, keycode_filter):
         for btn in self.buttons:
+            btn.hide()
             btn.deleteLater()
         self.buttons = []
 
         for keycode in self.keycodes:
-            if not keycode_filter(keycode.qmk_id):
+            if keycode.hidden or not keycode_filter(keycode.qmk_id):
                 continue
             btn = SquareButton()
             btn.setRelSize(KEYCODE_BTN_RATIO)

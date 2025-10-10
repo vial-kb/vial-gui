@@ -6,7 +6,11 @@ keyboard==0.13.5
 macholib==1.14
 pefile==2019.4.18
 PyInstaller==3.4
-PyQt5==5.9.2
+PyQt5==5.11.2
+PyQt5-sip==4.19.19
+pytest==7.0.1
+pytest-qt==4.0.2
+pytest-xvfb==2.0.0
 https://github.com/danthedeckie/simpleeval/archive/41c99b8e224a7a0ae0ac59c773598fe79a4470db.zip
 sip==4.19.8
 pywin32==303; sys_platform == 'win32'

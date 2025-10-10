@@ -44,7 +44,7 @@ class BooleanOption(GenericOption):
     def __init__(self, option, container):
         super().__init__(option, container)
 
-        self.qsid_bit = self.option["bit"]
+        self.qsid_bit = self.option.get("bit", 0)
 
         self.checkbox = QCheckBox()
         self.checkbox.stateChanged.connect(self.on_change)

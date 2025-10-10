@@ -548,7 +548,8 @@ class keycodes_v5:
         "MI_BENDD": 0x5CB9,
         "MI_BENDU": 0x5CBA,
 
-        "RESET": 0x5C00,
+        "QK_BOOT": 0x5C00,
+        "QK_CLEAR_EEPROM": 0x5CDF,
 
         "FN_MO13": 0x5F10,
         "FN_MO23": 0x5F11,
@@ -558,6 +559,30 @@ class keycodes_v5:
 
         "QMK_LM_SHIFT": 4,
         "QMK_LM_MASK": 0xF,
+
+        # TODO: these keycodes don't actually exist in v5; we need fake ones here to unbreak the build
+        # TODO: these should be removed after we can move keycodes to be owned by the Keyboard object and support optional/not implemented keycodes
+        "RM_ON": 0x9990,
+        "RM_OFF": 0x9991,
+        "RM_TOGG": 0x9992,
+        "RM_NEXT": 0x9993,
+        "RM_PREV": 0x9994,
+        "RM_HUEU": 0x9995,
+        "RM_HUED": 0x9996,
+        "RM_SATU": 0x9997,
+        "RM_SATD": 0x9998,
+        "RM_VALU": 0x9999,
+        "RM_VALD": 0x999a,
+        "RM_SPDU": 0x999b,
+        "RM_SPDD": 0x999c,
+        "QK_REBOOT": 0x999d,
+
+        "QK_CAPS_WORD_TOGGLE": 0x999e,
+        "QK_LAYER_LOCK": 0x999f,
+        "QK_PERSISTENT_DEF_LAYER": 0x999a0,  # Reserve 0x999a0 - 0x999bf.
+        "QK_REPEAT_KEY": 0x999c0,
+        "QK_ALT_REPEAT_KEY": 0x999c1,
+        "MAGIC_TOGGLE_GUI": 0x999c2,
     }
 
     masked = set()
@@ -574,11 +599,13 @@ for x in range(32):
     keycodes_v5.kc["TT({})".format(x)] = keycodes_v5.kc["QK_LAYER_TAP_TOGGLE"] | x
     keycodes_v5.kc["OSL({})".format(x)] = keycodes_v5.kc["QK_ONE_SHOT_LAYER"] | x
     keycodes_v5.kc["TO({})".format(x)] = keycodes_v5.kc["QK_TO"] | (1 << 4) | x
+    keycodes_v5.kc["PDF({})".format(x)] = keycodes_v5.kc["QK_PERSISTENT_DEF_LAYER"] + x
 
 for x in range(16):
     keycodes_v5.kc["LT{}(kc)".format(x)] = keycodes_v5.kc["QK_LAYER_TAP"] | (((x) & 0xF) << 8)
 
-for x in range(16):
+#TODO(userkeycodes): temp workaround, keycodes handling is messy, rework this later
+for x in range(64):
     keycodes_v5.kc["USER{:02}".format(x)] = keycodes_v5.kc["QK_KB"] + x
 
 for name, val in keycodes_v5.kc.items():
