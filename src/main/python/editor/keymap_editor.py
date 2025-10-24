@@ -2,7 +2,9 @@
 import json
 
 from PyQt5.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QMessageBox, QWidget
-from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtCore import Qt, pyqtSignal, QSize, QRect
+from PyQt5.QtGui import QPainter
+from PyQt5.QtSvg import QSvgGenerator
 
 from any_keycode_dialog import AnyKeycodeDialog
 from editor.basic_editor import BasicEditor
@@ -143,6 +145,28 @@ class KeymapEditor(BasicEditor):
                 return
         self.keyboard.restore_layout(data)
         self.refresh_layer_display()
+
+    def export_as_svg(self, filename, device_name):
+        widget = self.container
+        generator = QSvgGenerator()
+        generator.setSize(QSize(widget.width, widget.height * self.keyboard.layers))
+        generator.setViewBox(QRect(0, 0, widget.width, widget.height * self.keyboard.layers))
+        generator.setFileName(filename)
+        generator.setTitle(device_name)
+        generator.setDescription("")
+        painter = QPainter()
+        painter.begin(generator)
+        current_layer = self.current_layer
+        current_style = widget.styleSheet()
+        widget.setStyleSheet("background: transparent;")
+        for x in range(self.keyboard.layers):
+            self.switch_layer(x)
+            widget.render(painter)
+            if x != self.keyboard.layers - 1:
+                painter.translate(0, widget.height)
+        self.switch_layer(current_layer)
+        widget.setStyleSheet(current_style)
+        painter.end()
 
     def on_any_keycode(self):
         if self.container.active_key is None:
