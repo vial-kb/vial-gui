@@ -39,6 +39,8 @@ class keycodes_v5:
         "LALT(kc)": 0x400,
         "LCA_T(kc)": 0x6500,
         "LCA(kc)": 0x500,
+        "LAG_T(kc)": 0x6c00,
+        "LAG(kc)": 0xc00,
         "LCAG_T(kc)": 0x6d00,
         "LCAG(kc)": 0xd00,
         "LCG_T(kc)": 0x6900,
