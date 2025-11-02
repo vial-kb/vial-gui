@@ -41,6 +41,8 @@ class keycodes_v6:
         "LALT(kc)": 0x400,
         "LCA_T(kc)": 0x2500,
         "LCA(kc)": 0x500,
+        "LAG_T(kc)": 0x2c00,
+        "LAG(kc)": 0xc00,
         "LCAG_T(kc)": 0x2d00,
         "LCAG(kc)": 0xd00,
         "LCG_T(kc)": 0x2900,
