@@ -18,7 +18,7 @@ jobs:
         path: util/linux-builder/output/Vial-x86_64.AppImage
 
   build-mac:
-    runs-on: macos-13
+    runs-on: macos-15
     env:
       PYTHON_VERSION: 3.6.8
       MACOSX_DEPLOYMENT_TARGET: 10.9
@@ -38,7 +38,7 @@ jobs:
 
     - name: Setup venv
       run: |
-        python3 -m venv venv
+        python3.6 -m venv venv
         source venv/bin/activate
         pip install -r requirements.txt
 
