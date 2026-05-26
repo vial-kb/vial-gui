@@ -159,6 +159,10 @@ class MainWindow(QMainWindow):
         layout_save_act.setShortcut("Ctrl+S")
         layout_save_act.triggered.connect(self.on_layout_save)
 
+        layout_export_svg = QAction(tr("MenuFile", "Export layout as svg..."), self)
+        layout_export_svg.setShortcut("Ctrl+I")
+        layout_export_svg.triggered.connect(self.on_layout_export_svg)
+
         sideload_json_act = QAction(tr("MenuFile", "Sideload VIA JSON..."), self)
         sideload_json_act.triggered.connect(self.on_sideload_json)
 
@@ -177,6 +181,10 @@ class MainWindow(QMainWindow):
         file_menu.addAction(layout_save_act)
 
         if sys.platform != "emscripten":
+            file_menu = self.menuBar().addMenu(tr("Menu", "File"))
+            file_menu.addAction(layout_load_act)
+            file_menu.addAction(layout_save_act)
+            file_menu.addAction(layout_export_svg)
             file_menu.addSeparator()
             file_menu.addAction(sideload_json_act)
             file_menu.addAction(download_via_stack_act)
@@ -281,6 +289,14 @@ class MainWindow(QMainWindow):
             if dialog.exec_() == QDialog.Accepted:
                 with open(dialog.selectedFiles()[0], "wb") as outf:
                     outf.write(self.keymap_editor.save_layout())
+
+    def on_layout_export_svg(self):
+        dialog = QFileDialog()
+        dialog.setDefaultSuffix("svg")
+        dialog.setAcceptMode(QFileDialog.AcceptSave)
+        dialog.setNameFilters(["Keymap image (*.svg)"])
+        if dialog.exec_() == QDialog.Accepted:
+            self.keymap_editor.export_as_svg(dialog.selectedFiles()[0], self.combobox_devices.currentText())
 
     def on_click_refresh(self):
         self.autorefresh.update(quiet=False, hard=True)
