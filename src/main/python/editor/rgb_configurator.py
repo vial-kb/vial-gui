@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import QWidget, QPushButton, QHBoxLayout, QSizePolicy, QGri
     QComboBox, QColorDialog, QCheckBox
 
 from editor.basic_editor import BasicEditor
+from editor.rule_lighting import RuleLightingPanel, RULE_LIGHTING_EFFECT_IDX
 from widgets.clickable_label import ClickableLabel
 from util import tr
 from vial_device import VialKeyboard
@@ -277,8 +278,9 @@ class QmkBacklightHandler(BasicHandler):
 
 class VialRGBHandler(BasicHandler):
 
-    def __init__(self, container):
+    def __init__(self, container, container_widget=None):
         super().__init__(container)
+        self._container_widget = container_widget
 
         row = container.rowCount()
 
@@ -314,19 +316,53 @@ class VialRGBHandler(BasicHandler):
         self.rgb_speed.valueChanged.connect(self.on_rgb_speed_changed)
         container.addWidget(self.rgb_speed, row + 3, 1)
 
+        # Rule Lighting panel (shown when Rule Lighting mode is selected)
+        self.rule_lighting_panel = RuleLightingPanel()
+        container.addWidget(self.rule_lighting_panel, row + 4, 0, 1, 2)
+        container.setRowStretch(row + 4, 1)  # Make this row expand
+        self.rule_lighting_panel.hide()
+
         self.widgets = [self.lbl_rgb_effect, self.rgb_effect, self.lbl_rgb_brightness, self.rgb_brightness,
-                        self.lbl_rgb_color, self.rgb_color, self.lbl_rgb_speed, self.rgb_speed]
+                        self.lbl_rgb_color, self.rgb_color, self.lbl_rgb_speed, self.rgb_speed,
+                        self.rule_lighting_panel]
 
         self.effects = []
+        self.has_rule_lighting = False
 
     def on_rgb_brightness_changed(self, value):
         self.keyboard.set_vialrgb_brightness(value)
+        # Rule Lighting uses rgb_matrix_get_val() directly, no sync needed
 
     def on_rgb_speed_changed(self, value):
         self.keyboard.set_vialrgb_speed(value)
 
     def on_rgb_effect_changed(self, index):
-        self.keyboard.set_vialrgb_mode(self.effects[index].idx)
+        if index < 0 or index >= len(self.effects):
+            return
+
+        effect = self.effects[index]
+
+        if effect.idx == RULE_LIGHTING_EFFECT_IDX:
+            # Show Rule Lighting panel
+            self._show_rule_lighting(True)
+            self.rule_lighting_panel.load_from_keyboard()
+        else:
+            # Show normal RGB controls
+            self._show_rule_lighting(False)
+
+        # Always set the effect mode
+        self.keyboard.set_vialrgb_mode(effect.idx)
+
+    def _show_rule_lighting(self, show):
+        """Show/hide Rule Lighting panel and normal RGB controls"""
+        # Hide color only, keep speed and brightness visible (used by Rule Lighting)
+        self.lbl_rgb_color.setVisible(not show)
+        self.rgb_color.setVisible(not show)
+        # Speed and brightness stay visible - shared with Rule Lighting
+        self.rule_lighting_panel.setVisible(show)
+        # Notify parent RGBConfigurator to adjust layout
+        if hasattr(self, 'rule_lighting_toggled') and self.rule_lighting_toggled:
+            self.rule_lighting_toggled(show)
 
     def on_rgb_color(self):
         self.dlg_color = QColorDialog()
@@ -357,6 +393,13 @@ class VialRGBHandler(BasicHandler):
             if effect.idx in self.keyboard.rgb_supported_effects:
                 self.effects.append(effect)
 
+        # Add Rule Lighting option if supported
+        self.has_rule_lighting = self.keyboard.rule_lighting_count > 0
+        if self.has_rule_lighting:
+            self.effects.append(VialRGBEffect(RULE_LIGHTING_EFFECT_IDX, "Rule Lighting"))
+            # Setup the panel
+            self.rule_lighting_panel.set_keyboard(self.keyboard)
+
         self.rgb_effect.clear()
         for effect in self.effects:
             self.rgb_effect.addItem(effect.name)
@@ -366,10 +409,28 @@ class VialRGBHandler(BasicHandler):
             return
 
         self.rebuild_effects()
-        for x, effect in enumerate(self.effects):
-            if effect.idx == self.keyboard.rgb_mode:
-                self.rgb_effect.setCurrentIndex(x)
-                break
+
+        # Check if Rule Lighting mode is currently selected
+        rule_lighting_active = False
+        if self.has_rule_lighting:
+            rule_lighting_active = self.keyboard.rgb_mode == RULE_LIGHTING_EFFECT_IDX
+
+        if rule_lighting_active:
+            # Select Rule Lighting in dropdown
+            for x, effect in enumerate(self.effects):
+                if effect.idx == RULE_LIGHTING_EFFECT_IDX:
+                    self.rgb_effect.setCurrentIndex(x)
+                    break
+            self._show_rule_lighting(True)
+            self.rule_lighting_panel.load_from_keyboard()
+        else:
+            # Select current RGB mode
+            for x, effect in enumerate(self.effects):
+                if effect.idx == self.keyboard.rgb_mode:
+                    self.rgb_effect.setCurrentIndex(x)
+                    break
+            self._show_rule_lighting(False)
+
         self.rgb_brightness.setMaximum(self.keyboard.rgb_maximum_brightness)
         self.rgb_brightness.setValue(self.keyboard.rgb_hsv[2])
         self.rgb_speed.setValue(self.keyboard.rgb_speed)
@@ -384,12 +445,16 @@ class RGBConfigurator(BasicEditor):
     def __init__(self):
         super().__init__()
 
+        # Top stretch - will be minimized when Rule Lighting is active
+        self.top_stretch_idx = self.count()
         self.addStretch()
 
         w = QWidget()
-        w.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
+        w.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
         self.container = QGridLayout()
         w.setLayout(self.container)
+        self.container_widget = w
+        self.container_widget_idx = self.count()
         self.addWidget(w)
         self.setAlignment(w, QtCore.Qt.AlignHCenter)
 
@@ -397,20 +462,57 @@ class RGBConfigurator(BasicEditor):
         self.handler_backlight.update.connect(self.update_from_keyboard)
         self.handler_rgblight = QmkRgblightHandler(self.container)
         self.handler_rgblight.update.connect(self.update_from_keyboard)
-        self.handler_vialrgb = VialRGBHandler(self.container)
+        self.handler_vialrgb = VialRGBHandler(self.container, w)
         self.handler_vialrgb.update.connect(self.update_from_keyboard)
+        self.handler_vialrgb.rule_lighting_toggled = self._on_rule_lighting_toggled
         self.handlers = [self.handler_backlight, self.handler_rgblight, self.handler_vialrgb]
 
+        # Bottom stretch - will be hidden when Rule Lighting is active
+        self.bottom_stretch_idx = self.count()
         self.addStretch()
+
         buttons = QHBoxLayout()
         buttons.addStretch()
-        save_btn = QPushButton(tr("RGBConfigurator", "Save"))
-        buttons.addWidget(save_btn)
-        save_btn.clicked.connect(self.on_save)
+        self.save_btn = QPushButton(tr("RGBConfigurator", "Save"))
+        buttons.addWidget(self.save_btn)
+        self.save_btn.clicked.connect(self.on_save)
         self.addLayout(buttons)
+
+        # Connect rule lighting modified signal
+        self.handler_vialrgb.rule_lighting_panel.modified_changed.connect(self._on_rule_lighting_modified)
+
+    def _on_rule_lighting_toggled(self, show):
+        """Adjust layout when Rule Lighting is shown/hidden"""
+        if show:
+            # Remove stretches, expand container
+            self.setStretch(self.top_stretch_idx, 0)
+            self.setStretch(self.container_widget_idx, 1)
+            self.setStretch(self.bottom_stretch_idx, 0)
+            self.container_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+            self.container_widget.setMinimumSize(600, 400)
+            self.setAlignment(self.container_widget, QtCore.Qt.Alignment())  # Remove alignment
+        else:
+            # Restore stretches, shrink container
+            self.setStretch(self.top_stretch_idx, 1)
+            self.setStretch(self.container_widget_idx, 0)
+            self.setStretch(self.bottom_stretch_idx, 1)
+            self.container_widget.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
+            self.container_widget.setMinimumSize(0, 0)
+            self.setAlignment(self.container_widget, QtCore.Qt.AlignHCenter)
 
     def on_save(self):
         self.device.keyboard.save_rgb()
+        self.handler_vialrgb.rule_lighting_panel.mark_saved()
+        self._update_save_button()
+
+    def _on_rule_lighting_modified(self, modified):
+        self._update_save_button()
+
+    def _update_save_button(self):
+        if self.handler_vialrgb.rule_lighting_panel.is_modified():
+            self.save_btn.setText(tr("RGBConfigurator", "Save") + " *")
+        else:
+            self.save_btn.setText(tr("RGBConfigurator", "Save"))
 
     def valid(self):
         return isinstance(self.device, VialKeyboard) and \

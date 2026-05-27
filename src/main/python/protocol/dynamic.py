@@ -19,6 +19,7 @@ class ProtocolDynamic(BaseProtocol):
             self.key_override_count = 0
             self.key_override_entries = []
             self.alt_repeat_key_count = 0
+            self.rule_lighting_count = 0
             return
         data = self.usb_send(self.dev, struct.pack("BBB", CMD_VIA_VIAL_PREFIX, CMD_VIAL_DYNAMIC_ENTRY_OP,
                                                    DYNAMIC_VIAL_GET_NUMBER_OF_ENTRIES), retries=20)
@@ -26,6 +27,7 @@ class ProtocolDynamic(BaseProtocol):
         self.combo_count = data[1]
         self.key_override_count = data[2]
         self.alt_repeat_key_count = data[3]
+        self.rule_lighting_count = data[4]
 
         # Bits of data[-1] indicate optionally supported features.
         for bit_index, feature in [
