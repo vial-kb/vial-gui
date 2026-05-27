@@ -72,6 +72,7 @@ Section
   WriteUninstaller "$InstDir\uninstall.exe"
   CreateShortCut "$SMPROGRAMS\${app_name}.lnk" "$InstDir\${app_name}.exe"
   WriteRegStr SHCTX "${UNINST_KEY}" "DisplayName" "${app_name}"
+  WriteRegStr SHCTX "${UNINST_KEY}" "DisplayVersion" "${version}"
   WriteRegStr SHCTX "${UNINST_KEY}" "UninstallString" \
     "$\"$InstDir\uninstall.exe$\" /$MultiUser.InstallMode"
   WriteRegStr SHCTX "${UNINST_KEY}" "QuietUninstallString" \
