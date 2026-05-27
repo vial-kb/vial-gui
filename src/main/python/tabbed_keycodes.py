@@ -14,7 +14,7 @@ from keycodes.keycodes import KEYCODES_BASIC, KEYCODES_ISO, KEYCODES_MACRO, KEYC
     KEYCODES_TAP_DANCE, KEYCODES_MIDI, KEYCODES_BASIC_NUMPAD, KEYCODES_BASIC_NAV, KEYCODES_ISO_KR
 from widgets.square_button import SquareButton
 from util import tr, KeycodeDisplay
-
+import re
 
 class AlternativeDisplay(QWidget):
 
@@ -46,7 +46,7 @@ class AlternativeDisplay(QWidget):
         layout.addLayout(self.key_layout)
         self.setLayout(layout)
 
-    def recreate_buttons(self, keycode_filter):
+    def recreate_buttons(self, keycode_filter, keyboard=None):
         for btn in self.buttons:
             btn.hide()
             btn.deleteLater()
@@ -57,7 +57,36 @@ class AlternativeDisplay(QWidget):
                 continue
             btn = SquareButton()
             btn.setRelSize(KEYCODE_BTN_RATIO)
-            btn.setToolTip(Keycode.tooltip(keycode.qmk_id))
+            tooltip = Keycode.tooltip(keycode.qmk_id)
+            # tool tip for tap_dance and macro
+            if keyboard != None and re.search(r"TD\((\d+)\)", keycode.qmk_id):
+                tooltip_ = ''
+                tap_dance_idx = int(re.search(r"TD\((\d+)\)", keycode.qmk_id).group(1))
+                prefix = ['On Tap: ', 'On hold: ', 'On double tap: ', 'On tap + hold: ', 'Tapping term(ms): ']
+                for i in range(len(keyboard.tap_dance_entries[tap_dance_idx])):
+                    tooltip_ = tooltip_ + (prefix[i]) + str(keyboard.tap_dance_entries[tap_dance_idx][i])
+                    if i != len(keyboard.tap_dance_entries[tap_dance_idx]) - 1:
+                        tooltip_ = tooltip_ + '\n'
+                tooltip = tooltip_
+            elif keyboard != None and re.search(r"M(\d+)", keycode.qmk_id):
+                macro_idx = int(re.search(r"M(\d+)", keycode.qmk_id).group(1))
+                macro = keyboard.macros_deserialize(keyboard.macro)[macro_idx]
+                tooltip_ = ''
+                for act in macro:
+                    tooltip_ = tooltip_ + act.tag + ': '
+                    if act.tag == 'text':
+                        tooltip_ = tooltip_ + act.text
+                    elif act.tag == 'delay':
+                        tooltip_ = tooltip_ + str(act.delay)
+                    else:
+                        for s in act.sequence:
+                            tooltip_ = tooltip_ + s + ' + '
+                        tooltip_ = tooltip_[:-3]
+                    if macro.index(act) != len(macro) - 1:
+                        tooltip_ = tooltip_ + '\n'
+                tooltip = tooltip_
+            #btn.setToolTip(Keycode.tooltip(keycode.qmk_id))
+            btn.setToolTip(tooltip)
             btn.clicked.connect(lambda st, k=keycode: self.keycode_changed.emit(k.qmk_id))
             btn.keycode = keycode
             self.key_layout.addWidget(btn)
@@ -104,9 +133,9 @@ class Tab(QScrollArea):
         w.setLayout(self.layout)
         self.setWidget(w)
 
-    def recreate_buttons(self, keycode_filter):
+    def recreate_buttons(self, keycode_filter, keyboard=None):
         for alt in self.alternatives:
-            alt.recreate_buttons(keycode_filter)
+            alt.recreate_buttons(keycode_filter, keyboard)
         self.setVisible(self.has_buttons())
 
     def relabel_buttons(self):
@@ -197,13 +226,13 @@ class FilteredTabbedKeycodes(QTabWidget):
         else:
             self.keycode_changed.emit(Keycode.normalize(code))
 
-    def recreate_keycode_buttons(self):
+    def recreate_keycode_buttons(self, keyboard=None):
         prev_tab = self.tabText(self.currentIndex()) if self.currentIndex() >= 0 else ""
         while self.count() > 0:
             self.removeTab(0)
 
         for tab in self.tabs:
-            tab.recreate_buttons(self.keycode_filter)
+            tab.recreate_buttons(self.keycode_filter, keyboard)
             if tab.has_buttons():
                 self.addTab(tab, tr("TabbedKeycodes", tab.label))
                 if tab.label == prev_tab:
@@ -242,8 +271,10 @@ class TabbedKeycodes(QWidget):
         cls.tray = tray
 
     @classmethod
-    def open_tray(cls, target, keycode_filter=None):
+    def open_tray(cls, target, keycode_filter=None, keyboard=None):
         cls.tray.set_keycode_filter(keycode_filter)
+        if keyboard != None:
+            cls.tray.recreate_keycode_buttons(keyboard)
         cls.tray.show()
         if cls.tray.target is not None and cls.tray.target != target:
             cls.tray.target.deselect()
@@ -271,9 +302,9 @@ class TabbedKeycodes(QWidget):
         if self.target is not None:
             self.target.on_anykey()
 
-    def recreate_keycode_buttons(self):
+    def recreate_keycode_buttons(self, keyboard=None):
         for opt in [self.all_keycodes, self.basic_keycodes]:
-            opt.recreate_keycode_buttons()
+            opt.recreate_keycode_buttons(keyboard)
 
     def set_keycode_filter(self, keycode_filter):
         if keycode_filter == keycode_filter_masked:
