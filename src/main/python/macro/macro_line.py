@@ -47,6 +47,12 @@ class MacroLine(QObject):
         self.action.changed.connect(self.on_change)
         self.row = -1
 
+        self.btn_copy = QToolButton()
+        self.btn_copy.setText("c")
+        self.btn_copy.setToolTip("Duplicate action")
+        self.btn_copy.setToolButtonStyle(Qt.ToolButtonTextOnly)
+        self.btn_copy.clicked.connect(self.on_copy_clicked)
+
         self.btn_remove = QToolButton()
         self.btn_remove.setText("×")
         self.btn_remove.setToolButtonStyle(Qt.ToolButtonTextOnly)
@@ -56,17 +62,20 @@ class MacroLine(QObject):
         self.row = row
         self.container.addLayout(self.arrows, row, 0)
         self.container.addWidget(self.select_type, row, 1)
-        self.container.addWidget(self.btn_remove, row, 3)
+        self.container.addWidget(self.btn_copy, row, 3)
+        self.container.addWidget(self.btn_remove, row, 4)
         self.action.insert(row)
 
     def remove(self):
         self.container.removeItem(self.arrows)
         self.container.removeWidget(self.select_type)
+        self.container.removeWidget(self.btn_copy)
         self.container.removeWidget(self.btn_remove)
         self.action.remove()
 
     def delete(self):
         self.action.delete()
+        self.btn_copy.deleteLater()
         self.btn_remove.deleteLater()
         self.select_type.deleteLater()
         self.arrows.deleteLater()
@@ -80,6 +89,9 @@ class MacroLine(QObject):
         self.action.changed.connect(self.on_change)
         self.action.insert(self.row)
         self.changed.emit()
+
+    def on_copy_clicked(self):
+        self.parent.on_copy(self)
 
     def on_remove_clicked(self):
         self.parent.on_remove(self)

@@ -1,5 +1,9 @@
 venv
+.venv
 target
+build
+dist
 __pycache__
 *.pyc
 .idea
+*.egg-info

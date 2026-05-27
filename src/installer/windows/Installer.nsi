@@ -46,10 +46,6 @@ FunctionEnd
   !insertmacro MUI_PAGE_DIRECTORY
   !insertmacro MUI_PAGE_INSTFILES
     !define MUI_FINISHPAGE_NOAUTOCLOSE
-    !define MUI_FINISHPAGE_RUN
-    !define MUI_FINISHPAGE_RUN_CHECKED
-    !define MUI_FINISHPAGE_RUN_TEXT "Run ${app_name}"
-    !define MUI_FINISHPAGE_RUN_FUNCTION "LaunchLink"
   !insertmacro MUI_PAGE_FINISH
 
   !insertmacro MUI_UNPAGE_CONFIRM
@@ -98,8 +94,3 @@ Section "Uninstall"
   DeleteRegKey SHCTX "${UNINST_KEY}"
 
 SectionEnd
-
-Function LaunchLink
-  !addplugindir "."
-  ShellExecAsUser::ShellExecAsUser "open" "$SMPROGRAMS\${app_name}.lnk"
-FunctionEnd

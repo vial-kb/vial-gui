@@ -9,7 +9,7 @@ if sys.platform == "emscripten":
         def __exit__(self, *args):
             pass
 else:
-    from multiprocessing import RLock
+    from threading import RLock
 
 from PyQt5.QtCore import pyqtSignal, QThread
 

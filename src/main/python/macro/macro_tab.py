@@ -89,6 +89,23 @@ class MacroTab(QVBoxLayout):
     def on_add(self):
         self.add_action(ActionTextUI(self.container))
 
+    def on_copy(self, obj):
+        index = self.lines.index(obj)
+        saved = obj.action.act.save()
+        new_act = tag_to_action[saved[0]]()
+        new_act.restore(saved)
+        new_act_ui = ui_action[type(new_act)](self.container, new_act)
+        if self.parent.keyboard.vial_protocol < VIAL_PROTOCOL_EXT_MACROS:
+            new_act_ui.set_keycode_filter(keycode_filter_masked)
+        new_line = MacroLine(self, new_act_ui)
+        new_line.changed.connect(self.on_change)
+        for line in self.lines:
+            line.remove()
+        self.lines.insert(index + 1, new_line)
+        for x, line in enumerate(self.lines):
+            line.insert(x)
+        self.changed.emit()
+
     def on_remove(self, obj):
         for line in self.lines:
             if line == obj:
