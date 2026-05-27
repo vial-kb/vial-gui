@@ -5,7 +5,6 @@ from keycodes.keycodes import Keycode, RESET_KEYCODE
 from protocol.base_protocol import BaseProtocol
 from protocol.constants import DYNAMIC_VIAL_KEY_OVERRIDE_GET, CMD_VIA_VIAL_PREFIX, CMD_VIAL_DYNAMIC_ENTRY_OP, \
     DYNAMIC_VIAL_KEY_OVERRIDE_SET
-from unlocker import Unlocker
 
 
 class KeyOverrideOptions:
@@ -96,6 +95,7 @@ class ProtocolKeyOverride(BaseProtocol):
     def key_override_set(self, idx, entry):
         if entry != self.key_override_entries[idx]:
             if entry.replacement == RESET_KEYCODE:
+                from unlocker import Unlocker
                 Unlocker.unlock(self)
 
             self.key_override_entries[idx] = entry

@@ -21,8 +21,7 @@ from protocol.dynamic import ProtocolDynamic
 from protocol.key_override import ProtocolKeyOverride
 from protocol.macro import ProtocolMacro
 from protocol.tap_dance import ProtocolTapDance
-from unlocker import Unlocker
-from util import MSG_LEN, hid_send
+from util_base import MSG_LEN, hid_send
 
 SUPPORTED_VIA_PROTOCOL = [-1, 9]
 SUPPORTED_VIAL_PROTOCOL = [-1, 0, 1, 2, 3, 4, 5, 6]
@@ -314,6 +313,7 @@ class Keyboard(ProtocolMacro, ProtocolDynamic, ProtocolTapDance, ProtocolCombo, 
         key = (layer, row, col)
         if self.layout[key] != code:
             if code == RESET_KEYCODE:
+                from unlocker import Unlocker
                 Unlocker.unlock(self)
 
             self.usb_send(self.dev, struct.pack(">BBBBH", CMD_VIA_SET_KEYCODE, layer, row, col,
@@ -324,6 +324,7 @@ class Keyboard(ProtocolMacro, ProtocolDynamic, ProtocolTapDance, ProtocolCombo, 
         key = (layer, index, direction)
         if self.encoder_layout[key] != code:
             if code == RESET_KEYCODE:
+                from unlocker import Unlocker
                 Unlocker.unlock(self)
 
             self.usb_send(self.dev, struct.pack(">BBBBBH", CMD_VIA_VIAL_PREFIX, CMD_VIAL_SET_ENCODER,
