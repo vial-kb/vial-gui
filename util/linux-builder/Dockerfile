@@ -1,14 +1,24 @@
-FROM ubuntu:18.04
+FROM ubuntu:22.04
 
-RUN apt-get update && apt-get -y upgrade
-RUN apt-get install -y libusb-1.0-0-dev libudev-dev ruby ruby-dev rubygems build-essential desktop-file-utils wget unzip zlib1g-dev liblzma-dev libssl-dev git imagemagick file libfuse2
+ENV DEBIAN_FRONTEND=noninteractive
 
-RUN wget https://github.com/AppImage/pkg2appimage/archive/38603d92359a48189c35debad9005e8e902e6070.zip && \
-    unzip *.zip && \
-    gem install dotenv -v 2.8.1 && \
-    gem install --no-document fpm -v 1.16.0 && \
-    fpm --version
+RUN apt-get update && apt-get install -y \
+        libusb-1.0-0-dev libudev-dev build-essential \
+        wget ca-certificates file libfuse2 desktop-file-utils \
+        libgl1 libegl1 libxkbcommon0 libdbus-1-3 libxcb-icccm4 libxcb-image0 \
+        libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-shape0 \
+        libxcb-xinerama0 libxcb-xkb1 libxcb-cursor0 \
+    && rm -rf /var/lib/apt/lists/*
+
+# uv manages the Python toolchain (avoids relying on distro Python version).
+RUN wget -qO- https://astral.sh/uv/install.sh | env UV_INSTALL_DIR=/usr/local/bin sh
+
+RUN cd /opt \
+    && wget -q https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage \
+    && chmod +x appimagetool-x86_64.AppImage \
+    && ./appimagetool-x86_64.AppImage --appimage-extract \
+    && mv squashfs-root appimagetool \
+    && rm appimagetool-x86_64.AppImage \
+    && ln -s /opt/appimagetool/AppRun /usr/local/bin/appimagetool
 
 COPY . /vial-gui
-
-RUN /vial-gui/util/setup_python36.sh

@@ -1,0 +1,55 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  verify-version:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Tag matches pyproject.toml version
+      run: |
+        tag="${GITHUB_REF_NAME#v}"
+        pyproj=$(grep -m1 -E '^version = ' pyproject.toml | sed -E 's/version = "(.*)"/\1/')
+        echo "tag=$tag pyproject=$pyproj"
+        if [ "$tag" != "$pyproj" ]; then
+          echo "::error::tag $GITHUB_REF_NAME does not match pyproject version $pyproj"
+          exit 1
+        fi
+
+  test:
+    needs: verify-version
+    uses: ./.github/workflows/test.yml
+
+  build:
+    needs: test
+    uses: ./.github/workflows/build.yml
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: write
+
+    steps:
+    - uses: actions/download-artifact@v4
+      with:
+        path: artifacts
+
+    - name: Rename release assets
+      run: |
+        mkdir -p release
+        cp artifacts/vial-linux/Vial-x86_64.AppImage release/Vial-${{ github.ref_name }}-x86_64.AppImage
+        cp artifacts/vial-mac/vial-mac.dmg release/Vial-${{ github.ref_name }}.dmg
+        cp artifacts/vial-win/vial-win.zip release/Vial-${{ github.ref_name }}-windows.zip
+        cp artifacts/vial-win-installer/VialSetup.exe release/Vial-${{ github.ref_name }}-setup.exe
+        ls -l release
+
+    - uses: softprops/action-gh-release@v2
+      with:
+        files: release/*
+        generate_release_notes: true

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Vial
+GenericName=Keyboard Configurator
+Comment=Configure Vial-compatible QMK keyboards
+Exec=Vial
+Icon=Vial
+Categories=Utility;
+Terminal=false
+StartupWMClass=Vial

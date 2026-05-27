@@ -1,6 +1,10 @@
 name: Test
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_call:
 
 jobs:
   test-linux:
@@ -9,24 +13,49 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Install dependencies
+    - name: Install system deps
       run: |
         sudo apt-get update
-        sudo apt-get install -y libusb-1.0-0-dev libudev-dev ruby ruby-dev rubygems build-essential desktop-file-utils wget unzip zlib1g-dev liblzma-dev libssl-dev git imagemagick file libfuse2 clang
-        sudo gem install --no-document fpm
+        sudo apt-get install -y libusb-1.0-0-dev libudev-dev libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-xinerama0 libxcb-xkb1 libxcb-cursor0 xvfb
 
-    - name: Set up Python 3.6
-      run: CC=clang ./util/setup_python36.sh
+    - uses: astral-sh/setup-uv@v5
+      with:
+        enable-cache: true
 
-    - name: Setup venv
-      run: |
-        export LD_LIBRARY_PATH=$(pwd)/util/python36/prefix/lib/
-        ./util/python36/prefix/bin/python3 -m venv venv
-        . venv/bin/activate
-        pip install -r test-requirements.txt
+    - name: Install Python deps
+      run: uv sync --extra test --frozen
 
     - name: Run tests
-      run: |
-        export LD_LIBRARY_PATH=$(pwd)/util/python36/prefix/lib/
-        source venv/bin/activate
-        pytest -v src/main/python/test
+      run: uv run pytest -v src/main/python/test
+
+  test-mac:
+    runs-on: macos-14
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: astral-sh/setup-uv@v5
+      with:
+        enable-cache: true
+
+    - name: Install Python deps
+      run: uv sync --extra test --frozen
+
+    - name: Run tests
+      run: uv run pytest -v src/main/python/test
+
+  test-win:
+    runs-on: windows-2025
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: astral-sh/setup-uv@v5
+      with:
+        enable-cache: true
+
+    - name: Install Python deps
+      run: uv sync --extra test --frozen
+
+    - name: Run tests
+      run: uv run pytest -v src/main/python/test

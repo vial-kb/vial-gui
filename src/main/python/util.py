@@ -7,7 +7,7 @@ import time
 from logging.handlers import RotatingFileHandler
 
 from PyQt5.QtCore import QCoreApplication, QStandardPaths
-from PyQt5.QtGui import QPalette
+from PyQt5.QtGui import QPalette, QColor
 from PyQt5.QtWidgets import QApplication, QWidget, QScrollArea, QFrame
 
 from hidproxy import hid
@@ -186,7 +186,7 @@ class KeycodeDisplay:
         return key is not None and key.qmk_id in cls.keymap_override
 
     @classmethod
-    def display_keycode(cls, widget, code):
+    def display_keycode(cls, widget, code, trns_resolved=None):
         text = cls.get_label(code)
         tooltip = Keycode.tooltip(code)
         mask = Keycode.is_mask(code)
@@ -208,6 +208,20 @@ class KeycodeDisplay:
             widget.setMaskColor(QApplication.palette().color(QPalette.Link))
         else:
             widget.setMaskColor(None)
+        if trns_resolved is not None:
+            resolved_code, source_layer = trns_resolved
+            resolved_label = "(none)" if resolved_code == "KC_NO" else cls.get_label(resolved_code)
+            widget.setText(resolved_label)
+            widget.setToolTip("KC_TRNS → {} (layer {})".format(resolved_code, source_layer))
+            p = QApplication.palette()
+            fg = p.color(QPalette.ButtonText)
+            bg = p.color(QPalette.Button)
+            muted = QColor(
+                (fg.red()   * 4 + bg.red()   * 6) // 10,
+                (fg.green() * 4 + bg.green() * 6) // 10,
+                (fg.blue()  * 4 + bg.blue()  * 6) // 10,
+            )
+            widget.setColor(muted)
 
     @classmethod
     def set_keymap_override(cls, override):

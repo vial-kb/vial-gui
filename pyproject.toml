@@ -1,0 +1,33 @@
+[project]
+name = "vial-gui"
+version = "0.7.6"
+description = "GUI for configuring Vial-compatible QMK keyboards"
+requires-python = ">=3.13"
+license = { text = "GPL-2.0-or-later" }
+readme = "README.md"
+dependencies = [
+    "PyQt5>=5.15,<5.16",
+    "hidapi>=0.14",
+    "simpleeval>=0.9.13",
+    "keyboard==0.13.5",
+    "certifi",
+    "pywin32>=305; sys_platform == 'win32'",
+]
+
+[project.optional-dependencies]
+build = ["PyInstaller>=6,<7"]
+test = [
+    "pytest>=7",
+    "pytest-qt>=4",
+    "pytest-xvfb>=3; sys_platform == 'linux'",
+]
+
+# vial-gui is run from source, not installed as a package.
+[tool.uv]
+package = false
+required-environments = [
+    "sys_platform == 'win32' and platform_machine == 'AMD64'",
+    "sys_platform == 'darwin' and platform_machine == 'x86_64'",
+    "sys_platform == 'darwin' and platform_machine == 'arm64'",
+    "sys_platform == 'linux' and platform_machine == 'x86_64'",
+]
