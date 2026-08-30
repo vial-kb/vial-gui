@@ -1,0 +1,6 @@
+PyQt5==5.15.11
+PyInstaller==6.11.1
+git+https://github.com/vial-kb/cython-hidapi@fa31fd46e709ac4adba80bd516b1290dd56f43e9#egg=hidapi
+keyboard==0.13.5
+simpleeval==0.9.13
+certifi
