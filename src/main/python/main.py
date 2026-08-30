@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 import ssl
 import certifi
+import json
 import os
 
 if ssl.get_default_verify_paths().cafile is None:
@@ -55,7 +56,29 @@ class UncaughtHook(QtCore.QObject):
             self._exception_caught.emit(log_msg)
         sys._excepthook(exc_type, exc_value, exc_traceback)
 
+def _pyinstaller_resource_dir():
+    if getattr(sys, "frozen", False):
+        meipass = getattr(sys, "_MEIPASS", None)
+        if meipass and os.path.exists(os.path.join(meipass, "build_settings.json")):
+            return meipass
+    return None
+
+
 class VialApplicationContext(ApplicationContext):
+    def get_resource(self, *rel_path):
+        resource_dir = _pyinstaller_resource_dir()
+        if resource_dir is not None:
+            return os.path.join(resource_dir, *rel_path)
+        return super().get_resource(*rel_path)
+
+    @cached_property
+    def build_settings(self):
+        resource_dir = _pyinstaller_resource_dir()
+        if resource_dir is not None:
+            with open(os.path.join(resource_dir, "build_settings.json"), "r") as inf:
+                return json.load(inf)
+        return super().build_settings
+
     @cached_property
     def app(self):
         # Override the app definition in order to set WM_CLASS.

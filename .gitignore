@@ -1,5 +1,8 @@
 venv
 target
+build
+dist
+*.dmg
 __pycache__
 *.pyc
 .idea

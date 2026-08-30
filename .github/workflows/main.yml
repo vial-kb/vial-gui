@@ -53,6 +53,37 @@ jobs:
         name: vial-mac
         path: vial-mac.dmg
 
+  build-mac-arm64:
+    runs-on: macos-14
+    env:
+      MACOSX_DEPLOYMENT_TARGET: "11.0"
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+
+    - name: Setup venv
+      run: |
+        python3.10 -m venv venv
+        source venv/bin/activate
+        pip install -r requirements-mac.txt
+        pip install --no-deps fbs==0.9.0
+
+    - name: Build
+      run: |
+        source venv/bin/activate
+        ./util/mac-arm64-builder/make-icns.sh
+        pyinstaller --noconfirm Vial.spec
+        hdiutil create -volname Vial -srcfolder "dist/Vial.app" -ov -format UDZO vial-mac-arm64.dmg
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: vial-mac-arm64
+        path: vial-mac-arm64.dmg
+
   build-win:
     runs-on: windows-2025
 

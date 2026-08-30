@@ -9,7 +9,10 @@ if sys.platform == "emscripten":
         def __exit__(self, *args):
             pass
 else:
-    from multiprocessing import RLock
+    # Use threading.RLock, not multiprocessing.RLock. This lock works in one
+    # process only. multiprocessing.RLock re-runs the frozen application and
+    # makes too many processes.
+    from threading import RLock
 
 from PyQt5.QtCore import pyqtSignal, QThread
 
