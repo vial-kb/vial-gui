@@ -604,3 +604,29 @@ def test_tap_dance(qtbot):
     assert not tde.btn_save.isEnabled()
     assert td.tabText(td.currentIndex()) == "2"
     assert timeout_w.value() == 123
+
+def test_shifted_keycode_layout_labels(qtbot):
+    from keycodes.keycodes import Keycode
+    from keymap import german, japanese, slovak
+    from util import KeycodeDisplay
+
+    button = SquareButton()
+    qtbot.addWidget(button)
+
+    original_override = KeycodeDisplay.keymap_override
+
+    try:
+        for override, qmk_id, expected in [
+            ({}, "KC_LPRN", "("),
+            (german.keymap, "KC_LPRN", ")"),
+            (slovak.keymap, "KC_LPRN", "9\n¸"),
+            (japanese.keymap, "KC_RPRN", ""),
+        ]:
+            button.keycode = Keycode.find_by_qmk_id(qmk_id)
+            KeycodeDisplay.keymap_override = override
+            KeycodeDisplay.relabel_buttons([button])
+
+            assert button.text == expected
+            assert button.keycode.qmk_id == qmk_id
+    finally:
+        KeycodeDisplay.keymap_override = original_override
