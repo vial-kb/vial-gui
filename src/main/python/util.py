@@ -11,7 +11,7 @@ from PyQt5.QtGui import QPalette
 from PyQt5.QtWidgets import QApplication, QWidget, QScrollArea, QFrame
 
 from hidproxy import hid
-from keycodes.keycodes import Keycode
+from keycodes.keycodes import Keycode, KEYCODES_SHIFTED
 from keymaps import KEYMAPS
 
 tr = QCoreApplication.translate
@@ -228,11 +228,21 @@ class KeycodeDisplay:
     def relabel_buttons(cls, buttons):
         for widget in buttons:
             qmk_id = widget.keycode.qmk_id
+            label = None
+
             if qmk_id in KeycodeDisplay.keymap_override:
                 label = KeycodeDisplay.keymap_override[qmk_id]
+            elif widget.keycode in KEYCODES_SHIFTED:
+                normalized = Keycode.normalize(qmk_id)
+                inner = Keycode.find_inner_keycode(normalized)
+                if inner is not None and inner.qmk_id in KeycodeDisplay.keymap_override:
+                    label = KeycodeDisplay.keymap_override[inner.qmk_id].split("\n", 1)[0]
+
+            if label is not None:
                 highlight_color = QApplication.palette().color(QPalette.Link).getRgb()
                 widget.setStyleSheet("QPushButton {color: rgb%s;}" % str(highlight_color))
             else:
                 label = widget.keycode.label
                 widget.setStyleSheet("QPushButton {}")
+
             widget.setText(label.replace("&", "&&"))
