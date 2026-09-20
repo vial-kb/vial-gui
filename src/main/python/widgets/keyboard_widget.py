@@ -2,11 +2,11 @@ from collections import defaultdict
 
 from PyQt5.QtGui import QPainter, QColor, QPainterPath, QTransform, QBrush, QPolygonF, QPalette
 from PyQt5.QtWidgets import QWidget, QToolTip, QApplication
-from PyQt5.QtCore import Qt, QSize, QRect, QPointF, pyqtSignal, QEvent, QRectF
+from PyQt5.QtCore import Qt, QSize, QRect, QPointF, pyqtSignal, QEvent, QRectF, QTimer
 
 from constants import KEY_SIZE_RATIO, KEY_SPACING_RATIO, KEYBOARD_WIDGET_PADDING, \
     KEYBOARD_WIDGET_MASK_HEIGHT, KEY_ROUNDNESS, SHADOW_SIDE_PADDING, SHADOW_TOP_PADDING, SHADOW_BOTTOM_PADDING, \
-    KEYBOARD_WIDGET_NONMASK_PADDING
+    KEYBOARD_WIDGET_NONMASK_PADDING, KEYBOARD_WIDGET_FIT_WIDTH, KEYBOARD_WIDGET_FIT_HEIGHT
 from themes import Theme
 
 
@@ -259,6 +259,15 @@ class KeyboardWidget(QWidget):
 
         self.enabled = True
         self.scale = 1
+        # how much the drawing is shrunk to fit the screen, 1 or less
+        self.fit = 1
+        # share of the window height the drawing may take, editors with more
+        # content below the keyboard set this lower
+        self.fit_height = KEYBOARD_WIDGET_FIT_HEIGHT
+        self.watched = []
+        self.fit_timer = QTimer(self)
+        self.fit_timer.setSingleShot(True)
+        self.fit_timer.timeout.connect(self.update_fit)
         self.padding = KEYBOARD_WIDGET_PADDING
 
         self.setMouseTracking(True)
@@ -350,11 +359,12 @@ class KeyboardWidget(QWidget):
         max_w = max_h = 0
         for key in self.widgets:
             p = key.polygon.boundingRect().bottomRight()
-            max_w = max(max_w, p.x() * self.scale)
-            max_h = max(max_h, p.y() * self.scale)
+            max_w = max(max_w, p.x())
+            max_h = max(max_h, p.y())
 
         self.width = round(max_w + 2 * self.padding)
         self.height = round(max_h + 2 * self.padding)
+        self.schedule_fit()
 
         self.update()
         self.updateGeometry()
@@ -415,7 +425,7 @@ class KeyboardWidget(QWidget):
         for idx, key in enumerate(self.widgets):
             qp.save()
 
-            qp.scale(self.scale, self.scale)
+            qp.scale(self.draw_scale(), self.draw_scale())
             qp.translate(key.shift_x, key.shift_y)
             qp.translate(key.rotation_x, key.rotation_y)
             qp.rotate(key.rotation_angle)
@@ -472,16 +482,90 @@ class KeyboardWidget(QWidget):
 
         qp.end()
 
+    def draw_scale(self):
+        return self.scale * self.fit
+
+    def sizeHint(self):
+        return QSize(round(self.width * self.draw_scale()), round(self.height * self.draw_scale()))
+
     def minimumSizeHint(self):
-        return QSize(self.width, self.height)
+        return self.sizeHint()
+
+    def schedule_fit(self):
+        # coalesce the many layout events into one fit pass
+        self.fit_timer.start(0)
+
+    def watch_window(self):
+        # follow the size of the window this widget is shown in
+        top = self.window()
+        if top is self or top in self.watched:
+            return
+        for w in self.watched:
+            w.removeEventFilter(self)
+        self.watched = [top]
+        top.installEventFilter(self)
+
+    def eventFilter(self, obj, ev):
+        if ev.type() == QEvent.Resize:
+            self.schedule_fit()
+        return super().eventFilter(obj, ev)
+
+    def showEvent(self, ev):
+        super().showEvent(ev)
+        self.watch_window()
+        self.schedule_fit()
+
+    def update_fit(self):
+        # shrink the drawing when it would take more than its share of the
+        # window, capped at the screen, so the whole keyboard stays visible
+        # on small displays. the share is a fixed fraction rather than a
+        # measurement of the other widgets, so nothing feeds back into the
+        # window minimum and hidden tab pages get the right size before
+        # they are shown.
+        top = self.window()
+        if top is self or self.width == 0 or self.height == 0:
+            return
+
+        bound_w, bound_h = top.width(), top.height()
+        screen = top.screen() if hasattr(top, "screen") else None
+        if screen is not None:
+            avail = screen.availableGeometry()
+            bound_w, bound_h = min(bound_w, avail.width()), min(bound_h, avail.height())
+
+        fit = min(1, bound_w * KEYBOARD_WIDGET_FIT_WIDTH / (self.width * self.scale),
+                  bound_h * self.fit_height / (self.height * self.scale))
+        if abs(fit - self.fit) > 0.001:
+            self.fit = fit
+            self.updateGeometry()
+            self.refresh_layouts()
+            self.update()
+
+    def refresh_layouts(self):
+        # nested layouts keep their cached minimum size until their page is
+        # activated, which never happens for hidden tab pages. invalidate
+        # everything between this widget and the page by hand so the
+        # minimums read here and by the window are current.
+        def invalidate(layout):
+            layout.invalidate()
+            for i in range(layout.count()):
+                child = layout.itemAt(i).layout()
+                if child is not None:
+                    invalidate(child)
+
+        w = self.parentWidget()
+        while w is not None and not w.isWindow():
+            if w.layout() is not None:
+                invalidate(w.layout())
+            w.updateGeometry()
+            w = w.parentWidget()
 
     def hit_test(self, pos):
         """ Returns key, hit_masked_part """
 
         for key in self.widgets:
-            if key.masked and key.mask_polygon.containsPoint(pos/self.scale, Qt.OddEvenFill):
+            if key.masked and key.mask_polygon.containsPoint(QPointF(pos) / self.draw_scale(), Qt.OddEvenFill):
                 return key, True
-            if key.polygon.containsPoint(pos/self.scale, Qt.OddEvenFill):
+            if key.polygon.containsPoint(QPointF(pos) / self.draw_scale(), Qt.OddEvenFill):
                 return key, False
 
         return None, False
@@ -539,6 +623,8 @@ class KeyboardWidget(QWidget):
 
     def set_scale(self, scale):
         self.scale = scale
+        self.update_fit()
+        self.updateGeometry()
 
     def get_scale(self):
         return self.scale

@@ -42,6 +42,8 @@ class KeymapEditor(BasicEditor):
 
         # contains the actual keyboard
         self.container = KeyboardWidget(layout_editor)
+        # leave room for the keycode picker below the keyboard
+        self.container.fit_height = 0.45
         self.container.clicked.connect(self.on_key_clicked)
         self.container.deselected.connect(self.on_key_deselected)
 

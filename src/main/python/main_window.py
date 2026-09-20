@@ -3,7 +3,7 @@ import logging
 import platform
 from json import JSONDecodeError
 
-from PyQt5.QtCore import Qt, QSettings, QStandardPaths, QTimer, QRect, QT_VERSION_STR
+from PyQt5.QtCore import Qt, QSettings, QStandardPaths, QTimer, QRect, QT_VERSION_STR, QEvent
 from PyQt5.QtWidgets import QWidget, QComboBox, QToolButton, QHBoxLayout, QVBoxLayout, QMainWindow, QAction, qApp, \
     QFileDialog, QDialog, QTabWidget, QActionGroup, QMessageBox, QLabel
 
@@ -48,6 +48,7 @@ class MainWindow(QMainWindow):
             self.resize(self.settings.value("size"))
         else:
             self.resize(WINDOW_WIDTH, WINDOW_HEIGHT)
+        self.clamp_to_screen()
 
         _pos = self.settings.value("pos", None)
         # NOTE: QDesktopWidget is obsolete, but QApplication.screenAt only usable in Qt 5.10+
@@ -458,6 +459,19 @@ class MainWindow(QMainWindow):
         self.about_dialog = AboutKeyboard(self.autorefresh.current_device)
         self.about_dialog.setModal(True)
         self.about_dialog.show()
+
+    def clamp_to_screen(self):
+        # a size saved on a bigger screen, or a minimum size that has since
+        # shrunk, must not leave the window bigger than the screen
+        available = qApp.desktop().availableGeometry(self).size()
+        if self.width() > available.width() or self.height() > available.height():
+            self.resize(self.size().boundedTo(available))
+
+    def event(self, e):
+        if e.type() == QEvent.LayoutRequest:
+            # child widgets changed their size hints, the window may now fit
+            QTimer.singleShot(0, self.clamp_to_screen)
+        return super().event(e)
 
     def closeEvent(self, e):
         self.settings.setValue("size", self.size())
