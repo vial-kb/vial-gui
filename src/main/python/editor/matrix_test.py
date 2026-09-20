@@ -127,6 +127,16 @@ class MatrixTest(BasicEditor):
                 # write to matrix array
                 matrix[row][col] = (row_data[col_byte] >> col_mod) & 1
 
+        # rotation flags follow the matrix rows: two bits per encoder, bit 0 is
+        # counterclockwise and bit 1 is clockwise, four encoders per byte.
+        # firmware without support leaves these bytes zero.
+        encoder_start = 2 + rows * row_size
+        encoders = []
+        for idx in range(self.keyboard.encoder_count):
+            pos = encoder_start + idx // 4
+            flags = data[pos] if pos < len(data) else 0
+            encoders.append([(flags >> ((idx % 4) * 2 + direction)) & 1 for direction in range(2)])
+
         # write matrix state to keyboard widget
         for w in self.keyboardWidget.widgets:
             if w.desc.row is not None and w.desc.col is not None:
@@ -137,6 +147,11 @@ class MatrixTest(BasicEditor):
                     w.setPressed(matrix[row][col])
                     if matrix[row][col]:
                         w.setOn(True)
+            elif w.desc.encoder_idx is not None and w.desc.encoder_idx < len(encoders):
+                turned = encoders[w.desc.encoder_idx][w.desc.encoder_dir]
+                w.setPressed(turned)
+                if turned:
+                    w.setOn(True)
 
         self.keyboardWidget.update_layout()
         self.keyboardWidget.update()
