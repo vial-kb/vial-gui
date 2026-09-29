@@ -1,8 +1,14 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 import struct
 import sys
+import threading
 
 from protocol.constants import CMD_VIA_VIAL_PREFIX, CMD_VIAL_GET_KEYBOARD_ID
+
+# hidapi's macOS backend shares one global IOHIDManager that hid_init schedules on the calling
+# thread's run loop; initializing it from two threads at once aborts the process on macOS 27.
+# Hold this lock around enumerate() and device opening.
+hid_lock = threading.RLock()
 
 if sys.platform == "emscripten":
 

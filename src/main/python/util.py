@@ -10,7 +10,7 @@ from PyQt5.QtCore import QCoreApplication, QStandardPaths
 from PyQt5.QtGui import QPalette
 from PyQt5.QtWidgets import QApplication, QWidget, QScrollArea, QFrame
 
-from hidproxy import hid
+from hidproxy import hid, hid_lock
 from keycodes.keycodes import Keycode
 from keymaps import KEYMAPS
 
@@ -97,7 +97,9 @@ def find_vial_devices(via_stack_json, sideload_vid=None, sideload_pid=None, quie
     from vial_device import VialBootloader, VialKeyboard, VialDummyKeyboard
 
     filtered = []
-    for dev in hid.enumerate():
+    with hid_lock:
+        devices = hid.enumerate()
+    for dev in devices:
         if dev["vendor_id"] == sideload_vid and dev["product_id"] == sideload_pid:
             if not quiet:
                 logging.info("Trying VID={:04X}, PID={:04X}, serial={}, path={} - sideload".format(
