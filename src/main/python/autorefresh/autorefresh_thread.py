@@ -9,7 +9,9 @@ if sys.platform == "emscripten":
         def __exit__(self, *args):
             pass
 else:
-    from multiprocessing import RLock
+    # threading, not multiprocessing: this only guards in-process state, and on macOS a
+    # multiprocessing lock spawns a resource tracker via sys.executable (the app itself when frozen)
+    from threading import RLock
 
 from PyQt5.QtCore import pyqtSignal, QThread
 

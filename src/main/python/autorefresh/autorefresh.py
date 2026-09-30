@@ -42,6 +42,9 @@ class Autorefresh(QObject):
             self.thread = AutorefreshThread()
 
         self.thread.devices_updated.connect(self.on_devices_updated)
+
+    def start(self):
+        """ Start background polling. Call after the first update() so hidapi is initialized on the main thread """
         self.thread.start()
 
     def _lock(self):

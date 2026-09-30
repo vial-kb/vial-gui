@@ -145,6 +145,8 @@ class MainWindow(QMainWindow):
 
         # make sure initial state is valid
         self.on_click_refresh()
+        # only poll in the background once hidapi has been initialized here, on the main thread
+        self.autorefresh.start()
 
         if sys.platform == "emscripten":
             import vialglue
