@@ -76,9 +76,9 @@ class OptionsUI(QWidget):
         self.opt_activation_required_mod_down = CheckBoxNoPadding("Activate when a necessary modifier is pressed down")
         self.opt_activation_negative_mod_up = CheckBoxNoPadding("Activate when a negative modifier is released")
         self.opt_one_mod = CheckBoxNoPadding("Activate on one modifier")
-        self.opt_no_reregister_trigger = CheckBoxNoPadding("Don't deactivate when another key is pressed down")
-        self.opt_no_unregister_on_other_key_down = CheckBoxNoPadding(
+        self.opt_no_reregister_trigger = CheckBoxNoPadding(
             "Don't register the trigger key again after the override is deactivated")
+        self.opt_no_unregister_on_other_key_down = CheckBoxNoPadding("Don't deactivate when another key is pressed down")
 
         for w in [self.opt_activation_trigger_down, self.opt_activation_required_mod_down,
                   self.opt_activation_negative_mod_up, self.opt_one_mod, self.opt_no_reregister_trigger,
