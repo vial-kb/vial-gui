@@ -68,17 +68,11 @@ jobs:
         . .\venv\Scripts\activate.ps1
         pip install -r requirements.txt
 
-    - name: Install NSIS
+    - name: Install dependencies Visual C++ Redistributables and NSIS
       run: |
-        Invoke-WebRequest "https://github.com/vial-kb/vial-deps/releases/download/v1/nsis-3.06.1-setup.exe" -UserAgent "wget" -OutFile nsis-3.06.1-setup.exe
-        if ((Get-FileHash nsis-3.06.1-setup.exe -Algorithm sha256).Hash -ne "f60488a676308079bfdf6845dc7114cfd4bbff47b66be4db827b89bb8d7fdc52") { Write-Error 'SHA256 mismatch' }
-        Start-Process -FilePath "nsis-3.06.1-setup.exe" -ArgumentList "/S", "/D=C:\Program Files (x86)\NSIS" -NoNewWindow -Wait
-
-    - name: Install Visual C++ Redistributable
-      run: |
-        Invoke-WebRequest -Uri "https://download.microsoft.com/download/3/2/2/3224B87F-CFA0-4E70-BDA3-3DE650EFEBA5/vcredist_x64.exe" -OutFile "vcredist_x64.exe"
-        Start-Process -FilePath "vcredist_x64.exe" -ArgumentList "/install", "/quiet", "/norestart" -Wait
-        Remove-Item "vcredist_x64.exe"
+        winget install --silent --disable-interactivity --accept-package-agreements --accept-source-agreements --exact --id NSIS.NSIS
+        winget install --silent --disable-interactivity --accept-package-agreements --accept-source-agreements --exact --id Microsoft.VCRedist.2010.x64
+        winget install --silent --disable-interactivity --accept-package-agreements --accept-source-agreements --exact --id Microsoft.VCRedist.2012.x64
 
     - name: Build
       run: |
