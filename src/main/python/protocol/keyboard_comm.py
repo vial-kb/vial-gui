@@ -404,7 +404,7 @@ class Keyboard(ProtocolMacro, ProtocolDynamic, ProtocolTapDance, ProtocolCombo, 
         data["alt_repeat_key"] = self.save_alt_repeat_key()
         data["settings"] = self.settings
 
-        return json.dumps(data).encode("utf-8")
+        return json.dumps(data, indent=4).encode("utf-8")
 
     def restore_layout(self, data):
         """ Restores saved layout """
