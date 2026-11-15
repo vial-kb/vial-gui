@@ -585,6 +585,7 @@ class keycodes_v5:
         "QK_REPEAT_KEY": 0x999c0,
         "QK_ALT_REPEAT_KEY": 0x999c1,
         "MAGIC_TOGGLE_GUI": 0x999c2,
+        "MAGIC_TOGGLE_CONTROL_CAPS_LOCK": 0x999c3,
     }
 
     masked = set()
